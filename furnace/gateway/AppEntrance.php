@@ -29,8 +29,11 @@
  	FProject::ROOT_DIRECTORY."/app/controllers","_default");
  	
  /* PROCESS REQUEST AND STORE CONTENTS ***********************************/
- $entrance->processRequestURI($_SERVER['REQUEST_URI']);
- $contents = $entrance->dispatchRequest();
+ if ($entrance->validRequest($_SERVER['REQUEST_URI'])) {
+ 	$contents = $entrance->dispatchRequest();
+ } else {
+ 	die("Invalid request made.");
+ }
  
  /* CREATE LAYOUT OBJECT, RENDER AND SEND CONTENT ************************/
  $layout     = $entrance->getController()->getLayout();
