@@ -26,7 +26,7 @@
 	
 	// Variable: defaultController
 	// The controller to use when no page name is specified
-	private $defaultController;
+	private $defaultControllerName;
 	
 	// Variable: controllerDirectory
 	// The directory where the controllers reside.
@@ -61,11 +61,11 @@
 	// in the controller
 	private $viewArguments;
 	
-	public function __construct($controllerDir,$defaultController,$skip='') {
+	public function __construct($controllerDir,$defaultControllerName,$skip='') {
 		// Assign local variables
 		$this->skip = $skip;
-		$this->defaultController = $defaultController;
-		$this->controllerDirectory = $controllerDir;
+		$this->defaultControllerName = $defaultControllerName;
+		$this->controllerDirectory   = $controllerDir;
 		$this->stateParams     = array();
 		
 		// Start the session

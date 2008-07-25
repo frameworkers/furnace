@@ -26,7 +26,7 @@
  
  /* INIT ENTRANCE ********************************************************/
  $entrance = new Entrance(
- 	FProject::ROOT_DIRECTORY."/app/controllers","_default");
+ 	FProject::ROOT_DIRECTORY."/app/controllers","_Default");
  	
  /* PROCESS REQUEST AND STORE CONTENTS ***********************************/
  if ($entrance->validRequest($_SERVER['REQUEST_URI'])) {
