@@ -91,7 +91,9 @@
 	
 	public function compile() {
 		parent::compile();
-		$this->translateStrings();
+		if (FProject::I18N_ENABLED) {
+			$this->translateStrings();
+		}
 	}
 
  	public function render($bEcho = true,$bHeaderFooter = true) {
@@ -194,7 +196,7 @@ END;
 			$this->string_data = 
 				FYamlParser::parse(
 					@file_get_contents(
-						Config::PROJECT_ROOT_DIR."/model/i18n/strings.{$this->langcode}.yml"
+						FProject::ROOT_DIRECTORY."/model/i18n/strings.{$this->langcode}.yml"
 					)
 				);
 		} else {
