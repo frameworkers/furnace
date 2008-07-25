@@ -38,7 +38,11 @@
  	 *  The language code for the default language to display pages in.
  	 *  This can be overridden in your controllers to serve specific 
  	 *  views in other languages.
+ 	 * I18N_ENABLED 
+ 	 *  If this is set to false, no translation is done. Conversly, it
+ 	 *  must be set to true if you wish to set language content dynamically.
  	 */
+ 	const I18N_ENABLED     = false;
  	const DEFAULT_LANGUAGE = 'en-us';
  	
  	/*
