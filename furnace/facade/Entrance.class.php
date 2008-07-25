@@ -89,10 +89,9 @@
 		*/
 		
 		// Grab the parameter string from the request
-		$this->stateParams = explode("/",trim($request,"/"));
-			
+		$this->stateParams = explode("/",trim($this->requestURI,"/"));
 		// Extract the controller & view names
-		if (count($this->stateParams) == 0) {
+		if (count($this->stateParams) == 1 && "" == $this->stateParams[0]) {
 			// Load the default controller with the default view
 			$this->controllerName = $this->defaultControllerName;
 			$this->viewName       = FProject::DEFAULT_VIEW;
@@ -111,10 +110,12 @@
 		
 		// Append 'Controller' to the controller name
 		$this->controllerName .= "Controller";
+		var_dump($this->controllerName);
 	}
 	
 	public function validRequest($req) {
 		$this->state = $this->processRequestURI($req);
+		echo "checking {$this->controllerDirectory}/{$this->controllerName}.php";
 		if (file_exists(
 			"{$this->controllerDirectory}/{$this->controllerName}.php")) {
 			return true;
