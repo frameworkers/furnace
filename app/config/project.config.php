@@ -39,6 +39,15 @@
  	 *  This can be overridden in your controllers to serve specific 
  	 *  views in other languages.
  	 */
- 	const DEFAULT_LANGUAGE = 'en-us';	
+ 	const DEFAULT_LANGUAGE = 'en-us';
+ 	
+ 	/*
+ 	 * DEFAULT_VIEW
+ 	 *  The default view that will be invoked when no view is explicitly
+ 	 *  specified in the Request URI. For example, in the case of a 
+ 	 *  Request URI http://sitename.com/blog, the 'blog' controller would
+ 	 *  be invoked with the default view.
+ 	 */
+ 	 const DEFAULT_VIEW = 'index';
  }
 ?>
