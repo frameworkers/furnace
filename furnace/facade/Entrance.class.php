@@ -48,6 +48,10 @@
 	// The controller name as extracted from the request
 	private $controllerName;
 	
+	// Variable: controllerClassName
+	// The name of the controller class
+	private $controllerClassName;
+	
 	// Variable: controller
 	// The controller object actually invoked
 	private $controller;
@@ -108,16 +112,14 @@
 			$this->viewArguments  = array_slice($this->stateParams,2);
 		}
 		
-		// Append 'Controller' to the controller name
-		$this->controllerName .= "Controller";
-		var_dump($this->controllerName);
+		// Append 'Controller' to get the controllerClassName
+		$this->controllerClassName = $this->controllerName . "Controller";
 	}
 	
 	public function validRequest($req) {
 		$this->state = $this->processRequestURI($req);
-		echo "checking {$this->controllerDirectory}/{$this->controllerName}.php";
 		if (file_exists(
-			"{$this->controllerDirectory}/{$this->controllerName}.php")) {
+			"{$this->controllerDirectory}/{$this->controllerClassName}.php")) {
 			return true;
 		} else {
 			return false;
@@ -126,7 +128,7 @@
 	
 	public function dispatchRequest() {
 		require_once(
-			"{$this->controllerDirectory}/{$this->controllerName}.php");
+			"{$this->controllerDirectory}/{$this->controllerClassName}.php");
 		// Determine what content was submitted (priority order: POST,GET)
 		$args = ((count($_POST) > 0) 
 			? $_POST
@@ -136,7 +138,15 @@
 			  )
 		);
 		// Create the controller, passing any submitted data
-		$this->controller = new $this->controllerName($args);
+		$this->controller = new $this->controllerClassName($args);
+		// Set the template file for the controller 
+		$templatePath = $this->controllerDirectory
+			."/../views/"
+			.$this->controllerName
+			."/"
+			.$this->viewName
+			.".html";
+		$this->controller->setTemplate($templatePath);
 		// Invoke the method corresponding to the view name
 		if (is_callable(array($this->controller,$this->viewName))) {
 			call_user_func(
@@ -155,6 +165,12 @@
 	
 	public function getController() {
 		return $this->controller;	
+	}
+	public function getControllerName() {
+		return $this->controllerName;	
+	}
+	public function getControllerClassName() {
+		return $this->controllerClassName;	
 	}
  }
 ?>
