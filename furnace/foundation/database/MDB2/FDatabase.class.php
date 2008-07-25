@@ -15,6 +15,7 @@
   * Lightweight wrapper for the PEAR MDB2 database abstraction package.
   * 
   */
+  require_once("MDB2.php");
   class FDatabase extends MDB2 {
 		
 	/* No custom extensions at the moment */
