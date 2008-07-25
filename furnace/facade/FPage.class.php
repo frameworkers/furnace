@@ -25,6 +25,10 @@
  	// The page title
  	protected $title;
  	
+ 	// Variable: layout
+ 	// The name of the layout to use with this controller
+ 	protected $layout;
+ 	
  	// Array: stylesheets
 	// An array of stylesheet declarations to add
 	protected $stylesheets;
@@ -49,12 +53,12 @@
 	// Record the state information for this page request
 	protected $state;
  	
- 	public function __construct($template='',$state=array()) {
- 		$contents = file_get_contents($template);
- 		parent::__construct($contents); 
+ 	public function __construct($state=array()) {
+ 		parent::__construct(); 
  		$this->state = $state;	
  		$this->register("session",$_SESSION);
- 		$this->langcode = Config::PROJECT_DEFAULT_LANG;
+ 		$this->langcode = FProject::DEFAULT_LANGUAGE;
+ 		$this->layout   = 'default';
  	}
  	
  	protected function dispatch(&$args) {
@@ -90,12 +94,34 @@
 		$this->translateStrings();
 	}
 
- 	public function render() {
+ 	public function render($bEcho = true,$bHeaderFooter = true) {
  		$this->compile();
- 		echo $this->buildHead();
- 		echo $this->getContents();
- 		echo $this->buildFoot();
+ 		if ($bEcho) {
+ 			if ($bHeaderFooter) {echo $this->buildHead();}
+ 			echo $this->getContents();
+ 			if ($bHeaderFooter) {echo $this->buildFoot();}
+ 		} else {
+ 			if ($bHeaderFooter) {
+ 				return $this->buildHead()
+ 					. $this->getContents()
+ 					. $this->buildFoot();	
+ 			} else {
+ 				return $this->getContents();
+ 			}
+ 		}
  	}	
+ 	
+ 	public function useLayout($layout) {
+ 		$this->layout = $layout;	
+ 	}
+ 	
+ 	public function getLayout() {
+ 		return $this->layout;	
+ 	}
+ 	
+ 	public function getTitle() {
+ 		return $this->title;	
+ 	}
  	
  	public function setLanguage($code = "en-us") {
  		$this->langcode = $code;
