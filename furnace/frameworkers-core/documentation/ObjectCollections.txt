@@ -1,0 +1,64 @@
+Frameworkers.org - Foundation
+May 22 2008
+
+
+FObjectCollection Class
+------------------------
+
+The FObjectCollection class is a 'virtual object manager' presenting
+to the programmer a flexible object-oriented interface to the access
+and manipulation of groups of remote objects. 
+
+Construction
+---------
+The constructor takes three arguments:
+1) $type [string] : Specifies the type of objects in the group.
+2) $lookupTable [string] : Specifies the database table to use for 
+lookups in the case of a MM relationship. If 1M, $lookupTable is
+the table corresponding to the data object specified in $type.
+3) $filter [string] : Specifies the primary limiting selection
+criteria for group membership.
+
+Notes: Based on the format of $lookupTable (specifically, whether or 
+not it contains an "_") the $relationType is set to either "1M" or "MM"
+
+Adding Objects
+---------
+TBD
+
+Removing Objects
+---------
+TBD
+
+Retrieving Objects
+---------
+The function get takes four arguments:
+1) $uniqueValues [string] : can be one of four possible values:
+1a) "*" : Requests all members of the collection
+1b) scalar : Represents a value for a single attribute (specified in $key)
+for a single member of the group to be returned
+1c) numeric_array: Represents an array of values for a single attribute
+(specified in $key) for a subset of members of the group to be returned
+1d) associative array: Represents a set of attribute=>value pairs to use in
+determining the subset of members of the group to be returned
+2) $key [string] : Specifies how to interpret $uniqueValues, except in (1d)
+where it is the ORDER BY attribute
+3) $sortOrder [string] : Specifies how to sort the members of the group
+4) $returnType [mixed] : Specifies how to return the results. Can be one of 
+three possible values: 
+4a) "object" : each member of the result set should be returned as an object.
+4b) "collection" : the function should return an FObjectCollection object
+with the $filter set so as to select the present subset of objects
+4c) numeric_array: an array of object attributes to return. Returned array
+will be of the form:
+(assume $key = FirstName, returnType=array("Age","Weight"))
+array(
+  [John] => array(
+    [Age] => 28
+    [Weight] => 167
+  )
+  [Larry] => array(
+    [Age] => 36
+    [Weignt] => 180
+  )
+)

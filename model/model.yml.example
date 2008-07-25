@@ -1,0 +1,26 @@
+# 
+# Project Description File
+# ------------------------
+#
+# Place YAML descriptions of model objects here:
+# (see http://frameworkers.org/foundation/model/yaml) for more information)
+#
+# EXAMPLE:
+#
+# object SomeObject:
+#   depends SomeOtherObject:
+#     attr AttrName:
+#       matches: SomeOtherObject.SomeOtherObjectAttribute
+#   attr SomeAttribute:
+#     desc: This is a description of SomeAttribute
+#     type: string
+#     size: 60
+#     min: 5
+#   attr SomeRemoteRelation:
+#     desc: This is a description of SomeRemoteRelation
+#     foreign: YetAnotherObject
+#     quantity: 1
+#
+# object SomeOtherObject
+#   ...etc...
+#

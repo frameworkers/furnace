@@ -1,0 +1,37 @@
+Frameworkers.org - Foundation
+May 22 2008
+
+
+FObject Class
+------------------------
+
+The FObject class is a PHP representation of a model object.
+
+Construction
+---------
+The constructor takes a single argument:
+1) $data [associative_array] : contains all of the data from the database
+for this object instance. data is initialized from the array. In the case
+of 
+
+Retrieval
+---------
+The ::Retrieve function is a static function that takes a single argument:
+1) $objId [integer] : the unique ID of this object in the database.
+The function queries the database and calls the object class constructor
+with the resultant data array.
+
+Creation
+---------
+The ::Create function is a static function that takes as its arguments
+exactly as many elements as are needed to create a unique entry in the 
+database. The entry is made and the objId of the entry is retrieved. The
+function then makes a call to the object class constructor with a 
+data array comprised of the original arguments + the objId.
+
+Saving
+---------
+Saving is done either in the set* function (with the bSaveImmediately flag
+set to TRUE) or in the save function itself. If the object has a valid
+objId, then save proceeds to issue UPDATE statements to the appropriate
+row in the database table. 
