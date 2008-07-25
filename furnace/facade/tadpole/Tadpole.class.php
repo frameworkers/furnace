@@ -39,6 +39,9 @@ class Tadpole {
 	public function register($key,$value) {
 		$this->page_data[$key] = $value;	
 	}
+	public function set($key,$value) {
+		$this->page_data[$key] = $value;	
+	}
 	
 	public function compile() {
 		$this->process($this->contents);
