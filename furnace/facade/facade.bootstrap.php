@@ -13,5 +13,6 @@
  require_once("tadpole/Tadpole.class.php");
  require_once("FPage.class.php");
  require_once("FPageModule.class.php");
+ require_once("FPageLayout.class.php");
  require_once("Entrance.class.php");
 ?>
