@@ -23,7 +23,7 @@ class Tadpole {
 	// The page contents
 	protected $contents;
 	
-	public function __construct($contents) {
+	public function __construct($contents='') {
 		$this->contents  = $contents;
 		$this->page_data = array();
 		$this->iter_data = array();
