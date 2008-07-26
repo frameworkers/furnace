@@ -11,6 +11,7 @@
  
  /* ENVIRONMENT SETUP ****************************************************/
  require_once("../../app/config/project.config.php");
+ require_once("../../app/config/database.config.php");
  set_include_path(get_include_path() . PATH_SEPARATOR 
  	. FProject::ROOT_DIRECTORY);
  	
@@ -47,4 +48,15 @@
  	die("unknown layout '{$layout}' specified."); 	
  }
  exit();
+ 
+ /* UTILITY FUNCTIONS ****************************************************/
+ 
+ // FUNCTION: _db()
+ //  Provides shorthand notation for accessing the database, and also
+ //  insulates against API changes that will probably come as a result
+ //  of a future need to support additional database connection mechanisms.
+ //
+ function _db() {
+ 	return FDatabase::singleton(FDatabaseConfig::DSN);
+ }
 ?>
