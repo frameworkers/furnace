@@ -15,12 +15,11 @@ class FAccountManager extends FAccount {
 		$q = "INSERT INTO `FAccount` "
 			."(`username`,`password`,`emailAddress`,`objectClass`,`objectId`) "
 			."VALUES ('{$un}','{$encrypted}','{$em}','{$class}','{$id}')"; 
-		$r = FDatabase::singleton(Config::PROJECT_DB_DSN)->exec($q);
+		$r = _db()->exec($q);
 		if (MDB2::isError($r)) {
 			FDatabaseErrorTranslator::translate($r->getCode(),$q);
 		}
-		return FDatabase::singleton(Config::PROJECT_DB_DSN)
-			->lastInsertID("FAccount","objId");
+		return _db()->lastInsertID("FAccount","objId");
 	}
 }
 ?>

@@ -83,7 +83,7 @@
  	
  	public function getCount() {
  		$q = "SELECT COUNT(*) FROM {$this->objectType} {$this->filter}";
- 		return FDatabase::singleton(Config::PROJECT_DB_DSN)->queryOne($q);
+ 		return _db()->queryOne($q);
  	}
  	
  	public function add($objId) {
@@ -103,7 +103,7 @@
  				: "'{$this->objectId}','{$objId}'"
  			);
  			$q .= ") ;";
- 			FDatabase::singleton(Config::PROJECT_DB_DSN)->exec($q);
+ 			_db()->exec($q);
  		}
  	}
  	
@@ -193,7 +193,7 @@
  	protected function get_case1(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter;
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->query($q);
+ 		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[$row[strtolower($k)]] = new $this->objectType($row);	
  		}
@@ -209,7 +209,7 @@
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter;
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->query($q);
+ 		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
  			$count=0;
@@ -224,7 +224,7 @@
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}`='{$u_v}' ";
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->queryRow($q);
+ 		$result = _db()->queryRow($q);
  		//while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  		//	$results[] = new $this->objectType($row);
  		//}
@@ -246,7 +246,7 @@
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter
  			."AND `{$k}`='{$u_v}' ";
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->queryRow($q);
+ 		$result = _db()->queryRow($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
  			$count=0;
@@ -261,7 +261,7 @@
  	protected function get_case7(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}` IN ('".implode("','",$u_v)."') ";	
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->query($q);
+ 		$result = _db()->query($q);
 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[$row[strtolower($k)]] = new $this->objectType($row);	
  		}
@@ -279,7 +279,7 @@
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter 
  			."AND `{$k}` IN ('".implode("','",$u_v)."') ";
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->query($q);
+ 		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
  			$count=0;
@@ -296,7 +296,7 @@
  		foreach ($u_v as $attr=>$val) {
  			$q .= "AND `{$attr}`='{$val}' ";
  		}
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->query($q);
+ 		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[$row[strtolower($k)]] = new $this->objectType($row);	
  		}
@@ -320,7 +320,7 @@
  		foreach ($u_v as $attr=>$val) {
  			$q .= "AND `{$attr}`='{$val}' ";
  		}
- 		$result = FDatabase::singleton(Config::PROJECT_DB_DSN)->query($q);
+ 		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
  			$count=0;

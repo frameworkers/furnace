@@ -222,23 +222,23 @@ class FAccount extends FBaseObject {
 			} else {
 				$q = "UPDATE `FAccount` SET `{$attribute}`='{$this->$attribute}' WHERE `objId`='{$this->objId}' ";
 			}
-			FDatabase::singleton(Config::PROJECT_DB_DSN)->exec($q);
+			_db()->exec($q);
 		}
 
 		public static function Create($username) {
 			$q = "INSERT INTO `FAccount` (`username`) VALUES ('{$username}')"; 
-			$r = FDatabase::singleton(Config::PROJECT_DB_DSN)->exec($q);
+			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
-			$objectId = FDatabase::singleton(Config::PROJECT_DB_DSN)->lastInsertID("FAccount","objId");
+			$objectId = _db()->lastInsertID("FAccount","objId");
 			$data = array("objId"=>$objectId,"username"=>$username);
 			return new FAccount($data);
 		}
 		public static function Retrieve($objId) {
-			FDatabase::singleton(Config::PROJECT_DB_DSN)->setFetchMode(MDB2_FETCHMODE_ASSOC);
+			_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);
 			$q = "SELECT * FROM `FAccount` WHERE `objId`='{$objId}' LIMIT 1 ";
-			$r = FDatabase::singleton(Config::PROJECT_DB_DSN)->queryRow($q);
+			$r = _db()->queryRow($q);
 			return new FAccount($r);
 		}
 	}
