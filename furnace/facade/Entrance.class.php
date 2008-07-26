@@ -80,20 +80,19 @@
 		// Save the raw REQUEST_URI
 		$this->requestURI =& $req_uri;
 		
-		/*
 		// Process subdirectory skips if required
-		$request = $req_uri;
+		$processedRequest = $req_uri;
 		if ($this->skip != '') {
 			if (strpos($req_uri,$this->skip) >0) {
 				echo (strpos($req_uri,$this->skip) == 0);
-				$request = substr($req_uri,
+				$processedRequest = substr($req_uri,
 					strpos($req_uri,$this->skip)+strlen($this->skip));
 			}
 		}
-		*/
+		
 		
 		// Grab the parameter string from the request
-		$this->stateParams = explode("/",trim($this->requestURI,"/"));
+		$this->stateParams = explode("/",trim($processedRequest,"/"));
 		// Extract the controller & view names
 		if (count($this->stateParams) == 1 && "" == $this->stateParams[0]) {
 			// Load the default controller with the default view
