@@ -148,7 +148,7 @@
 		$this->controller->setTemplate($templatePath);
 		// Invoke the method corresponding to the view name
 		if (is_callable(array($this->controller,$this->viewName))) {
-			call_user_func(
+			call_user_func_array(
 				array($this->controller,$this->viewName),
 				$this->viewArguments
 			);
