@@ -65,6 +65,10 @@
 	// in the controller
 	private $viewArguments;
 	
+	// Variable: templatePath
+	// The path to the requested view's template file
+	private $templatePath;
+	
 	public function __construct($controllerDir,$defaultControllerName,$skip='') {
 		// Assign local variables
 		$this->skip = $skip;
@@ -117,42 +121,62 @@
 	
 	public function validRequest($req) {
 		$this->state = $this->processRequestURI($req);
-		if (file_exists(
-			"{$this->controllerDirectory}/{$this->controllerClassName}.php")) {
+		// Check that the controller file exists
+		if (file_exists("{$this->controllerDirectory}/{$this->controllerClassName}.php")) {
+			// Require the controller file
+			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
+			//TODO: check that the class is defined within the file
+			// Create an instance of the controller
+			$this->controller = new $this->controllerClassName();
+			// Check that the appropriate function has been defined in the class
+			if (!is_callable(array($this->controller,$this->viewName))) {
+				$this->fatal(
+					"The function {$this->controllerClassName}::{$this->viewName} "
+					."has not been implemented yet."
+				);
+				return false;
+			}
+			// Check that the template file exists
+			$this->templatePath = $this->controllerDirectory
+				."/../views/"
+				.$this->controllerName
+				."/"
+				.$this->viewName
+				.".html";
+			if (!file_exists($this->templatePath)) {
+				$this->fatal(
+					"The view 'app/views/{$this->controllerName}/{$this->viewName}.html "
+					. "does not exist yet.");
+				return false;
+			}
+			// If everything above this passed, return true
 			return true;
 		} else {
+			$this->fatal(
+				"The controller file 'app/controllers/{$this->controllerClassName}.php' "
+				."does not exist yet.");
 			return false;
 		}
 	}
 	
 	public function dispatchRequest() {
-		require_once(
-			"{$this->controllerDirectory}/{$this->controllerClassName}.php");
-		// Determine what content was submitted (priority order: POST,GET)
-		$args = ((count($_POST) > 0) 
-			? $_POST
-			: ((count($_GET) > 0)
-				? $_GET
-				: array()
-			  )
+
+		// Handle any 'actions' before processing the view
+		for ($i = 0; $i < count($this->viewArguments) - 1; $i++) {
+			if ("actions" == $this->viewArguments[$i]) {
+				$actionName = "_{$this->viewArguments[$i+1]}";
+				call_user_func(array($this->controller,"doAction"),$actionName);
+				break;
+			}
+		}	
+		
+		// Process the view
+		$this->controller->setTemplate($this->templatePath);
+		call_user_func_array(
+			array($this->controller,$this->viewName),
+			$this->viewArguments
 		);
-		// Create the controller, passing any submitted data
-		$this->controller = new $this->controllerClassName($args);
-		// Set the template file for the controller 
-		$templatePath = $this->controllerDirectory
-			."/../views/"
-			.$this->controllerName
-			."/"
-			.$this->viewName
-			.".html";
-		$this->controller->setTemplate($templatePath);
-		// Invoke the method corresponding to the view name
-		if (is_callable(array($this->controller,$this->viewName))) {
-			call_user_func_array(
-				array($this->controller,$this->viewName),
-				$this->viewArguments
-			);
-		}
+		
 		// Return the generated content
 		return $this->controller->render(false,false);
 	}	
@@ -170,6 +194,15 @@
 	}
 	public function getControllerClassName() {
 		return $this->controllerClassName;	
+	}
+	
+	private function fatal($message) {
+		if (FProject::DEBUG_LEVEL > 0) {
+			die($message);
+		} else {
+			// Should redirect to the 'invalid request' page
+			return false;
+		}
 	}
  }
 ?>
