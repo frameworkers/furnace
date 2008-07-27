@@ -36,6 +36,11 @@
 	// Array: javascripts
 	// An array of javascript declarations to add
 	protected $javascripts;
+	
+	// Array: messages
+	// An array of messages to be displayed on the page (usually
+	// as a result of some action)
+	protected $messages;
  	
  	// Variable: charset
  	// The page character set
@@ -59,30 +64,9 @@
  		$this->register("session",$_SESSION);
  		$this->langcode = FProject::DEFAULT_LANGUAGE;
  		$this->layout   = 'default';
- 	}
- 	
- 	protected function dispatch(&$args) {
- 		// Clean arguments
- 		
- 		// Search for 'do' and call matching user function
-		$count = 0;
-		foreach ($args as $arg=>$value) {
-			// Handles case where 'do' is sent via POST
-			if ("do" === $arg) {					
-				if (method_exists($this,$value)) {
-					$this->$value($args);
-				} 
-				break;
-			}
-			// Handles all other cases
-			if ("do" == $value) {
-				if (method_exists($this,$args[$count+1])) {
-					$this->$args[$count+1]($args);
-				} 
-				break;
-			}
-			$count++;
-		}
+ 		$this->javascripts = array();
+ 		$this->stylesheets = array();
+ 		$this->messages    = array();
  	}
 
 	protected function display() {
@@ -96,20 +80,12 @@
 		}
 	}
 
- 	public function render($bEcho = true,$bHeaderFooter = true) {
+ 	public function render($bEcho = true) {
  		$this->compile();
  		if ($bEcho) {
- 			if ($bHeaderFooter) {echo $this->buildHead();}
  			echo $this->getContents();
- 			if ($bHeaderFooter) {echo $this->buildFoot();}
  		} else {
- 			if ($bHeaderFooter) {
- 				return $this->buildHead()
- 					. $this->getContents()
- 					. $this->buildFoot();	
- 			} else {
- 				return $this->getContents();
- 			}
+ 			return $this->getContents();
  		}
  	}	
  	
@@ -125,58 +101,39 @@
  		return $this->title;	
  	}
  	
- 	public function setLanguage($code = "en-us") {
+ 	protected function setLanguage($code = "en-us") {
  		$this->langcode = $code;
  	}
  	
-	public function setTitle($value) {
+	protected function setTitle($value) {
 		$this->title = $value;
 	}
 	
-	public function addStylesheet($path) {
-		$this->stylesheets[] = 
-			"<link rel=\"stylesheet\" type=\"text/css\" href=\"{$path}\"/>";
+	protected function addStylesheet($path) {
+		$this->stylesheets[] = $path;
 	}
 	
-	public function addJavascript($path) {
-		$this->javascripts[] = 
-			"<script type=\"text/javascript\" src=\"{$path}\"></script>";
+	protected function addJavascript($path) {
+		$this->javascripts[] = $path;
 	}
 	
-	private function getStylesheets() {
-		return ((count($this->stylesheets)) > 0) 
-			? implode("\r\n\t",$this->stylesheets)
-			: '';
+	public function getStylesheets() {
+		return $this->stylesheets;
 	}
 	
-	private function getJavascripts() {
-		return ((count($this->javascripts)) > 0)
-			? implode("\r\n\t",$this->javascripts)
-			: '';
+	public function getJavascripts() {
+		return $this->javascripts;
 	}
 	
-	private function buildHead() {
-		echo <<<END
-<html>
-<head>
-	<title>{$this->title}</title>
-	<!-- CSS Stylesheets -->
-	{$this->getStylesheets()}
-	<!-- Javascript Includes -->
-	{$this->getJavascripts()}
-	
-</head>
-<body>
-
-END;
+	public function flash($message,$cssClass='success',$title='') {
+		$this->messages[] = array(
+			'message' => $message,
+			'cssClass'=> $cssClass,
+			'title'   => $title
+		);
 	}
-	
-	private function buildFoot() {
-		echo <<<END
-		
-</body>
-</html>	
-END;
+	public function getMessages() {
+		return $this->messages;
 	}
 
  	protected function requireLogin($failPage) {
