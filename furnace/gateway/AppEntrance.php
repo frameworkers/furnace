@@ -24,6 +24,12 @@
  set_include_path(get_include_path() . PATH_SEPARATOR 
  	. FProject::ROOT_DIRECTORY.'/furnace/facade');
  require_once('facade.bootstrap.php'); 
+  
+ /* CUSTOM CONTROLLER BASE CLASS SETUP ***********************************/
+ require_once('../../app/controllers/_base/Controller.class.php');
+ 
+ /* INCLUDE MODEL DATA ***************************************************/
+ @include_once("../../model/objects/compiled.php");
  
  /* INIT ENTRANCE ********************************************************/
  $entrance = new Entrance(
@@ -57,6 +63,6 @@
  //  of a future need to support additional database connection mechanisms.
  //
  function _db() {
- 	return FDatabase::singleton(FDatabaseConfig::DSN);
+ 	return FDatabase::singleton(FDatabaseConfig::$DSN);
  }
 ?>
