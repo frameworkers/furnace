@@ -56,20 +56,29 @@ class Tadpole {
 		// FIND_NEXT_TAG
 		$startMarkers = array(
 			"[tp.",				/* absolute var/block definitions */
-			"[@.",				/* relative var/block definitions */
+			"[@",				/* relative var/block definitions */
 			"[tp-if:");			/* control block definitions */
 		$endMarker    = "]";
 		
 		// maxReverseSearch: The number of characters to search
 		// backwards from the marker for an html tag before giving up
 		$maxReverseSearch = 200;
+		// selfTag: The tag to use when referring to an element that
+		// consists of a single tag (<img>,<input>,<link>,etc). It can
+		// be used in statements like [images.#;block=<<selfTag>>]. The
+		// default value is 'self'. An example:
+		// $images = array('img1.jpg','img2.jpg','img3.jpg');
+		// <div class="gallery"><img src="[tp.images.#;block=self][@]"/></div>
+		// Generates:
+		// <div class="gallery"><img src="img1.jpg"/><img src="img2.jpg"/>...
+		$selfTag = "self";
 				
 		$offset  = 0;
 		$current = 0;
 		$marker  = '';
 		
 		while (1) {
-			$offset = $current;
+			$offset = 0;	//Todo: This needs rework.
 			// DETERMINE POSITION OF NEXT MARKER
 			$nextTagCandidatePosition = strlen($contents);
 			$foundCandidate = false;
@@ -109,32 +118,31 @@ class Tadpole {
 				// DETERMINE HTML TAG
 				$tag = $commands['block'];
 				
-				
 				// EXTRACT AND STORE CONTENT
 				// -- determine content start
 				$contentStart = $current 
 					- ((min($current,$maxReverseSearch)) 
 					- strrpos(
 						substr($contents,$current-min($current,$maxReverseSearch),
-							min($current,$maxReverseSearch)),"<{$tag}"));
+							min($current,$maxReverseSearch)),(($tag == $selfTag) ? "<" : "<{$tag}")));
 	
 				// -- find a closing tag, taking possible nesting into account
-				$contentEnd = strpos($contents,"</{$tag}>",
+				$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
 					min(strlen($contents)-1,
 					$current + strlen($marker)));
 				
 				$tempStart = $current + strlen($marker);
 				while (false !== 
-					($nestedStart = strpos($contents,"<{$tag}",$tempStart)) 
+					($nestedStart = strpos($contents,(($tag == $selfTag) ? "<" : "<{$tag}"),$tempStart)) 
 						&& $nestedStart < $contentEnd) {
-					$contentEnd = strpos($contents,"</{$tag}>",
+					$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
 						$contentEnd+1);
 					$tempStart = $nestedStart + 1;
 				}
 				
 				// -- extract the content block
 				$content = substr($contents,$contentStart,
-					$contentEnd-$contentStart+(strlen($tag)+3));
+					$contentEnd-$contentStart+((($tag == $selfTag) ? 1 : strlen($tag)+3)));
 					
 				// -- store relevant information about the block
 				$originalContentLength = strlen($content);
@@ -170,7 +178,7 @@ class Tadpole {
 						substr($content,0,$relativeMarkerStart) 
 						. $iterContents;
 				}
-				
+
 				// REPLACE BLOCK DEFINITION WITH BLOCK CONTENTS
 				$contents = substr($contents,0,$contentStart)
 					. $blockContents
@@ -256,14 +264,17 @@ class Tadpole {
 				}	
 			} else {
 				// IS_VARIABLE
-	
 				// DETERMINE CORRESPONDING DATA
 				// if blockname begins with an @, use iter_data
 				// else use page_data
 				$id_parts = explode(".",$identifier);
 				if ("@" == $id_parts[0]) {
 					unset($id_parts[0]);
-					$data = $this->getRecursively($id_parts,$iter_data);
+					if (count($id_parts) == 0) {	// added to support [@] tags for block=self blocks
+						$data = $iter_data;
+					} else {
+						$data = $this->getRecursively($id_parts,$iter_data);
+					}
 				} else {
 					unset($id_parts[0]);
 					$data = $this->getRecursively($id_parts);
