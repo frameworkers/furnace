@@ -36,10 +36,10 @@ class Tadpole {
 		}
 	}
 	
-	public function register($key,$value) {
+	public function register($key,$value = true) {
 		$this->page_data[$key] = $value;	
 	}
-	public function set($key,$value) {
+	public function set($key,$value = true) {
 		$this->page_data[$key] = $value;	
 	}
 	
@@ -195,25 +195,25 @@ class Tadpole {
 					- ((min($current,$maxReverseSearch)) 
 					- strrpos(
 						substr($contents,$current-min($current,$maxReverseSearch),
-							min($current,$maxReverseSearch)),"<{$tag}"));
+							min($current,$maxReverseSearch)),(($tag == $selfTag) ? "<" : "<{$tag}")));
 	
 				// -- find a closing tag, taking possible nesting into account
-				$contentEnd = strpos($contents,"</{$tag}>",
+				$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
 					min(strlen($contents)-1,
 					$current + strlen($marker)));
 				
 				$tempStart = $current + strlen($marker);
 				while (false !== 
-					($nestedStart = strpos($contents,"<{$tag}",$tempStart)) 
+					($nestedStart = strpos($contents,(($tag == $selfTag) ? "<" : "<{$tag}"),$tempStart)) 
 						&& $nestedStart < $contentEnd) {
-					$contentEnd = strpos($contents,"</{$tag}>",
+					$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
 						$contentEnd+1);
 					$tempStart = $nestedStart + 1;
 				}
 				
 				// -- extract the content block
 				$content = substr($contents,$contentStart,
-					$contentEnd-$contentStart+(strlen($tag)+3));
+					$contentEnd-$contentStart+((($tag == $selfTag) ? 1 : strlen($tag)+3)));
 					
 				// -- store relevant information about the block
 				$originalContentLength = strlen($content);
@@ -228,8 +228,10 @@ class Tadpole {
 				
 				// DETERMINE CONDITION FORMAT AND COMPONENTS
 				list($var,$value) = explode("=",(substr($identifier,6)));
+				
 				$conditionParts = explode(".",$var);
 				$data_value     = false;
+				$bNegate        = false;
 				if (empty($value) || "true" == $value) {
 					$value = true;
 				} else if ("~" == $value || "false" == $value) {
