@@ -21,11 +21,9 @@
   */
 class FPageModule extends FPage {
 	
-	public function __construct($template,&$container,$state=array()) {
-		parent::__construct($template,$state);
-		
-		$this->page_data =&$container->page_data;
-		$this->langcode  = $container->langcode;
+	public function __construct($templatePath) {
+		parent::__construct();
+		parent::setTemplate($templatePath);
 	}
 
  	public function render($bEcho = false) {
