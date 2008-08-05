@@ -13,7 +13,7 @@
  require_once("../../app/config/project.config.php");
  require_once("../../app/config/database.config.php");
  set_include_path(get_include_path() . PATH_SEPARATOR 
- 	. FProject::ROOT_DIRECTORY);
+ 	. FProject::ROOT_DIRECTORY . "/app");
  	
  /* FOUNDATION SETUP *****************************************************/	
  set_include_path(get_include_path() . PATH_SEPARATOR 
