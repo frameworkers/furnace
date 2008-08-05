@@ -16,10 +16,33 @@ class FController extends FPage {
 		$this->form =& $_POST;
 	}
 	
-	public function doAction($action) {
+	public function doAction($action,$args=null) {
 		if (is_callable(array($this,$action))) {
-			call_user_func(array($this,$action));
+			call_user_func_array(array($this,$action),$args);
 		}
+	}
+	
+	protected function redirect($url,$flashMsg='',$cssClass='success') {
+		//TODO: write the flash message / css class pair to the session so that 
+		//      it can be displayed on the new page
+		header("Location: $url");
+		exit();
+	}
+	
+	protected function loadModule($uri) {
+		$path = FProject::ROOT_DIRECTORY . "/app/modles/" . str_replace(".","/",$uri) . '/module.php';
+		if (file_exists($path)) {
+			require_once($path);
+		} else {
+			$this->dieWithExplanation(
+				"The page requested a module ({$uri}) that does not exist or is not installed correctly."
+			);
+		}
+	} 
+	
+	private function dieWithExplanation($explanation) {
+		echo "<b>Furnace Error:</b> {$explanation}";
+		die();
 	}
 	
 }
