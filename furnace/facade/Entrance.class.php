@@ -165,7 +165,8 @@
 		for ($i = 0; $i < count($this->viewArguments) - 1; $i++) {
 			if ("actions" == $this->viewArguments[$i]) {
 				$actionName = "_{$this->viewArguments[$i+1]}";
-				call_user_func(array($this->controller,"doAction"),$actionName);
+				$actionArgs = @array_slice($this->viewArguments,$i+2);
+				call_user_func(array($this->controller,"doAction"),$actionName,$actionArgs);
 				break;
 			}
 		}	
@@ -184,6 +185,21 @@
 	public function dispatchError() {
 		// use $this->state to determine which error to return
 		
+	}
+	
+	public function handleRedirect($newController,$newView='index',$flashText='',$cssClass='') {
+		// Build new REQUEST_URI
+		if ($newView == 'index') {
+			$request = (($this->skip != '') ? "/{$this->skip}" : "") . "/{$newController}/";
+		} else {
+			$request = (($this->skip != '') ? "/{$this->skip}" : "") . "/{$newController}/{$newView}";
+		}
+		// Execute the new request
+		if ($this->validRequest($request)) {
+			$this->dispatchRequest($flashText,$cssClass);
+		} else {
+			die("Invalid redirect request made.");
+		}
 	}
 	
 	public function getController() {
