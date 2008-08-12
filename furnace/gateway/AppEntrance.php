@@ -8,12 +8,18 @@
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
+ $queries = array();
  
  /* ENVIRONMENT SETUP ****************************************************/
  require_once("../../app/config/project.config.php");
  require_once("../../app/config/database.config.php");
  set_include_path(get_include_path() . PATH_SEPARATOR 
  	. FProject::ROOT_DIRECTORY . "/app");
+ 	
+ /* BENCHMARKING SETUP ***************************************************/
+ if (FProject::DEBUG_LEVEL == 2) {
+ 	$bm_start= microtime(true);
+ }
  	
  /* FOUNDATION SETUP *****************************************************/	
  set_include_path(get_include_path() . PATH_SEPARATOR 
@@ -31,32 +37,101 @@
  /* INCLUDE MODEL DATA ***************************************************/
  @include_once("../../model/objects/compiled.php");
  
+ if (FProject::DEBUG_LEVEL == 2) {
+ 	$bm_setup_end = microtime(true);
+ }
  /* INIT ENTRANCE ********************************************************/
  $entrance = new Entrance(
  	FProject::ROOT_DIRECTORY."/app/controllers","_default");
- 	
- /* PROCESS REQUEST AND STORE CONTENTS ***********************************/
- if ($entrance->validRequest($_SERVER['REQUEST_URI'])) {
- 	$contents = $entrance->dispatchRequest();
- } else {
- 	die("Invalid request made.");
+ 
+ /* INIT REQUEST *********************************************************/
+ if (FProject::DEBUG_LEVEL == 2) {
+ 	$bm_requests = array();
+ 	$bm_current_request = null;
  }
  
- /* CREATE LAYOUT OBJECT, RENDER AND SEND CONTENT ************************/
- $layout     = $entrance->getController()->getLayout();
- $layoutPath = FProject::ROOT_DIRECTORY."/app/layouts/{$layout}.html";
- if (file_exists($layoutPath)) {
- 	$pageLayout = new FPageLayout($layoutPath);
- 	$pageLayout->register('pageTitle',$entrance->getController()->getTitle());
- 	$pageLayout->register('bodyContent',$contents);
- 	$pageLayout->render();
- } else {
- 	die("unknown layout '{$layout}' specified."); 	
+ _start_request($_SERVER['REQUEST_URI']);
+ 
+ if (FProject::DEBUG_LEVEL == 2) {
+ 	$bm_end = microtime(true);
+ }
+ 
+ /* BENCHMARKING REPORTING ***********************************************/
+ if (FProject::DEBUG_LEVEL == 2) {
+ 	$setupTime   = $bm_setup_end - $bm_start;
+ 	echo "Page loaded in " . ($bm_end - $bm_start) . " seconds\r\n";
+ 	echo "\r\n<table class=\"ff_benchmark\">\r\n";
+ 	echo "\r\n<caption>".count($GLOBALS['queries']) ." Queries:</caption>\r\n";
+ 	$queryTime = 0;
+ 	foreach ($GLOBALS['queries'] as $q) {
+ 		echo "<tr><td>{$q['sql']}</td><td>{$q['delay']}</td></tr>\r\n";	
+ 		$queryTime += $q['delay'];
+ 	}		
+ 	echo "</table>\r\n";
+ 	echo "Total Setup Time: {$setupTime}<br/>\r\n";
+ 	foreach ($GLOBALS['bm_requests'] as $r) {
+ 		echo "--- {$r['uri']} : " . ($r['stop'] - $r['start']) . "<br/>\r\n";	
+ 	}
+ 	echo "-- Total Query Delay: {$queryTime}<br/>\r\n";
  }
  exit();
  
- /* UTILITY FUNCTIONS ****************************************************/
+ /* GLOBAL UTILITY FUNCTIONS ****************************************************/
+ function _start_request($request_uri) {
+ 	/* BENCHMARKING ******************************************************/
+ 	if (FProject::DEBUG_LEVEL == 2) {
+ 		$bm_request_start = microtime(true);
+ 		if (is_array($GLOBALS['bm_current_request'])) {
+ 			$GLOBALS['bm_current_request']['stop'] = $bm_request_start;
+ 			$GLOBALS['bm_requests'][] = $GLOBALS['bm_current_request'];
+ 		}
+ 		$GLOBALS['bm_current_request'] = array('uri'=>$request_uri,'start'=>$bm_request_start,'stop'=>0);
+ 	}
+
+	/* PROCESS REQUEST AND STORE CONTENTS ********************************/
+	if ($GLOBALS['entrance']->validRequest($request_uri)) {
+		$contents = $GLOBALS['entrance']->dispatchRequest();
+	} else {
+		die("Invalid request made.");
+	}
+
+	/* CREATE LAYOUT OBJECT, RENDER AND SEND CONTENT *********************/
+	$layout     = $GLOBALS['entrance']->getController()->getLayout();
+	$layoutPath = FProject::ROOT_DIRECTORY."/app/layouts/{$layout}.html";
+	if (file_exists($layoutPath)) {
+		$pageLayout = new FPageLayout($layoutPath); 	
+		$pageLayout->register('PageTitleFromView',  $GLOBALS['entrance']->getController()->getTitle());
+		$pageLayout->register('JavascriptsFromView',$GLOBALS['entrance']->getController()->getJavascripts());
+		$pageLayout->register('StylesheetsFromView',$GLOBALS['entrance']->getController()->getStylesheets());
+		$pageLayout->register('MessagesFromView', _read_flashes());
+		$pageLayout->register('ContentFromView',$contents);
+		$pageLayout->render();
+	} else {
+		die("unknown layout '{$layout}' specified."); 	
+	}
+	
+	/* BENCHMARKING ******************************************************/
+	if (FProject::DEBUG_LEVEL == 2) {
+ 		$bm_request_stop = microtime(true);
+ 		if (is_array($GLOBALS['bm_current_request'])) {
+ 			$GLOBALS['bm_current_request']['stop'] = $bm_request_stop;
+ 			$GLOBALS['bm_requests'][] = $GLOBALS['bm_current_request'];
+ 		}
+ 		$GLOBALS['bm_current_request'] = null;
+ 	}
+ }
  
+ function _read_flashes($bReset = true) {
+ 	if (isset($_SESSION['flashes'])) {
+ 		$flashes = $_SESSION['flashes'];
+ 		if ($bReset) {
+ 			$_SESSION['flashes'] = array();	
+ 		}
+ 		return $flashes;
+ 	} else {
+ 		return array();
+ 	}	
+ }
  // FUNCTION: _db()
  //  Provides shorthand notation for accessing the database, and also
  //  insulates against API changes that will probably come as a result
