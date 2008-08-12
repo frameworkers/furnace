@@ -36,11 +36,6 @@
 	// Array: javascripts
 	// An array of javascript declarations to add
 	protected $javascripts;
-	
-	// Array: messages
-	// An array of messages to be displayed on the page (usually
-	// as a result of some action)
-	protected $messages;
  	
  	// Variable: charset
  	// The page character set
@@ -66,7 +61,6 @@
  		$this->layout   = 'default';
  		$this->javascripts = array();
  		$this->stylesheets = array();
- 		$this->messages    = array();
  	}
 
 	protected function display() {
@@ -126,14 +120,11 @@
 	}
 	
 	public function flash($message,$cssClass='success',$title='') {
-		$this->messages[] = array(
+		$_SESSION['flashes'][] = array(
 			'message' => $message,
 			'cssClass'=> $cssClass,
 			'title'   => $title
 		);
-	}
-	public function getMessages() {
-		return $this->messages;
 	}
 
  	protected function requireLogin($failPage) {
