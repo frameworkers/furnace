@@ -8,11 +8,17 @@
  * Copyright 2008 Frameworkers.org.
  * http://www.frameworkers.org
  */
- class _DefaultController extends FPage {
+ class _DefaultController extends Controller {
  	
  	public function index() {
  		
  		
+ 	}
+ 	
+ 	public function login() {
+ 		$this->loadModule('org.frameworkers.core.LoginBox');
+ 		$lb = new LoginBox('/user');
+ 		$this->set('loginbox',$lb->render());
  	}
  	
  }
