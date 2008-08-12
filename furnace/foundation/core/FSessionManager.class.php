@@ -56,6 +56,7 @@ class FSessionManager {
 		$_SESSION['_fwauth'] = $fws;
 		
 		$_SESSION['username'] = $data['username'];
+		$_SESSION['userid']   = $data['objectid'];
 	}
 	
 	private function uninitSession() {
