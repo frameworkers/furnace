@@ -1,0 +1,8 @@
+RewriteEngine On
+RewriteRule ^fuel/(.*) fuel/gateway/FuelEntrance.php [NC,L]
+#RewriteRule ^assets/(.*) app/assets/$1 [NC,L]
+#RewriteRule !^assets/(css|images|js)/.* furnace/gateway/AppEntrance.php [NC,L]
+
+RewriteRule !.*/assets/((css|images|js)/(.*))$ furnace/gateway/AppEntrance.php [NC,L]
+RewriteRule  .*/assets/((css|images|js)/(.*))$ app/assets/$2/$3 [NC,L]
+
