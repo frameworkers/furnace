@@ -1,5 +1,5 @@
 <?php
-	class LoginBox2 extends FPageModule {
+	class LoginBox extends FPageModule {
 		
 		// Variable: successURI
 		// The URI of the location to redirect to when a user has
