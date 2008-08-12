@@ -143,12 +143,7 @@
 				."/"
 				.$this->viewName
 				.".html";
-			if (!file_exists($this->templatePath)) {
-				$this->fatal(
-					"The view 'app/views/{$this->controllerName}/{$this->viewName}.html "
-					. "does not exist yet.");
-				return false;
-			}
+			
 			// If everything above this passed, return true
 			return true;
 		} else {
@@ -160,23 +155,18 @@
 	}
 	
 	public function dispatchRequest() {
-
-		// Handle any 'actions' before processing the view
-		for ($i = 0; $i < count($this->viewArguments) - 1; $i++) {
-			if ("actions" == $this->viewArguments[$i]) {
-				$actionName = "_{$this->viewArguments[$i+1]}";
-				$actionArgs = @array_slice($this->viewArguments,$i+2);
-				call_user_func(array($this->controller,"doAction"),$actionName,$actionArgs);
-				break;
-			}
-		}	
-		
 		// Process the view
-		$this->controller->setTemplate($this->templatePath);
 		call_user_func_array(
 			array($this->controller,$this->viewName),
 			$this->viewArguments
 		);
+		if (!file_exists($this->templatePath)) {
+			$this->fatal(
+				"The view 'app/views/{$this->controllerName}/{$this->viewName}.html "
+				. "does not exist yet.");
+			exit();
+		}
+		$this->controller->setTemplate($this->templatePath);
 		
 		// Return the generated content
 		return $this->controller->render(false,false);
