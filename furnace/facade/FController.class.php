@@ -22,15 +22,13 @@ class FController extends FPage {
 		}
 	}
 	
-	protected function redirect($url,$flashMsg='',$cssClass='success') {
-		//TODO: write the flash message / css class pair to the session so that 
-		//      it can be displayed on the new page
-		header("Location: $url");
+	protected function redirect($url) {
+		header("Location: {$url}");
 		exit();
 	}
 	
 	protected function loadModule($uri) {
-		$path = FProject::ROOT_DIRECTORY . "/app/modles/" . str_replace(".","/",$uri) . '/module.php';
+		$path = FProject::ROOT_DIRECTORY . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
