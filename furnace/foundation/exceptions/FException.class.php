@@ -20,7 +20,7 @@ class FException extends Exception {
     public function __toString() {
     	return "<b>". __CLASS__ . "</b>" 
     		. " [{$this->code}] : {$this->message}\n"
-    		. ((Config::PROJECT_ENV_DEBUG)
+    		. ((FProject::DEBUG_LEVEL > 0)
     			? "<pre>{$this->getTraceAsString()}</pre>\n"
     			: "<pre>Please contact the site administrator regarding this error.</pre>"
     		);	
@@ -40,7 +40,7 @@ class FDatabaseException extends FException {
 			(($message == '')
 				? "Unknown database exception"
 				: $message)
-			. ((Config::PROJECT_ENV_DEBUG)
+			. ((FProject::DEBUG_LEVEL > 0)
 				? "\r\n<br/>Last query was: {$query}\r\n<br/>"
 				: ""),
 			100);	
