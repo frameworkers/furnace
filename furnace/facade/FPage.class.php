@@ -127,7 +127,7 @@
 		);
 	}
 
- 	protected function requireLogin($failPage) {
+ 	protected function requireLogin($failPage='/') {
 		if (false == ($user = FSessionManager::checkLogin())) {
 			if ("" == $failPage) {
 				return false;
