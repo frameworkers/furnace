@@ -331,7 +331,17 @@
  		}
  		return $results;
  	}
- 	
+	
+	public function advancedGet($filter) {
+ 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " AND " . $filter;
+ 		$result = _db()->query($q);
+ 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+ 			$results[] = new $this->objectType($row);
+ 		}	
+ 		return (count($results) >0)
+ 			? $results
+ 			: false;
+ 	} 	
  	
  	protected abstract function destroyObject($objId);
  	
