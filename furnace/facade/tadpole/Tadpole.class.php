@@ -169,14 +169,20 @@ class Tadpole {
 					unset($id_parts[$id_parts_size-1]);	// drop the '#'
 					$data = $this->getRecursively($id_parts);
 				}
-	
-				// FOREACH DATA, RECURSE & APPEND CONTENT
-				foreach ($data as $iteration) {
-					$iterContents  = $subcontent;
-					$this->process($iterContents,$iteration);
-					$blockContents .= 
-						substr($content,0,$relativeMarkerStart) 
-						. $iterContents;
+				
+				if (count($data) == 0) {
+					// IF NO DATA, DISPLAY EMPTY
+					$blockContents = ((isset($commands['empty'])) ? $commands['empty'] : '');
+					
+				} else {
+					// FOREACH DATA, RECURSE & APPEND CONTENT
+					foreach ($data as $iteration) {
+						$iterContents  = $subcontent;
+						$this->process($iterContents,$iteration);
+						$blockContents .= 
+							substr($content,0,$relativeMarkerStart) 
+							. $iterContents;
+					}
 				}
 
 				// REPLACE BLOCK DEFINITION WITH BLOCK CONTENTS
