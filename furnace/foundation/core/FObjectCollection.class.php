@@ -97,11 +97,11 @@
  		$results = array();
  		
  		// Return an array of objects according to the pagination details given
-		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ";
+		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($per_page,$offset);
 		$result = _db()->query($q);
 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
- 			$results[$row[strtolower($key)]] = new $this->objectType($row);	
+ 			$results[/*$row[strtolower($key)]*/] = new $this->objectType($row);	
  		}
  		
  		// Set Pagination Data and Stats
@@ -236,7 +236,7 @@
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
- 			$results[$row[strtolower($k)]] = new $this->objectType($row);	
+ 			$results[] = new $this->objectType($row);	
  		}
  		return $results;
  	}
@@ -304,7 +304,7 @@
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");	
  		$result = _db()->query($q);
 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
- 			$results[$row[strtolower($k)]] = new $this->objectType($row);	
+ 			$results[] = new $this->objectType($row);	
  		}
  		return $results;
  	}
@@ -340,7 +340,7 @@
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
- 			$results[$row[strtolower($k)]] = new $this->objectType($row);	
+ 			$results[] = new $this->objectType($row);	
  		}
  		return $results; 	
  	}
@@ -376,11 +376,11 @@
  	}
  	
  	public function setCustomFilter($filter) {
- 		$this->filter .= " AND {$filter} ";
+ 		$this->filter .= " AND ( {$filter} ) ";
  	}
  	
  	public function advancedGet($filter) {
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND" . $filter;
+ 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " AND (" . $filter . " ) ";
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);
