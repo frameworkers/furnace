@@ -38,6 +38,10 @@
  	// The table to consult when doing MM lookups
  	private $lookupTable = '';
  	
+ 	// Variable: paginationData
+	// An array containing information required to construct pagination links
+ 	private $paginationData = array();
+ 	
  	// Variable: filter
  	// The primary selection criteria determining group membership
  	private $filter = '';
@@ -84,6 +88,43 @@
  	public function getCount() {
  		$q = "SELECT COUNT(*) FROM {$this->objectType} {$this->filter}";
  		return _db()->queryOne($q);
+ 	}
+
+ 	public function getPage($page_number=1,$per_page = 15,$key='objId',$sortOrder="default") { 		
+ 		$total   = $this->getCount();
+ 		$pages   = ceil($total/$per_page);
+ 		$offset  = ($page_number-1) * $per_page;
+ 		$results = array();
+ 		
+ 		// Return an array of objects according to the pagination details given
+		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ";
+		_db()->setLimit($per_page,$offset);
+		$result = _db()->query($q);
+		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+ 			$results[$row[strtolower($key)]] = new $this->objectType($row);	
+ 		}
+ 		
+ 		// Set Pagination Data and Stats
+		for ($i=1;$i<=$pages;$i++) {
+			$this->paginationData['data'][] = (($i == $page_number)
+				? array ("pageNumber"=>$i)
+				: array ("pageNumber"=>$i,
+						 "suffix"=>"?page={$i}&sortBy={$key}&sortOrder={$sortOrder}"
+					));
+		}
+		$this->paginationData['stats'] = array(
+			"start" => $offset + 1,
+			"end"   => min($total,$offset + $per_page),
+			"total" => $total,
+			"currentPage" => $page_number,
+			"totalPages"  => $pages
+		);
+ 		
+ 		return $results;
+ 	}
+ 	
+ 	public function getPaginationData() {
+ 		return $this->paginationData;
  	}
  	
  	public function add($objId) {
@@ -192,7 +233,7 @@
  	
  	protected function get_case1(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter;
+ 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[$row[strtolower($k)]] = new $this->objectType($row);	
@@ -208,7 +249,7 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter;
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -223,7 +264,7 @@
  	
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}`='{$u_v}' ";
+ 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->queryRow($q);
  		//while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  		//	$results[] = new $this->objectType($row);
@@ -245,7 +286,7 @@
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter
- 			."AND `{$k}`='{$u_v}' ";
+ 			."AND `{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->queryRow($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -260,7 +301,7 @@
  	
  	protected function get_case7(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}` IN ('".implode("','",$u_v)."') ";	
+ 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");	
  		$result = _db()->query($q);
 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[$row[strtolower($k)]] = new $this->objectType($row);	
@@ -278,7 +319,7 @@
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter 
- 			."AND `{$k}` IN ('".implode("','",$u_v)."') ";
+ 			."AND `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -296,6 +337,7 @@
  		foreach ($u_v as $attr=>$val) {
  			$q .= "AND `{$attr}`='{$val}' ";
  		}
+ 		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[$row[strtolower($k)]] = new $this->objectType($row);	
@@ -320,6 +362,7 @@
  		foreach ($u_v as $attr=>$val) {
  			$q .= "AND `{$attr}`='{$val}' ";
  		}
+ 		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -331,9 +374,13 @@
  		}
  		return $results;
  	}
-	
-	public function advancedGet($filter) {
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " AND " . $filter;
+ 	
+ 	public function setCustomFilter($filter) {
+ 		$this->filter .= " AND {$filter} ";
+ 	}
+ 	
+ 	public function advancedGet($filter) {
+ 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND" . $filter;
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);
@@ -341,7 +388,8 @@
  		return (count($results) >0)
  			? $results
  			: false;
- 	} 	
+ 	}
+ 	
  	
  	protected abstract function destroyObject($objId);
  	
