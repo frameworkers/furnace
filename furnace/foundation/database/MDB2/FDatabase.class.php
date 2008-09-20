@@ -65,6 +65,25 @@
 		return $r;		
 	}
 	
+	public function queryOne($q) {
+		if (FProject::DEBUG_LEVEL == 2) {
+			$bm_start = microtime(true);	
+		}	
+		$r = $this->mdb2->queryOne($q);
+		if (FProject::DEBUG_LEVEL == 2) {
+			$bm_end   = microtime(true);
+			$GLOBALS['queries'][] = array( 
+				'sql'   => $q,
+				'delay' => $bm_end - $bm_start
+			);	
+		}
+		return $r;
+	}
+	
+	public function setLimit($count,$offset) {
+		$this->mdb2->setLimit($count,$offset);
+	}
+	
 	public function exec($q) {
 		if (FProject::DEBUG_LEVEL == 2) {
 			$bm_start = microtime(true);	
