@@ -57,7 +57,7 @@ class Tadpole {
 		$startMarkers = array(
 			"[tp.",				/* absolute var/block definitions */
 			"[@",				/* relative var/block definitions */
-			"[tp-if:");			/* control block definitions */
+			"[tp-if:");			/* conditional var/block definitions */
 		$endMarker    = "]";
 		
 		// maxReverseSearch: The number of characters to search
@@ -107,8 +107,13 @@ class Tadpole {
 			$commands = array();
 			$raw = explode(";",$commandstr);
 			foreach ($raw as $r) {
-				list($k,$v) = explode("=",$r);
-				$commands[$k] = $v;
+				if (0 != ($start = strpos($r,"=`"))) {
+					$commands[substr($r,0,$start)] = rtrim(substr($r,$start+2),"`");
+					//die("command: " . substr($r,0,$start) . " value: " . rtrim(substr($r,$start+2),"`"));
+				} else {
+					list($k,$v) = explode("=",$r);
+					$commands[$k] = $v;
+				}
 			}
 	
 			
@@ -171,9 +176,7 @@ class Tadpole {
 				}
 				
 				if (count($data) == 0) {
-					// IF NO DATA, DISPLAY EMPTY
-					$blockContents = ((isset($commands['empty'])) ? $commands['empty'] : '');
-					
+					$blockContents = ((isset($commands['ifempty'])) ? $commands['ifempty'] : '');
 				} else {
 					// FOREACH DATA, RECURSE & APPEND CONTENT
 					foreach ($data as $iteration) {
@@ -190,86 +193,127 @@ class Tadpole {
 					. $blockContents
 					. $coda;
 			} else if ($candidateMarker == "[tp-if:") {
-				// IS_CONTROL_BLOCK
-				
-				// DETERMINE HTML TAG
-				$tag = $commands['block'];
+				// IS_CONDITIONAL
+				if (isset($commands['block'])) {
+					/* special processing for conditional block */
+					// DETERMINE HTML TAG
+					$tag = $commands['block'];
 
-				// GET THE BLOCK CONTENTS
-				// -- determine content start
-				$contentStart = $current 
-					- ((min($current,$maxReverseSearch)) 
-					- strrpos(
-						substr($contents,$current-min($current,$maxReverseSearch),
-							min($current,$maxReverseSearch)),(($tag == $selfTag) ? "<" : "<{$tag}")));
+					// GET THE BLOCK CONTENTS
+					// -- determine content start
+					$contentStart = $current 
+						- ((min($current,$maxReverseSearch)) 
+						- strrpos(
+							substr($contents,$current-min($current,$maxReverseSearch),
+								min($current,$maxReverseSearch)),(($tag == $selfTag) ? "<" : "<{$tag}")));
 	
-				// -- find a closing tag, taking possible nesting into account
-				$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
-					min(strlen($contents)-1,
-					$current + strlen($marker)));
-				
-				$tempStart = $current + strlen($marker);
-				while (false !== 
-					($nestedStart = strpos($contents,(($tag == $selfTag) ? "<" : "<{$tag}"),$tempStart)) 
-						&& $nestedStart < $contentEnd) {
+					// -- find a closing tag, taking possible nesting into account
 					$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
-						$contentEnd+1);
-					$tempStart = $nestedStart + 1;
+						min(strlen($contents)-1,
+						$current + strlen($marker)));
+				
+					$tempStart = $current + strlen($marker);
+					while (false !== 
+						($nestedStart = strpos($contents,(($tag == $selfTag) ? "<" : "<{$tag}"),$tempStart)) 
+							&& $nestedStart < $contentEnd) {
+						$contentEnd = strpos($contents,(($tag == $selfTag) ? ">" : "</{$tag}>"),
+							$contentEnd+1);
+						$tempStart = $nestedStart + 1;
+					}
+				
+					// -- extract the content block
+					$content = substr($contents,$contentStart,
+						$contentEnd-$contentStart+((($tag == $selfTag) ? 1 : strlen($tag)+3)));
+						
+					// -- store relevant information about the block
+					$originalContentLength = strlen($content);
+					$coda = substr($contents,$contentStart+$originalContentLength);
+					
+					// -- compute the position of the marker within the block content
+					$relativeMarkerStart = strpos($content,$marker);
+					$relativeMarkerEnd   = $relativeMarkerStart + strlen($marker);
+				
+					// -- compute the portion of the content that will be checked
+					$subcontent = substr($content,$relativeMarkerEnd);
+					
 				}
 				
-				// -- extract the content block
-				$content = substr($contents,$contentStart,
-					$contentEnd-$contentStart+((($tag == $selfTag) ? 1 : strlen($tag)+3)));
-					
-				// -- store relevant information about the block
-				$originalContentLength = strlen($content);
-				$coda = substr($contents,$contentStart+$originalContentLength);
-				
-				// -- compute the position of the marker within the block content
-				$relativeMarkerStart = strpos($content,$marker);
-				$relativeMarkerEnd   = $relativeMarkerStart + strlen($marker);
-				
-				// -- compute the portion of the content that will be checked
-				$subcontent = substr($content,$relativeMarkerEnd);
-				
 				// DETERMINE CONDITION FORMAT AND COMPONENTS
+				$bNegate = false;
 				list($var,$value) = explode("=",(substr($identifier,6)));
 				
-				$conditionParts = explode(".",$var);
-				$data_value     = false;
-				$bNegate        = false;
-				if (empty($value) || "true" == $value) {
-					$value = true;
-				} else if ("~" == $value || "false" == $value) {
-					$value = false;
-				} else if ("~" == substr($value,0,1)) {
-					// NEGATION
+				// -- check for rhs negation
+				if ("~" == substr($value,0,1)) {
 					$bNegate = true;
-					$value = substr($value,1);
-				} 
+					$value   = substr($value,1);
+				}
 				
-				// RETRIEVE RELEVANT DATA
-				if ("tp" == $conditionParts[0]){
-					unset($conditionParts[0]);
-					$data_value = $this->getRecursively($conditionParts);
-				} else if ("@" == $conditionParts[0]) {
-					unset($conditionParts[0]);
-					$data_value = $this->getRecursively($conditionParts,$iter_data);
+				// -- break out the variables, if necessary
+				$lhsParts = explode(".",$var);
+				$rhsParts = explode(".",$value);
+				
+				$lhs_value      = false;
+				$rhs_value      = false;
+				
+				// -- Process the left hand side variable (tp,@)
+				if ("tp" == $lhsParts[0]){
+					unset($lhsParts[0]);
+					$lhs_value = $this->getRecursively($lhsParts);
+				} else if ("@" == $lhsParts[0]) {
+					unset($lhsParts[0]);
+					$lhs_value = $this->getRecursively($lhsParts,$iter_data);
+				}
+				
+				// -- Process the right hand side variable (tp,@,~,true,false,_scalar_)
+				if (count($rhsParts) > 1 && ("tp" == $rhsParts[0] || "@" == $rhsParts[0])) {
+					if ("tp" == $rhsParts[0]){
+						unset($rhsParts[0]);
+						$rhs_value = $this->getRecursively($rhsParts);
+					} else if ("@" == $rhsParts[0]) {
+						unset($rhsParts[0]);
+						$rhs_value = $this->getRecursively($rhsParts,$iter_data);
+					}
+				} else {
+					if (empty($value) || "true" == $value) {
+						$rhs_value = true;
+					} else if ("false" == $value) {
+						$rhs_value = false;
+					} else {
+						$rhs_value = $value;
+					}
 				}
 
 				// EVALUATE CONDITION
-				if ((!$bNegate && ($value == $data_value)) || ($bNegate && ($value != $data_value))) {
-					// IF CONDITION HOLDS, REPLACE TAG with ""
-					$before = substr($contents,0,$current);
-					$after  = substr($contents,$current+strlen($marker));
-					$contents = $before.$after;
+				if ((!$bNegate && ($lhs_value == $rhs_value)) || ($bNegate && ($lhs_value != $rhs_value))) {
+					// IF CONDITION HOLDS, REPLACE TAG with content 
+					if (isset($commands['block'])) {
+						/* conditional blocks */
+						$before = substr($contents,0,$current);
+						$after  = substr($contents,$current+strlen($marker));
+						// Display the block, minus the tadpole tag
+						$contents = $before.$after;	
+					} else {
+						/* conditional variables */
+						$before = substr($contents,0,$current);
+						$after  = substr($contents,$current+strlen($marker));
+						$contents = $before.$commands['content'].$after;
+					}
 				} else {
-					// IF CONDITION FAILS, REPLACE BLOCK with ""
-					$before = substr($contents,0,$contentStart);
-					$after  = substr($contents,
-						$contentStart + strlen($content));
-					$contents = $before.$after;
-				}	
+					// IF CONDITION FAILS, REPLACE TAG with ""
+					if (isset($commands['block'])) {
+						/* conditional blocks */
+						$before = substr($contents,0,$contentStart);
+						$after  = substr($contents,$contentStart + strlen($content));
+					} else {
+						/* conditional variables */
+						$before = substr($contents,0,$current);
+						$after  = substr($contents,$current+strlen($marker));	
+					}
+					$contents = $before . (empty($commands['else']) ? '' : $commands['else']) . $after;
+				}
+				
+				
+				
 			} else {
 				// IS_VARIABLE
 				// DETERMINE CORRESPONDING DATA
@@ -293,9 +337,15 @@ class Tadpole {
 					$data = $commands['ifempty'];
 				}
 				
+				
 				// USE DEFAULT VALUE FOR DATES, IF SPECIFIED
-				if ("0000-00-00" == $data && "" != $commands['ifempty']) {
-					$data = $commands['ifempty'];
+				if ("0000-00-00" == $data && "" != $commands['ifnever']) {
+					$data = $commands['ifnever'];
+				}
+				
+				// USE DEFAULT VALUE FOR 0-valued NUMBERS, IF SPECIFIED 
+				if ("0" == $data && "" != $commands['ifzero']) {
+					$data = $commands['ifzero'];
 				}
 				
 				if (is_array($data)) {
