@@ -11,8 +11,7 @@
  class _DefaultController extends Controller {
  	
  	public function index() {
- 		
- 		
+ 		$this->addStylesheet('furnace');
  	}
  	
  	public function login() {
