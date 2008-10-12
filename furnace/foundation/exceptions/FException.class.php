@@ -8,6 +8,13 @@
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
+ 
+/*
+ * Class: FException
+ * 
+ * Provides a wrapper around the built in Exception classes
+ * to support object-oriented exception handling
+ */
 class FException extends Exception {
 
     public function __construct($message,$code = 0) {
@@ -32,9 +39,30 @@ class FException extends Exception {
  * 
  * 1xx = Database (query) related exceptions 
  */
-
+ 
+/*
+ * Class: FDatabaseException
+ * 
+ * Extends <FException> to support object-oriented exception handling
+ * of database related errors.
+ * 
+ * Extends: <FException>
+ */
 class FDatabaseException extends FException {
 
+	/*
+	 * Function: __construct
+	 * 
+	 * Overrides the FException constructor, providing specific information
+	 * about the database exception that occurred, including query details.
+	 * 
+	 * Parameters:
+	 * 
+	 *  message - The message to display
+	 *  query   - The query which has caused the exception
+	 * 
+	 * 
+	 */
 	public function __construct($message='',$query='') {
 		parent::__construct(
 			(($message == '')
@@ -47,6 +75,14 @@ class FDatabaseException extends FException {
 	}	
 }
 
+/*
+ * Class: FUniqueValueException
+ * 
+ * Extends <FDatabaseException> to support object-oriented exception handling
+ * of database related errors related to unique value violations.
+ * 
+ * Extends: <FDatabaseException>
+ */
 class FUniqueValueException extends FDatabaseException {
 
 	public function __construct($query='') {
@@ -56,6 +92,15 @@ class FUniqueValueException extends FDatabaseException {
 	}	
 }
 
+/*
+ * Class: FDatabaseErrorTranslator
+ * 
+ * Provides a mapping between PEAR MDB2 error codes and defined 
+ * <FException> classes. This effectively provides an object-oriented
+ * wrapper around the MDB2 error codes
+ * 
+ * Extends: <FException>
+ */
 class FDatabaseErrorTranslator {
 
 	public static function translate($code,$query='') {
