@@ -57,7 +57,8 @@ class Tadpole {
 		$startMarkers = array(
 			"[tp.",				/* absolute var/block definitions */
 			"[@",				/* relative var/block definitions */
-			"[tp-if:");			/* conditional var/block definitions */
+			"[tp-if:",			/* conditional var/block definitions */
+			"[!");				/* super tags */
 		$endMarker    = "]";
 		
 		// maxReverseSearch: The number of characters to search
@@ -327,6 +328,12 @@ class Tadpole {
 					} else {
 						$data = $this->getRecursively($id_parts,$iter_data);
 					}
+				} else if ("!" == $id_parts[0]) {
+					if ("date" == $id_parts[1]) {
+						$data = date(((isset($commands['format'])?$commands['format']:'Y-m-d')),mktime());	
+					} else {
+						die("Unsupported super tag");
+					}	
 				} else {
 					unset($id_parts[0]);
 					$data = $this->getRecursively($id_parts);
@@ -348,8 +355,22 @@ class Tadpole {
 					$data = $commands['ifzero'];
 				}
 				
-				if (is_array($data)) {
+				// GLUE DATA TOGETHER, IF REQUIRED
+				if (is_array($data) && isset($commands['glue'])) {
 					$data = implode($commands['glue'],$data);
+				}
+				
+				// MAP DATA TO VALUES, IF SPECIFIED
+				// mapped values look like:
+				// ;map=0|Zero,1|One,2|Something Else,...
+				if (isset($commands['map'])) {
+					$opts = explode(",",$commands['map']);
+					foreach($opts as $o) {
+						if ($data == substr($o,0,strpos($o,"|"))) {
+							$data = trim(substr($o,strpos($o,"|")),"|");
+							break;
+						}
+					}	
 				}
 				
 				// REPLACE TAG WITH DATA
