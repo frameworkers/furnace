@@ -8,13 +8,17 @@
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
+
+ 
+ /* ENVIRONMENT SETUP ****************************************************/
+ // Create an array to store database queries (for benchmarking).
  $queries = array();
  // Compute the project root directory based on the location of this file.
  $rootdir = dirname(dirname(dirname(__FILE__)));
- 
- /* ENVIRONMENT SETUP ****************************************************/
+ // Include the /app directory in the path
  set_include_path(get_include_path() . PATH_SEPARATOR 
  	. $rootdir . "/app");
+ // Require the configuration files
  require_once("config/project.config.php");
  require_once("config/database.config.php");
  	
@@ -80,6 +84,8 @@
  
  /* GLOBAL UTILITY FUNCTIONS ****************************************************/
  function _start_request($request_uri) {
+ 	global $rootdir;
+ 	
  	/* BENCHMARKING ******************************************************/
  	if (FProject::DEBUG_LEVEL == 2) {
  		$bm_request_start = microtime(true);
