@@ -9,12 +9,14 @@
  * http://www.frameworkers.org
  */
  $queries = array();
+ // Compute the project root directory based on the location of this file.
+ $rootdir = dirname(dirname(dirname(__FILE__)));
  
  /* ENVIRONMENT SETUP ****************************************************/
- require_once("../../app/config/project.config.php");
- require_once("../../app/config/database.config.php");
  set_include_path(get_include_path() . PATH_SEPARATOR 
- 	. FProject::ROOT_DIRECTORY . "/app");
+ 	. $rootdir . "/app");
+ require_once("config/project.config.php");
+ require_once("config/database.config.php");
  	
  /* BENCHMARKING SETUP ***************************************************/
  if (FProject::DEBUG_LEVEL == 2) {
@@ -23,12 +25,12 @@
  	
  /* FOUNDATION SETUP *****************************************************/	
  set_include_path(get_include_path() . PATH_SEPARATOR 
- 	. FProject::ROOT_DIRECTORY.'/furnace/foundation');
+ 	. $rootdir.'/furnace/foundation');
  require_once('foundation.bootstrap.php');
  
  /* FACADE SETUP *********************************************************/	
  set_include_path(get_include_path() . PATH_SEPARATOR 
- 	. FProject::ROOT_DIRECTORY.'/furnace/facade');
+ 	. $rootdir.'/furnace/facade');
  require_once('facade.bootstrap.php'); 
   
  /* CUSTOM CONTROLLER BASE CLASS SETUP ***********************************/
@@ -42,7 +44,7 @@
  }
  /* INIT ENTRANCE ********************************************************/
  $entrance = new Entrance(
- 	FProject::ROOT_DIRECTORY."/app/controllers","_default");
+ 	$rootdir."/app/controllers","_default");
  
  /* INIT REQUEST *********************************************************/
  if (FProject::DEBUG_LEVEL == 2) {
@@ -97,7 +99,7 @@
 
 	/* CREATE LAYOUT OBJECT, RENDER AND SEND CONTENT *********************/
 	$layout     = $GLOBALS['entrance']->getController()->getLayout();
-	$layoutPath = FProject::ROOT_DIRECTORY."/app/layouts/{$layout}.html";
+	$layoutPath = $rootdir."/app/layouts/{$layout}.html";
 	if (file_exists($layoutPath)) {
 		$pageLayout = new FPageLayout($layoutPath); 	
 		$pageLayout->register('PageTitleFromView',  $GLOBALS['entrance']->getController()->getTitle());

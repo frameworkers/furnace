@@ -12,6 +12,8 @@
  	
  	public function index() {
  		$this->addStylesheet('furnace');
+ 		$this->set('buildinfo',file_get_contents("../../furnace/VERSION"));
+ 		$this->set('rootdir',$GLOBALS['rootdir']);
  	}
  	
  	public function login() {

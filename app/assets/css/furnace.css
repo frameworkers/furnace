@@ -1,9 +1,14 @@
 @CHARSET "UTF-8";
 
-body {
-	font-family:verdana,sans-serif;	
-	font-size:12px;
-}
+body,html {
+  	width:800px;
+  	margin-left:auto;
+  	margin-right:auto;
+  	background-color:#eee;
+  	padding:5px;
+  	font-family:verdana,sans-serif;
+  	font-size:12px;
+  }
 
 div.ff-banner {
 	border:solid 1px #888;
@@ -16,4 +21,51 @@ div.ff-banner {
 h3.ff {
 	font-weight:normal;
 	border-bottom:dotted 1px #ccc;
+}
+
+
+code {
+	display:block;
+	border:solid 2px #e0e0e0;
+	color:#333;
+	padding:8px;
+	background-color:#fafafa;
+	margin-top:3px;
+}
+
+div.page {
+	border-left:solid 2px #ccc;
+	border-bottom:solid 2px #ccc;
+	border-right:solid 1px #ddd;
+	border-top:dotted 1px #ccc;
+	padding:15px;
+}
+
+div.pageFooter {
+	font-size:90%;
+	border-top:solid 1px #ccc;
+	color:#777;
+	margin-top:8px;
+	padding-top:2px;
+	margin-bottom:-12px;
+}
+
+div.pageFooter a {
+	color:#444;
+	text-decoration:none;
+	
+}
+div.pageFooter a:hover {
+	text-decoration:underline;
+}
+
+h2.ff {
+	font-weight:normal;
+	font-size:21px;
+	background-color:#bdb;
+	padding:5px;
+	margin-top:0px;
+	margin-bottom:5px;
+	color:#353;
+	border-bottom:solid 2px #9b9;
 }
