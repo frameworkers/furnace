@@ -1,0 +1,17 @@
+# Routes.yml
+#
+# Mappings between URLs and Controller/View pairs
+# NOTE: Order is important! The Router runs top to bottom, 
+# stopping after it has found a route that matches.
+
+default:
+  url: /:controller/:view/*
+
+default_index:
+  url: /:controller/*
+  map: {view: index}
+
+homepage:
+  url: /
+  map: {controller: _default, view: index}
+

@@ -94,29 +94,14 @@
 			}
 		}
 		
+		// Route the current request to a controller/view pair
+		$route = FRouter::Route($processedRequest);
 		
-		// Grab the parameter string from the request
-		$this->stateParams = explode("/",trim($processedRequest,"/"));
-		// Extract the controller & view names
-		if (count($this->stateParams) == 1 && "" == $this->stateParams[0]) {
-			// Load the default controller with the default view
-			$this->controllerName = $this->defaultControllerName;
-			$this->viewName       = FProject::DEFAULT_VIEW;
-			$this->viewArguments  = array();	
-		} else if (count($this->stateParams) == 1) {
-			// Load the specified controller with the default view
-			$this->controllerName = $this->stateParams[0];	
-			$this->viewName       = FProject::DEFAULT_VIEW;
-			$this->viewArguments  = array();
-		} else {
-			// Load the specified controller with the specified view
-			$this->controllerName = $this->stateParams[0];
-			$this->viewName       = $this->stateParams[1];	
-			$this->viewArguments  = array_slice($this->stateParams,2);
-		}
-		
+		$this->controllerName      = $route['controller'];
 		// Append 'Controller' to get the controllerClassName
-		$this->controllerClassName = $this->controllerName . "Controller";
+		$this->controllerClassName = $route['controller'] . "Controller";
+		$this->viewName            = $route['view'];
+		$this->viewArguments       = $route['parameters'];
 	}
 	
 	public function validRequest($req) {

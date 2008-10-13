@@ -16,4 +16,8 @@
  require_once("FPageLayout.class.php");
  require_once("FController.class.php");
  require_once("Entrance.class.php");
+ require_once("FRouter.class.php");
+ 
+ // Add YAML parser to read Route table
+ require_once("../../tools/YAML/spyc.php5");
 ?>
