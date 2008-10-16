@@ -4,6 +4,29 @@
 # NOTE: Order is important! The Router runs top to bottom, 
 # stopping after it has found a route that matches.
 
+## Maintenance URL 
+## This is an example of site-wide (global) redirection. This
+## type of redirection can be useful in the event that all or
+## part of the application is undergoing maintenance. Naturally,
+## this route should be the first available route (topmost) in 
+## the file. Uncomment the route to activate it. 
+#site_down:
+#  url: /*
+#  map: {controller: _furnace, view: unavailable}
+
+###########################################################
+## ADD CUSTOM ROUTES HERE:
+## Add custom routes (if needed) for your application here.
+##
+
+
+###########################################################
+## SITEWIDE DEFAULT ROUTES
+## These routes ship with every furnace installation.
+## Since they appear at the bottom of the file, they will
+## only be matched if every previous rule fails. 
+##
+##
 default:
   url: /:controller/:view/*
 
