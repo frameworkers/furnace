@@ -340,7 +340,11 @@
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
- 			$results[] = new $this->objectType($row);	
+ 			if ($k == "objId") {
+ 				$results[] = new $this->objectType($row);	
+ 			} else {
+ 				$results[$row[strtolower($k)]] = new $this->objectType($row);	
+ 			}
  		}
  		return $results; 	
  	}
