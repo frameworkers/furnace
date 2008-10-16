@@ -19,8 +19,8 @@ class FRouter {
       foreach ($routes as $r=>$route) {
           //echo "Testing route: {$r}<br/>";
           $rp = explode("/",ltrim($route['url'],"/"));
-          $wildcards = array();
-         
+          $wildcards  = array();
+          $parameters = array();
           // If the number of defined segments does not match, ignore this route
           if (count($rp) > count($parts)) {
               continue;
@@ -32,11 +32,15 @@ class FRouter {
           for ($j = 0; $j < count($rp);$j++) {
               // Just ignore unnamed wildcards
               if ($rp[$j] == "*") {
+              	  $parameters[] = $parts[$j];
                   continue;
               }
               // Capture named wildcards in the 'wildcards' array
               if ($rp[$j][0] == ':') {
                   $wildcards[trim($rp[$j],":")] = $parts[$j];
+                  if (":controller" != $rp[$j] && ":view" != $rp[$j]) {
+                  	$parameters[] = $parts[$j];
+                  }
                   continue;
               }
               // Test for equality between non-wildcard parts
@@ -46,7 +50,12 @@ class FRouter {
               }
           }
           if ($matched) {
-              //var_dump($wildcards);
+              // Capture additional view arguments (in the case that the
+			  // url contained more parts than the matching route rule
+			  for($k=count($rp);$k < count($parts); $k++) {
+			  	$parameters[] = $parts[$k];
+			  }
+			  // Build the resulting route data array
               $the_route = array(
                   'controller' => ((isset($wildcards['controller']) && !empty($wildcards['controller']))
                       ? $wildcards['controller']
@@ -60,7 +69,7 @@ class FRouter {
                           ? $route['map']['view']
                           : "index")
                   ),
-                  'parameters' => $wildcards 
+                  'parameters' => $parameters
               );
               //var_dump($the_route);
               return $the_route;

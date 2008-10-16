@@ -119,7 +119,7 @@
 					"The function {$this->controllerClassName}::{$this->viewName} "
 					."has not been implemented yet."
 				);
-				return false;
+				return true;
 			}
 			// Check that the template file exists
 			$this->templatePath = $this->controllerDirectory
@@ -135,7 +135,7 @@
 			$this->fatal(
 				"The controller file 'app/controllers/{$this->controllerClassName}.php' "
 				."does not exist yet.");
-			return false;
+			return true;
 		}
 	}
 	
@@ -149,7 +149,6 @@
 			$this->fatal(
 				"The view 'app/views/{$this->controllerName}/{$this->viewName}.html "
 				. "does not exist yet.");
-			exit();
 		}
 		$this->controller->setTemplate($this->templatePath);
 		
@@ -187,12 +186,21 @@
 		return $this->controllerClassName;	
 	}
 	
-	private function fatal($message) {
+	private function fatal($debug_message) {
 		if (FProject::DEBUG_LEVEL > 0) {
-			die($message);
+			$this->controllerClassName = "_FurnaceController";
+			$this->viewName            = "debug";
+			$this->viewArguments       = array($debug_message,$this->requestURI);
+			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
+			$this->controller = new $this->controllerClassName();
+			$this->templatePath = $this->controllerDirectory . "/../views/_furnace/debug.html";
 		} else {
-			// Should redirect to the 'invalid request' page
-			return false;
+			$this->controllerClassName = "_ErrorController";
+			$this->viewName   = "http404";
+			$this->viewArguments = array($this->requestURI);
+			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
+			$this->controller = new $this->controllerClassName();
+			$this->templatePath = $this->controllerDirectory . "/../views/_error/404.html";
 		}
 	}
  }
