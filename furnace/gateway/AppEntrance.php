@@ -113,6 +113,12 @@
 		$pageLayout->register('StylesheetsFromView',$GLOBALS['entrance']->getController()->getStylesheets());
 		$pageLayout->register('MessagesFromView', _read_flashes());
 		$pageLayout->register('ContentFromView',$contents);
+		// Google Analytics Support
+		if (FProject::DEBUG_LEVEL == 0 && '' != FProject::GOOGLE_ANALYTICS_CODE && '' != FProject::GOOGLE_ANALYTICS_SITE_BASE) {
+			$pageLayout->register('doGoogleAnalytics',true);
+			$pageLayout->register('googleAnalyticsCode',FProject::GOOGLE_ANALYTICS_CODE);
+			$pageLayout->register('googleAnalyticsSiteBase',FProject::GOOGLE_ANALYTICS_SITE_BASE);
+		}
 		$pageLayout->render();
 	} else {
 		die("unknown layout '{$layout}' specified."); 	

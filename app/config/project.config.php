@@ -53,5 +53,21 @@
  	 *  be invoked with the default view.
  	 */
  	 const DEFAULT_VIEW = 'index';
+ 	 
+ 	/*
+ 	 * GOOGLE_ANALYTICS_CODE
+ 	 *  If Google Analytics is used to gather usage data about your site,
+ 	 *  you can include the unique code here. Note that the analytics
+ 	 *  javascript will only be included if both GOOGLE_ANALYTICS_CODE and
+ 	 *  GOOGLE_ANALYTICS_SITE_BASE have non-empty values *and* DEBUG_VALUE
+ 	 *  is set to 0 (production mode). 
+     */
+	 const GOOGLE_ANALYTICS_CODE = '';
+
+ 	/*
+ 	 * GOOGLE_ANALYTICS_SITE_BASE
+ 	 * 
+ 	 */
+	 const GOOGLE_ANALYTICS_SITE_BASE = '';
  }
 ?>
