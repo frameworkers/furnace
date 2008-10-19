@@ -1,8 +1,18 @@
 RewriteEngine On
-RewriteRule ^fuel/(.*) fuel/gateway/FuelEntrance.php [NC,L]
-#RewriteRule ^assets/(.*) app/assets/$1 [NC,L]
-#RewriteRule !^assets/(css|images|js)/.* furnace/gateway/AppEntrance.php [NC,L]
 
-RewriteRule !.*/assets/((css|images|js)/(.*))$ furnace/gateway/AppEntrance.php [NC,L]
-RewriteRule  .*/assets/((css|images|js)/(.*))$ app/assets/$2/$3 [NC,L]
+
+# FUEL ASSETS
+RewriteRule ^fuel/assets/((css|images|js)/(.*))$ lib/fuel/app/assets/$2/$3 [NC,L]
+RewriteRule ^lib/fuel/app/assets/(.*) lib/fuel/app/assets/$1 [NC,L]
+
+# FUEL WEBAPP
+RewriteRule ^fuel/ etc/fuel.php [NC,L]
+RewriteRule ^etc/(.*) etc/$1 [NC,L]
+
+# APPLICATION ASSETS
+RewriteRule ^assets/((css|images|js)/(.*))$ app/assets/$2/$3 [NC,L]
+RewriteRule ^app/assets/(.*) app/assets/$1 [NC,L]	
+
+# WEBAPP
+RewriteRule ^(.*)/?$ etc/app.php [NC,L]
 

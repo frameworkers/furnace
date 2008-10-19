@@ -2,7 +2,7 @@
 /*
  * frameworkers_furnace
  * 
- * app.php
+ * fuel.php
  * Created on Oct 18, 2008
  * 
  * Based on and replaces:
@@ -12,7 +12,6 @@
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
-
  
  /* ENVIRONMENT SETUP ****************************************************/
  // Create an array to store database queries (for benchmarking).
@@ -20,6 +19,7 @@
 
  // Compute the project root directory based on the location of this file.
  $rootdir = dirname(dirname(__FILE__));
+ $fueldir = $rootdir . "/lib/fuel/app";
 
  // Load the application configuration files
  require_once($rootdir . "/app/config/project.config.php");
@@ -46,7 +46,7 @@
  require_once($rootdir . "/lib/yaml/FYamlParser.class.php");
   
  /* CUSTOM CONTROLLER BASE CLASS SETUP ***********************************/
- require_once($rootdir . '/app/controllers/_base/Controller.class.php');
+ require_once($fueldir . '/controllers/_base/Controller.class.php');
  
  /* INCLUDE MODEL DATA ***************************************************/
  @include_once($rootdir . "/app/model/objects/compiled.php");
@@ -55,7 +55,7 @@
  	$bm_setup_end = microtime(true);
  }
  /* INIT ENTRANCE ********************************************************/
- $entrance = new Entrance( $rootdir."/app/controllers","_default" );
+ $entrance = new Entrance( $fueldir."/controllers","_default" );
  
  /* INIT REQUEST *********************************************************/
  if (FProject::DEBUG_LEVEL == 2) {
@@ -92,6 +92,7 @@
  /* GLOBAL UTILITY FUNCTIONS ****************************************************/
  function _start_request($request_uri) {
  	global $rootdir;
+ 	global $fueldir;
  	
  	/* BENCHMARKING ******************************************************/
  	if (FProject::DEBUG_LEVEL == 2) {
@@ -112,7 +113,7 @@
 
 	/* CREATE LAYOUT OBJECT, RENDER AND SEND CONTENT *********************/
 	$layout     = $GLOBALS['entrance']->getController()->getLayout();
-	$layoutPath = $rootdir."/app/layouts/{$layout}.html";
+	$layoutPath = $fueldir."/layouts/{$layout}.html";
 	if (file_exists($layoutPath)) {
 		$pageLayout = new FPageLayout($layoutPath); 	
 		$pageLayout->register('PageTitleFromView',  $GLOBALS['entrance']->getController()->getTitle());

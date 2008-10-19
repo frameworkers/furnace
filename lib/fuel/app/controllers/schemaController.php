@@ -279,21 +279,21 @@ class SchemaController extends Controller {
 	}
 	
 	private function init() {
-		require_once("../../furnace/foundation/database/MDB2/FDatabase.class.php");
-		require_once("../tools/generation/core/FObj.class.php");
-		require_once("../tools/generation/core/FObjAttr.class.php");
-		require_once("../tools/generation/core/FObjSocket.class.php");
-		require_once("../tools/generation/core/FSqlColumn.class.php");
-		require_once("../tools/generation/core/FSqlTable.class.php");
-		require_once("../tools/generation/parsing/YAML/spyc-0.2.5/spyc.php5");
-		require_once("../tools/generation/parsing/YAML/FYamlParser.class.php");
-		require_once("../tools/generation/building/FModel.class.php");
-		require_once("../tools/dbmgmt/FDatabaseSchema.class.php");
+		global $rootdir;
+		require_once($rootdir . "/lib/furnace/foundation/database/MDB2/FDatabase.class.php");
+		require_once($rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
+		require_once($rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		require_once($rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		require_once($rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
+		require_once($rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
 	}
 	private function getModel() {
+		global $rootdir;
 		return new FModel(
 			FYamlParser::parse(
-				file_get_contents('../../model/model.yml')
+				file_get_contents($rootdir . "/app/model/model.yml")
 			)
 		);
 	}

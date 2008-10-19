@@ -27,6 +27,15 @@
 ## only be matched if every previous rule fails. 
 ##
 ##
+fuel_default:
+  url: /fuel/:controller/:view/*
+fuel_index:
+  url: /fuel/:controller/*
+  map: {view: index}
+fuel_homepage:
+  url: /fuel/*
+  map: {controller: _default, view: index}
+
 default:
   url: /:controller/:view/*
 
