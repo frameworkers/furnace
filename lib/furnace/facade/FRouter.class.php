@@ -76,13 +76,8 @@ class FRouter {
               exit();
           }
       }
-      echo "<b>Invalid Route</b><br/>";
-      if (FProject::DEBUG_LEVEL > 0) {
-      	echo "Route:<br/>";
-      	var_dump($the_route);
-      }
-      die();
-      //return false;
+      // Invalid route specified
+      return array();
     }   
 } 
 ?>
