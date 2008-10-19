@@ -1,0 +1,80 @@
+@CHARSET "UTF-8";
+body.ff {
+	background-color:#e0e0e0;
+	margin:0px;
+	margin-top:10px;
+	font-family:'lucida grande',verdana,helvetica,arial,sans-serif;
+	font-size:90%;
+}
+div.ff_header {
+	position:relative;
+	
+	height:110px;
+	background:url(../images/fuel_logo.png) scroll center center no-repeat;
+	background-color:#fff;
+	border:solid 4px #cbcbcb;
+	border-left:0px;
+	border-right:0px;
+}
+div.ff_sectionContainer {
+	position:relative;	
+	margin-left:15px;
+	margin-right:15px;
+}
+div.ff_container {
+	float:left;
+	width:44%;
+	border:solid 3px #aaa;
+	margin:5px;
+	margin-top:10px;
+}
+div.ff_box {
+	padding:5px;
+}
+div.ff_box ul {
+	
+}
+div.ff_box ul li {
+	padding-bottom:8px;	
+}
+div.ff_box h1 {
+	margin:-5px;
+	padding:5px;
+	background-color:#888;
+	border-bottom:solid 2px #aaa;
+	font-size:125%;	
+	color:#eee;
+}
+div.ff_clr {
+	clear:both;	
+}
+div.ff_message {
+	border:solid 1px #ccc;
+	padding:5px;
+	font-size:90%;	
+	margin:2px;
+}
+.success {
+	background-color:#cfc;
+	border:solid 1px green;
+	color:#292;
+}
+.error {
+	background-color:#fcc;
+	border:solid 1px red;
+	color:#922;
+}
+li.ff_notice {
+	padding:5px;
+	list-style:none;
+	margin:5px;
+	margin-left:0px;
+}
+.notice {
+	background-color:#ff6;
+	border:solid 1px yellow;
+	color:#000;	
+}
+a.ff {
+	color:#11d;
+}

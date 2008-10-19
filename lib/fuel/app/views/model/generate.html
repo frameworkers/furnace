@@ -1,0 +1,25 @@
+&nbsp;<a href="/">App</a>&nbsp;/
+<a href="/fuel">Fuel</a>&nbsp;/
+Model (Re)Generator
+<br/><br/>
+
+<div class="ff_box">
+[tp-if:tp.preflt;block=div]
+	<h1>Pre-flight Checklist</h1>
+	<ul>
+	  <li>Project Root Directory Specified?&nbsp;&nbsp; 
+	  	<span class="success" style="padding-left:7px;padding-right:7px;">[tp-if:tp.preflt.rootDirectorySet;block=span]Pass</span>
+	  	<span class="error"   style="padding-left:10px;padding-right:10px;">[tp-if:tp.preflt.rootDirectorySet=~;block=span]Failed. To resolve, edit the ROOT_DIRECTORY entry in '/app/config/project.config.php'</span>
+	  </li>
+	  <li>Model File '[tp.rootdir]/model/model.yml' Exists?&nbsp;&nbsp; 
+	  	<span class="success" style="padding-left:7px;padding-right:7px;">[tp-if:tp.preflt.modelFileExists;block=span]Pass</span>
+	  	<span class="error"   style="padding-left:10px;padding-right:10px;">[tp-if:tp.preflt.modelFileExists=~;block=span]Fail</span>
+	  </li>
+	</ul>
+	<center>
+	<form method="POST" action="/fuel/model/generateObjects">
+	[tp-if:tp.allgood;block=form]
+		<input type="submit" name="goforit" value="Generate Object Files" style="padding:5px;font-size:120%;"/>
+	</form>
+	</center>
+</div>

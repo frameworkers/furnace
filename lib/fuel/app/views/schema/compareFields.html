@@ -1,0 +1,71 @@
+&nbsp;<a href="/">App</a>&nbsp;/
+<a href="/fuel">Fuel</a>&nbsp;/
+<a href="/fuel/schema">Database Schema Updater</a>&nbsp;/
+Compare Fields:
+<br/><br/>
+
+<div>
+	<h3  style="margin-left:15px;">Fields In Table: [tp.table.name]</h3>
+	<div style="margin:15px;margin-left:50px">
+	<table>
+	  <tr>
+	    <th>Field Name</th><th>Type</th><th>Is Null</th><th>Default Value</th><th>State</th><th>Choices</th>
+	  </tr>
+	  <tr>
+		<td>[tp.fields.#;block=tr][@.column.name]</td>
+		<td>[@.column.colType]</td>
+		<td>[@.column.isNull]</td>
+		<td>[@.column.defaultValue]</td>
+		<td>[@.state]</td>
+		<td>
+			<ul>
+				<li>[@.choices.#;block=li][@.text]
+				  <form  method="POST" style="display:inline;" action="[@.action]">
+					<input type="hidden" name="tableName" value="[@.tableName]"/>
+					<input type="[tp-if:@.type=~rename;block=self]hidden" name="columnName" value="[@.columnName]"/>
+					<input type="[tp-if:@.type=rename;block=self]hidden" name="renameTo"  value="[@.renameTo]"/>
+					<select name="columnName">[tp-if:@.type=rename;block=select]
+						<option value="[tp.renameList.#;block=option][@]">[@]</option>
+					</select>
+					<input type="submit" value="Apply"/>
+					</form>
+				</li>
+			</ul>
+		</td>
+	  </tr>
+	</table>
+	
+	<div>
+	[tp-if:tp.unknownCount=~0;block=div]
+	<h3>Notices:</h3>
+	<table>
+	  <tr>
+	    <th>Field Name</th><th>Type</th>
+	  </tr>
+	  <tr>
+	    <td>[tp.unknowns.#;block=tr][@.column.name]</td>
+	    <td>[@.column.colType]</td>
+	    <td>
+			<ul>
+				<li>[@.choices.#;block=li][@.text]
+				<form  method="POST" style="display:inline;" action="[@.action]">
+					<input type="hidden" name="tableName" value="[@.tableName]"/>
+					<input type="hidden" name="columnName" value="[@.columnName]"/>
+					<input type="submit" value="Delete"/>
+					</form>
+				</li>
+			</ul>
+			</table>
+		</td>
+	  </tr>
+	</table>
+	</div>
+
+		<!--<form method="POST" action="/fuel/schema/createTable/actions/doCreateTable">
+			<input type="hidden" name="tableName" value="[tp.table.name]"/>
+			<input type="submit" value="Create Table"/>&nbsp;
+			<a href="/fuel/schema"><input type="button" value="Cancel"/>
+		</form>
+	--></div>
+
+</div>

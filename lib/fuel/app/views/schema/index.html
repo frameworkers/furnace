@@ -1,0 +1,30 @@
+&nbsp;<a href="/">App</a>&nbsp;/
+<a href="/fuel">Fuel</a>&nbsp;/
+Database Schema Updater
+<br/><br/>
+<h3>Table Summary:</h3>
+<ul>
+	<li>[tp.tables.#;block=li] <span>[tp-if:@.found;block=span]Found</span> Required Model Table `[@.name]`
+	<span>[tp-if:@.status=fieldsDiffer;block=span]<a href="/fuel/schema/compareFields/[@.name]">Fields Differ</a>!</span>
+	<span>[tp-if:@.status=ok;block=span]No Changes Detected.</span>
+	<span>[tp-if:@.found=~;block=span]
+		Not found in database. Options are: 
+		<ul>
+		  <li><a href="/fuel/schema/createTable/[@.name]">create</a></li>
+		  <li>Rename existing database table 
+		    <form style="display:inline;" action="/fuel/schema/renameDbTable" method="POST">
+		    	<input type="hidden" name="renameTo" value="[@.name]"/>
+			 	<select name="tableName">
+			  		<option value="[tp.existingTableNames.#;block=option][@]">[@]</option>
+			  	</select>
+			  	<input type="submit" value="Apply"/>
+		  	</form>
+		  	</li>
+		</ul>
+	</span>
+	</li>
+</ul>
+<p>&nbsp;</p>
+<ul>
+ <li class="ff_notice notice">[tp.notices.#;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="/fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
+</ul>

@@ -1,0 +1,29 @@
+&nbsp;<a href="/">App</a>&nbsp;/
+<a href="/fuel">Fuel</a>&nbsp;/
+<a href="/fuel/schema">Database Schema Updater</a>&nbsp;/
+Create Table
+<br/><br/>
+
+<div class="ff_message error">
+	[tp-if:tp.errorTableExists;block=div]
+	Error: Table Exists!
+</div>
+<div class="ff_message error">
+	[tp-if:tp.errorNoTableSpecified;block=div]
+	Error: No Table Specified
+</div>
+<div>
+	<h3  style="margin-left:15px;">Will Create New Table: [tp.table.name]</h3>
+	<div style="margin:15px;margin-left:50px">
+		
+		<pre>
+[tp.sql]
+		</pre>
+		<form method="POST" action="/fuel/schema/doCreateTable">
+			<input type="hidden" name="tableName" value="[tp.table.name]"/>
+			<input type="submit" value="Create Table"/>&nbsp;
+			<a href="/fuel/schema"><input type="button" value="Cancel"/></a>
+		</form>
+	</div>
+
+</div>
