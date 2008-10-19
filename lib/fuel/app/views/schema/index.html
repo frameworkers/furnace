@@ -1,5 +1,5 @@
 &nbsp;<a href="/">App</a>&nbsp;/
-<a href="/fuel">Fuel</a>&nbsp;/
+<a href="/fuel/">Fuel</a>&nbsp;/
 Database Schema Updater
 <br/><br/>
 <h3>Table Summary:</h3>
@@ -12,7 +12,7 @@ Database Schema Updater
 		<ul>
 		  <li><a href="/fuel/schema/createTable/[@.name]">create</a></li>
 		  <li>Rename existing database table 
-		    <form style="display:inline;" action="/fuel/schema/renameDbTable" method="POST">
+		    <form style="display:inline;" action="/fuel/schema/renameDbTable/" method="POST">
 		    	<input type="hidden" name="renameTo" value="[@.name]"/>
 			 	<select name="tableName">
 			  		<option value="[tp.existingTableNames.#;block=option][@]">[@]</option>
