@@ -188,14 +188,14 @@
 	
 	private function fatal($debug_message) {
 		if (FProject::DEBUG_LEVEL > 0) {
-			$this->controllerClassName = "_FurnaceController";
+			$this->controllerClassName = "_furnaceController";
 			$this->viewName            = "debug";
 			$this->viewArguments       = array($debug_message,$this->requestURI);
 			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
 			$this->controller = new $this->controllerClassName();
 			$this->templatePath = $this->controllerDirectory . "/../views/_furnace/debug.html";
 		} else {
-			$this->controllerClassName = "_ErrorController";
+			$this->controllerClassName = "_errorController";
 			$this->viewName   = "http404";
 			$this->viewArguments = array($this->requestURI);
 			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
