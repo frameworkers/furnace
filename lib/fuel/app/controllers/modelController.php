@@ -49,7 +49,7 @@ class ModelController extends Controller {
 		 require_once($rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
 		 require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
 		 require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		 require_once($rootdir . "/lib/fuel/lib/building/FModel.class.php");
+		 require_once($rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
 		 
 		// Parse the YAML Model File
 		 $model_data = FYamlParser::Parse($rootdir . "/app/model/model.yml");
