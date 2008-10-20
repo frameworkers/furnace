@@ -44,7 +44,7 @@ class SchemaController extends Controller {
 			}
 		}
 		
-		// Analyze differences MODEL vs DATABADE
+		// Analyze differences MODEL vs DATABASE
 		foreach ($d->getTables() as $dt) {
 			if ($dt->getName() == "FAccount") {continue;}
 			
@@ -155,7 +155,7 @@ class SchemaController extends Controller {
 						$choices = array(array(
 							'type'=>'edit',
 							'text'=>'Apply model definition to database field',
-							'action'=>"/fuel/schema/editColumn",
+							'action'=>"/fuel/schema/editColumn/",
 							'tableName' =>$modelTable->getName(),
 							'columnName'=>$mc->getName()
 							));
@@ -172,13 +172,13 @@ class SchemaController extends Controller {
 				$choices = array(array(
 					'type'=>'add',
 					'text'=>'Add as new column',
-					'action'=>"/fuel/schema/addColumn",
+					'action'=>"/fuel/schema/addColumn/",
 					'tableName'=>$modelTable->getName(),
 					'columnName'=>$mc->getName()),
 					array(
 					'type'=>'rename',
 					'text'=>'Rename existing column: ',
-					'action'=>"/fuel/schema/renameColumn",
+					'action'=>"/fuel/schema/renameColumn/",
 					'tableName'=>$modelTable->getName(),
 					'renameTo'=>$mc->getName())
 				);
@@ -203,7 +203,7 @@ class SchemaController extends Controller {
 				$choices[] = array(
 					'type'  => 'unknown',
 					'text'  => 'Database Column does not exist in the Model',
-					'action'=> "/fuel/schema/deleteDbField",
+					'action'=> "/fuel/schema/deleteDbField/",
 					'tableName'  =>$modelTable->getName(),
 					'columnName' =>$dbc->getName()
 				);
@@ -224,7 +224,7 @@ class SchemaController extends Controller {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not edit. No Column Data Specified","error");
-			$this->redirect("/fuel/schema");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -238,7 +238,7 @@ class SchemaController extends Controller {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not rename. No Column Data Specified","error");
-			$this->redirect("/fuel/schema");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -252,7 +252,7 @@ class SchemaController extends Controller {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not add column. No Column Data Specified","error");
-			$this->redirect("/fuel/schema");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -267,7 +267,7 @@ class SchemaController extends Controller {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not delete column. No Column Data Specified","error");
-			$this->redirect("/fuel/schema");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
