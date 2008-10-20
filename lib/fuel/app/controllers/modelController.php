@@ -103,7 +103,7 @@ END;
 		 
 		 $output[] =  "</ul>";
 		 $output[] =  "<h5>Finished.</h5>";
-		 $this->set('results',$output);
+		 $this->set('results',implode($output));
 	}
 }
 ?>
