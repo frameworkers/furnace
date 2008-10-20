@@ -3,6 +3,13 @@
 class ModelController extends Controller {
 	
 	public function index() {
+		if (!file_exists(FProject::ROOT_DIRECTORY . 
+			"/app/model/model.yml")) {
+			file_put_contents(FProject::ROOT_DIRECTORY . 
+			"/app/model/model.yml",file_get_contents(
+				FProject::ROOT_DIRECTORY .
+					"/app/model/model.yml.example"));		
+		}
 		$this->set('modelcontents',
 			file_get_contents(
 				FProject::ROOT_DIRECTORY.
