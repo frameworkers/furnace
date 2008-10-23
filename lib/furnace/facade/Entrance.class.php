@@ -32,6 +32,10 @@
 	// The directory where the controllers reside.
 	private $controllerDirectory;
 	
+	// Variable: controllerPath
+	// The full path to the controller file
+	private $controllerPath;
+	
 	// Variable: requestURI
 	// The original request URI
 	private $requestURI;
@@ -100,6 +104,12 @@
 		$this->controllerName      = $route['controller'];
 		// Append 'Controller' to get the controllerClassName
 		$this->controllerClassName = $route['controller'] . "Controller";
+		$this->controllerPath      = $this->controllerDirectory .
+			(( !empty($route['prefix']) )
+				? (rtrim("/",$route['prefix']) . "/")
+				: "/") .
+			$this->controllerClassName .
+			".php";
 		$this->viewName            = $route['view'];
 		$this->viewArguments       = $route['parameters'];
 	}
@@ -107,9 +117,9 @@
 	public function validRequest($req) {
 		$this->state = $this->processRequestURI($req);
 		// Check that the controller file exists
-		if (file_exists("{$this->controllerDirectory}/{$this->controllerClassName}.php")) {
+		if (file_exists("{$this->controllerPath}")) {
 			// Require the controller file
-			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
+			require_once("{$this->controllerPath}");
 			//TODO: check that the class is defined within the file
 			// Create an instance of the controller
 			$this->controller = new $this->controllerClassName();

@@ -57,6 +57,7 @@ class FRouter {
 			  }
 			  // Build the resulting route data array
               $the_route = array(
+              	  'prefix' => ((isset($route['prefix'])) ? $route['prefix'] : ''),
                   'controller' => ((isset($wildcards['controller']) && !empty($wildcards['controller']))
                       ? $wildcards['controller']
                       : (isset($route['map']['controller'])
