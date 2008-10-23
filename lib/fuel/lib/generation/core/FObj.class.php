@@ -452,6 +452,16 @@
  				. "\t\t}\r\n\r\n";	
  		}
  		
+ 		// Setters to allow for 'parent' reassignment
+		foreach ($this->sockets as $s) {
+			if (1 == $s->getQuantity() ) {
+				$r .= "\t\tpublic function set{$s->getFunctionName()}Id(\$id) {\r\n"
+					. "\t\t\t\$q = \"UPDATE `{$this->getName()}` SET `{$s->getName()}_id`='{\$id}' WHERE `objId`='{\$this->objId}'\";\r\n"
+					. "\t\t\t_db()->exec(\$q);\r\n"
+					. "\t\t}\r\n\r\n";
+			}
+		}
+ 		
  		// Add Save Function
  		$r .= "\t\tpublic function save(\$attribute = '') {\r\n"
  			. "\t\t\tif('' == \$attribute) {\r\n"
