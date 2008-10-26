@@ -32,7 +32,7 @@ class FRouter {
           for ($j = 0; $j < count($rp);$j++) {
               // Just ignore unnamed wildcards
               if ($rp[$j] == "*") {
-              	  $parameters[] = $parts[$j];
+              	  if ('' != $parts[$j]) {$parameters[] = $parts[$j];}
                   continue;
               }
               // Capture named wildcards in the 'wildcards' array
@@ -53,7 +53,7 @@ class FRouter {
               // Capture additional view arguments (in the case that the
 			  // url contained more parts than the matching route rule
 			  for($k=count($rp);$k < count($parts); $k++) {
-			  	$parameters[] = $parts[$k];
+			  	if ('' != $parts[$k]) {$parameters[] = $parts[$k];}
 			  }
 			  // Build the resulting route data array
               $the_route = array(
