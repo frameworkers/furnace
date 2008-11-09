@@ -14,7 +14,7 @@
  *  This is the physical location of the root directory
  *  on the server's filesystem.
  */
-$fconfig_root_directory = dirname(dirname(__FILE__));
+$fconfig_root_directory = dirname(dirname(dirname(__FILE__)));
 
 /*
  * ROOT_DIRECTORY
