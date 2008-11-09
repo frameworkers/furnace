@@ -1,6 +1,6 @@
-&nbsp;<a href="/">App</a>&nbsp;/
-<a href="/fuel/">Fuel</a>&nbsp;/
-<a href="/fuel/schema/">Database Schema Updater</a>&nbsp;/
+&nbsp;<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/schema/">Database Schema Updater</a>&nbsp;/
 Compare Fields:
 <br/><br/>
 
@@ -20,7 +20,7 @@ Compare Fields:
 		<td>
 			<ul>
 				<li>[@.choices.#;block=li][@.text]
-				  <form  method="POST" style="display:inline;" action="[@.action]">
+				  <form  method="POST" style="display:inline;" action="[tp..fconfig_url_base][@.action]">
 					<input type="hidden" name="tableName" value="[@.tableName]"/>
 					<input type="[tp-if:@.type=~rename;block=self]hidden" name="columnName" value="[@.columnName]"/>
 					<input type="[tp-if:@.type=rename;block=self]hidden" name="renameTo"  value="[@.renameTo]"/>
@@ -48,7 +48,7 @@ Compare Fields:
 	    <td>
 			<ul>
 				<li>[@.choices.#;block=li][@.text]
-				<form  method="POST" style="display:inline;" action="[@.action]">
+				<form  method="POST" style="display:inline;" action="[tp..fconfig_url_base][@.action]">
 					<input type="hidden" name="tableName" value="[@.tableName]"/>
 					<input type="hidden" name="columnName" value="[@.columnName]"/>
 					<input type="submit" value="Delete"/>

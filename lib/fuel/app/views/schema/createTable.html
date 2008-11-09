@@ -1,6 +1,6 @@
-&nbsp;<a href="/">App</a>&nbsp;/
-<a href="/fuel/">Fuel</a>&nbsp;/
-<a href="/fuel/schema/">Database Schema Updater</a>&nbsp;/
+&nbsp;<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/schema/">Database Schema Updater</a>&nbsp;/
 Create Table
 <br/><br/>
 
@@ -19,10 +19,10 @@ Create Table
 		<pre>
 [tp.sql]
 		</pre>
-		<form method="POST" action="/fuel/schema/doCreateTable/">
+		<form method="POST" action="[tp..fconfig_url_base]/fuel/schema/doCreateTable/">
 			<input type="hidden" name="tableName" value="[tp.table.name]"/>
 			<input type="submit" value="Create Table"/>&nbsp;
-			<a href="/fuel/schema/"><input type="button" value="Cancel"/></a>
+			<a href="[tp..fconfig_url_base]/fuel/schema/"><input type="button" value="Cancel"/></a>
 		</form>
 	</div>
 
