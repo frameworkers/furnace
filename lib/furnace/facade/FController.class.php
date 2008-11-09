@@ -28,7 +28,7 @@ class FController extends FPage {
 	}
 	
 	protected function loadModule($uri) {
-		$path = $GLOBALS['rootdir'] . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
+		$path = $GLOBALS['fconfig_root_directory'] . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
 		if (file_exists($path)) {
 			require_once($path);
 		} else {

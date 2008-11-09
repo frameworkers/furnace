@@ -57,7 +57,7 @@
  		parent::__construct(); 
  		$this->state = $state;	
  		$this->register("session",$_SESSION);
- 		$this->langcode = FProject::DEFAULT_LANGUAGE;
+ 		$this->langcode = "en-us";
  		$this->layout   = 'default';
  		$this->javascripts = array();
  		$this->stylesheets = array();
@@ -69,9 +69,11 @@
 	
 	public function compile() {
 		parent::compile();
+		/*
 		if (FProject::I18N_ENABLED) {
 			$this->translateStrings();
 		}
+		*/
 	}
 
  	public function render($bEcho = true) {
@@ -144,7 +146,7 @@
 			$this->string_data = 
 				FYamlParser::parse(
 					@file_get_contents(
-						FProject::ROOT_DIRECTORY."/model/i18n/strings.{$this->langcode}.yml"
+						$GLOBALS['fconfig_root_directory']."/model/i18n/strings.{$this->langcode}.yml"
 					)
 				);
 		} else {

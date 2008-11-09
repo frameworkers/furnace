@@ -3,26 +3,26 @@
 class ModelController extends Controller {
 	
 	public function index() {
-		if (!file_exists(FProject::ROOT_DIRECTORY . 
+		if (!file_exists($GLOBALS['fconfig_root_directory'] . 
 			"/app/model/model.yml")) {
-			file_put_contents(FProject::ROOT_DIRECTORY . 
+			file_put_contents($GLOBALS['fconfig_root_directory'] . 
 			"/app/model/model.yml",file_get_contents(
-				FProject::ROOT_DIRECTORY .
+				$GLOBALS['fconfig_root_directory'] .
 					"/app/model/model.yml.example"));		
 		}
 		$this->set('modelcontents',
 			file_get_contents(
-				FProject::ROOT_DIRECTORY.
+				$GLOBALS['fconfig_root_directory'].
 				"/app/model/model.yml"));
 	}
 	
 	public function generate() {
 		if (!$this->form) {
-			$this->set('rootdir',FProject::ROOT_DIRECTORY);
+			$this->set('rootdir',$GLOBALS['fconfig_root_directory']);
 			$bRootDirectorySet = 
-				(FProject::ROOT_DIRECTORY != '' &&
-				 FProject::ROOT_DIRECTORY != '/path/to/project/root');
-			$bModelExists = file_exists(FProject::ROOT_DIRECTORY . '/app/model/model.yml');
+				($GLOBALS['fconfig_root_directory'] != '' &&
+				 $GLOBALS['fconfig_root_directory'] != '/path/to/project/root');
+			$bModelExists = file_exists($GLOBALS['fconfig_root_directory'] . '/app/model/model.yml');
 			$this->set('preflt',array(
 				'modelFileExists' =>$bModelExists,
 				'rootDirectorySet'=>$bRootDirectorySet));
@@ -32,7 +32,7 @@ class ModelController extends Controller {
 	
 	public function saveModel() {
 		file_put_contents(
-			FProject::ROOT_DIRECTORY.
+			$GLOBALS['fconfig_root_directory'].
 			"/app/model/model.yml",$this->form['contents']);
 			
 		$this->flash("model changes saved. Don't forget to "
@@ -41,31 +41,30 @@ class ModelController extends Controller {
 	}
 	
 	public function generateObjects() {
-		global $rootdir;
 		$output = array();
 		// Import required files
-		 require_once($rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
-		 require_once($rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		 require_once($rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		 require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		 require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		 require_once($rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
+		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
+		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/building/FModel.class.php");
 		 
 		// Parse the YAML Model File
-		 $model_data = FYamlParser::Parse($rootdir . "/app/model/model.yml");
+		 $model_data = FYamlParser::Parse($GLOBALS['fconfig_root_directory'] . "/app/model/model.yml");
 		 
 		 // Build a representation of the data
 		 $model = new FModel($model_data);
 		 
 		 // Write the object code (individual and compiled)
 		 $output[] =  "<h4>Generating PHP Object Code</h4><ul>";
-		 $outputfile = fopen($rootdir . "/app/model/objects/compiled.php","w");
+		 $outputfile = fopen($GLOBALS['fconfig_root_directory'] . "/app/model/objects/compiled.php","w");
 		 fwrite($outputfile,"<?php\r\n");
 		 foreach ($model->objects as $obj) {
 		 	$output[] = "<li>Writing class file: {$obj->getName()}</li>";
 		 	$phpString = $obj->toPhpString();
 			fwrite($outputfile,$phpString."\r\n\r\n");
-			file_put_contents($rootdir . "/app/model/objects/{$obj->getName()}.class.php",
+			file_put_contents($GLOBALS['fconfig_root_directory'] . "/app/model/objects/{$obj->getName()}.class.php",
 				"<?php\r\n{$phpString}");
 		 }
 		 fclose($outputfile); 
@@ -73,7 +72,7 @@ class ModelController extends Controller {
 		 $output[] =  "<h4>Generating SQL Schema File</h4><ul>";
 		 
 		 // Write the SQL Schema file
-		 $sqlOutputFile = fopen($rootdir . "/app/model/model.sql","w");
+		 $sqlOutputFile = fopen($GLOBALS['fconfig_root_directory'] . "/app/model/model.sql","w");
 		 foreach ($model->tables as $t) {
 		 	$output[] =  "<li>Writing table definition for: {$t->getName()}</li>";
 			fwrite($sqlOutputFile,$t->toSqlString()."\r\n\r\n");

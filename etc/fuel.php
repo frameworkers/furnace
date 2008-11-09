@@ -26,7 +26,7 @@
  require_once($rootdir . "/app/config/database.config.php");
  	
  /* BENCHMARKING SETUP ***************************************************/
- if (FProject::DEBUG_LEVEL == 2) {
+ if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$bm_start= microtime(true);
  }
  	
@@ -51,26 +51,26 @@
  /* INCLUDE MODEL DATA ***************************************************/
  @include_once($rootdir . "/app/model/objects/compiled.php");
  
- if (FProject::DEBUG_LEVEL == 2) {
+ if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$bm_setup_end = microtime(true);
  }
  /* INIT ENTRANCE ********************************************************/
  $entrance = new Entrance( $fueldir."/controllers","_default" );
  
  /* INIT REQUEST *********************************************************/
- if (FProject::DEBUG_LEVEL == 2) {
+ if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$bm_requests = array();
  	$bm_current_request = null;
  }
  
  _start_request($_SERVER['REQUEST_URI']);
  
- if (FProject::DEBUG_LEVEL == 2) {
+ if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$bm_end = microtime(true);
  }
  
  /* BENCHMARKING REPORTING ***********************************************/
- if (FProject::DEBUG_LEVEL == 2) {
+ if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$setupTime   = $bm_setup_end - $bm_start;
  	echo "Page loaded in " . ($bm_end - $bm_start) . " seconds\r\n";
  	echo "\r\n<table class=\"ff_benchmark\">\r\n";
@@ -95,7 +95,7 @@
  	global $fueldir;
  	
  	/* BENCHMARKING ******************************************************/
- 	if (FProject::DEBUG_LEVEL == 2) {
+ 	if ($GLOBALS['fconfig_debug_level'] == 2) {
  		$bm_request_start = microtime(true);
  		if (is_array($GLOBALS['bm_current_request'])) {
  			$GLOBALS['bm_current_request']['stop'] = $bm_request_start;
@@ -121,19 +121,14 @@
 		$pageLayout->register('StylesheetsFromView',$GLOBALS['entrance']->getController()->getStylesheets());
 		$pageLayout->register('MessagesFromView', _read_flashes());
 		$pageLayout->register('ContentFromView',$contents);
-		// Google Analytics Support
-		if (FProject::DEBUG_LEVEL == 0 && '' != FProject::GOOGLE_ANALYTICS_CODE && '' != FProject::GOOGLE_ANALYTICS_SITE_BASE) {
-			$pageLayout->register('doGoogleAnalytics',true);
-			$pageLayout->register('googleAnalyticsCode',FProject::GOOGLE_ANALYTICS_CODE);
-			$pageLayout->register('googleAnalyticsSiteBase',FProject::GOOGLE_ANALYTICS_SITE_BASE);
-		}
+
 		$pageLayout->render();
 	} else {
 		die("unknown layout '{$layout}' specified."); 	
 	}
 	
 	/* BENCHMARKING ******************************************************/
-	if (FProject::DEBUG_LEVEL == 2) {
+	if ($GLOBALS['fconfig_debug_level'] == 2) {
  		$bm_request_stop = microtime(true);
  		if (is_array($GLOBALS['bm_current_request'])) {
  			$GLOBALS['bm_current_request']['stop'] = $bm_request_stop;
@@ -160,6 +155,10 @@
  //  of a future need to support additional database connection mechanisms.
  //
  function _db() {
- 	return FDatabase::singleton(FDatabaseConfig::$DSN);
+ 	if ($GLOBALS['fconfig_debug_level'] > 0) {
+ 		return FDatabase::singleton($GLOBALS['fconfig_debug_dsn']);
+ 	} else {
+ 		return FDatabase::singleton($GLOBALS['fconfig_production_dsn']);
+ 	}
  }
 ?>

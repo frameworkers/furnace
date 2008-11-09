@@ -12,9 +12,8 @@
 class FRouter {
     
     public static function Route($request) {
-      global $rootdir;
       $parts  = explode("/",ltrim($request,"/"));
-      $routes = Spyc::YAMLLoad(file_get_contents($rootdir.'/app/config/routes.yml'));
+      $routes = Spyc::YAMLLoad(file_get_contents($GLOBALS['fconfig_root_directory'].'/app/config/routes.yml'));
       $the_route = array();
       foreach ($routes as $r=>$route) {
           //echo "Testing route: {$r}<br/>";

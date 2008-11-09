@@ -21,7 +21,11 @@
   	private $mdb2;
   	
   	private function __construct() {
-  		$this->mdb2 = MDB2::singleton(FDatabaseConfig::$DSN);
+  		if ($GLOBALS['fconfig_debug_level'] > 0) {
+  			$this->mdb2 = MDB2::singleton($GLOBALS['fconfig_debug_dsn']);
+  		} else {
+  			$this->mdb2 = MDB2::singleton($GLOBALS['fconfig_production_dsn']);
+  		}
   	}
 	
 	public static function singleton() {
@@ -36,11 +40,11 @@
 	}
 		
 	public function query($q) {
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->query($q);
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
 				'sql'   => $q,
@@ -51,11 +55,11 @@
 	}
 	
 	public function queryRow($q) {
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->queryRow($q);
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
 				'sql'   => $q,
@@ -66,11 +70,11 @@
 	}
 	
 	public function queryOne($q) {
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->queryOne($q);
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
 				'sql'   => $q,
@@ -85,11 +89,11 @@
 	}
 	
 	public function exec($q) {
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->exec($q);
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
 				'sql'   => $q,
@@ -99,11 +103,11 @@
 		return $r;		
 	}
 	public function lastInsertID() {
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->lastInsertID($q);
-		if (FProject::DEBUG_LEVEL == 2) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
 				'sql'   => 'LAST INSERT ID',

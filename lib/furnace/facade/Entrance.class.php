@@ -197,7 +197,7 @@
 	}
 	
 	private function fatal($debug_message) {
-		if (FProject::DEBUG_LEVEL > 0) {
+		if ($GLOBALS['fconfig_debug_level'] > 0) {
 			$this->controllerClassName = "_furnaceController";
 			$this->viewName            = "debug";
 			$this->viewArguments       = array($debug_message,$this->requestURI);

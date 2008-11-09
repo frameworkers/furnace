@@ -15,6 +15,6 @@
  require_once("core/FAccount.class.php");
  require_once("core/FAccountManager.class.php");
  require_once("core/FSessionManager.class.php");
- require_once("database/".FProject::DB_ENGINE."/FDatabase.class.php");
+ require_once("database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
  require_once("exceptions/FException.class.php");
 ?>

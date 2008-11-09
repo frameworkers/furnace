@@ -5,7 +5,11 @@ class SchemaController extends Controller {
 		$this->init();		// Load required files
 		
 		$d = new FDatabaseSchema();
-		$d->discover(FDatabaseConfig::$DSN);
+		if ($GLOBALS['fconfig_debug_level'] > 0) {
+			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		} else {
+			$d->discover($GLOBALS['fconfig_production_dsn']);
+		}
 		$model = $this->getModel();
 		
 		$tables = array();
@@ -279,27 +283,29 @@ class SchemaController extends Controller {
 	}
 	
 	private function init() {
-		global $rootdir;
-		require_once($rootdir . "/lib/furnace/foundation/database/MDB2/FDatabase.class.php");
-		require_once($rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/MDB2/FDatabase.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/building/FModel.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
 	}
 	private function getModel() {
-		global $rootdir;
 		return new FModel(
 			FYamlParser::parse(
-				file_get_contents($rootdir . "/app/model/model.yml")
+				file_get_contents($GLOBALS['fconfig_root_directory'] . "/app/model/model.yml")
 			)
 		);
 	}
 	private function getSchema() {
 		$d = new FDatabaseSchema();
-		$d->discover(FDatabaseConfig::$DSN);
+		if ($GLOBALS['fconfig_debug_level'] > 0) {
+			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		} else {
+			$d->discover($GLOBALS['fconfig_production_dsn']);
+		}
 		return $d;
 	}
 }

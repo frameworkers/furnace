@@ -12,13 +12,13 @@
  	
  	public function index() {
  		$this->addStylesheet('furnace');
- 		$this->set('buildinfo',file_get_contents($GLOBALS['rootdir'] . "/lib/furnace/VERSION"));
- 		$this->set('rootdir',$GLOBALS['rootdir']);
+ 		$this->set('buildinfo',file_get_contents($GLOBALS['fconfig_root_directory'] . "/lib/furnace/VERSION"));
+ 		$this->set('rootdir',$GLOBALS['fconfig_root_directory']);
  	}
  	
  	public function login() {
  		$this->loadModule('org.frameworkers.core.LoginBox');
- 		$lb = new LoginBox('/user');
+ 		$lb = new LoginBox('/user/');
  		$this->set('loginbox',$lb->render());
  	}
  	
