@@ -2,6 +2,15 @@
 class SchemaController extends Controller {
 	
 	public function index() {
+		
+		if ($GLOBALS['fconfig_debug_level'] > 0 && 
+			$GLOBALS['fconfig_debug_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No debug database specified. Please edit the 'fconfig_debug_dsn' variable in your application config file");
+		} else if ($GLOBALS['fconfig_debug_level'] == 0 &&
+				   $GLOBALS['fconfig_production_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No production database specified. Please edit the 'fconfig_production_dsn' variable in your application config file");	   	
+		}
+		
 		$this->init();		// Load required files
 		
 		$d = new FDatabaseSchema();
