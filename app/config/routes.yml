@@ -52,8 +52,3 @@ default:
 default_index:
   url: /:controller
   map: {view: index}
-
-homepage:
-  url: /
-  map: {controller: _default, view: index}
-
