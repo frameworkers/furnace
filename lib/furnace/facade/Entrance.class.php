@@ -74,7 +74,7 @@
 		$this->requestURI =& $req_uri;
 		
 		// Route the current request to a controller/view pair
-		$route = FRouter::Route($req_uri);
+		$route = FRouter::Route($req_uri,$GLOBALS['fconfig_url_base']);
 		
 		$this->controllerName      = $route['controller'];
 		// Append 'Controller' to get the controllerClassName
