@@ -17,9 +17,12 @@
 $fconfig_root_directory = dirname(dirname(dirname(__FILE__)));
 
 /*
- * ROOT_DIRECTORY
- *  This is the physical location of the root directory
- *  on the server's filesystem.
+ * URL_BASE
+ * The base url (default is /) to expect at the beginning of 
+ * each request. This is particularly helpful when your 
+ * webapp does not reside at the site root (ie: in a sub-
+ * directory like: http://example.com/apps/myapp). Include a
+ * trailing '/'.
  */
 $fconfig_url_base       = '';
 
