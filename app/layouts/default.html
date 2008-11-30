@@ -4,14 +4,14 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>[tp.pageTitleFromView]</title>
 <!-- CSS Stylesheet Includes -->
-<link rel="stylesheet" type="text/css" href="/app/assets/css/[tp.StylesheetsFromView.#;block=self][@].css"/>
+<link rel="stylesheet" type="text/css" href="[tp..fconfig_url_base]app/assets/css/[tp.StylesheetsFromView.#;block=self][@].css"/>
 <!-- Javascript Includes -->
-<script type="text/javascript" src="/assets/js/[tp.JavascriptsFromView.#;block=script][@].js"></script>
+<script type="text/javascript" src="[tp..fconfig_url_base]assets/js/[tp.JavascriptsFromView.#;block=script][@].js"></script>
 </head>
 <body>
 <div class="ff_messages">
 	<div class="ff_message [tp.MessagesFromView.#;block=div][@.cssClass]">
-		<h1>[tp-if:@.title;block=h1][@a.title]</h1>
+		<h1>[tp-if:@.title;block=h1][@.title]</h1>
 		[@.message]
 	</div>
 </div>
