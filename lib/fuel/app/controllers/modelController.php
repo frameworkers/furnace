@@ -37,7 +37,7 @@ class ModelController extends Controller {
 			
 		$this->flash("model changes saved. Don't forget to "
 			."<a class=\"ff\" href=\"/fuel/model/generate/\">regenerate your model objects</a>!");
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/model/");
+		$this->redirect("/fuel/model/");
 	}
 	
 	public function generateObjects() {

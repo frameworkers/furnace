@@ -107,7 +107,7 @@ class SchemaController extends Controller {
 			$schema->executeStatement($query);
 			$this->flash("Table Successfully Renamed");
 		}
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+		$this->redirect("/fuel/schema/");
 	}
 	
 	public function createTable($tableName='') {
@@ -143,7 +143,7 @@ class SchemaController extends Controller {
 				$this->flash("Error: Unknown table {$data['tableName']}","error");
 			}
 		}
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+		$this->redirect("/fuel/schema/");
 	}
 	
 	public function compareFields($tableName) {
@@ -237,7 +237,7 @@ class SchemaController extends Controller {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not edit. No Column Data Specified","error");
-			$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -245,13 +245,13 @@ class SchemaController extends Controller {
 		$query = "ALTER TABLE `{$data['tableName']}` MODIFY COLUMN {$model->tables[strtolower($data['tableName'])]->getColumn($data['columnName'])->toSqlString()}";
 		$schema->executeStatement($query);
 		$this->flash("Column Definition Successfully Changed");
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/compareFields/{$data['tableName']}");
+		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
 	}
 	public function renameColumn() {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not rename. No Column Data Specified","error");
-			$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -259,13 +259,13 @@ class SchemaController extends Controller {
 		$query = "ALTER TABLE `{$data['tableName']}` CHANGE COLUMN `{$data['columnName']}` {$model->tables[strtolower($data['tableName'])]->getColumn($data['renameTo'])->toSqlString()}";
 		$schema->executeStatement($query);
 		$this->flash("Column Successfully Renamed");
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/compareFields/{$data['tableName']}");
+		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
 	}
 	public function addColumn() {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not add column. No Column Data Specified","error");
-			$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -273,14 +273,14 @@ class SchemaController extends Controller {
 		$query = "ALTER TABLE `{$data['tableName']}` ADD COLUMN {$model->tables[strtolower($data['tableName'])]->getColumn($data['columnName'])->toSqlString()}";
 		$schema->executeStatement($query);
 		$this->flash("Column Added Successfully");
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/compareFields/{$data['tableName']}");
+		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
 	}
 	
 	public function deleteDbField() {
 		$data =& $this->form;
 		if (!$data) {
 			$this->flash("Error: Could not delete column. No Column Data Specified","error");
-			$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+			$this->redirect("/fuel/schema/");
 		}
 		$this->init();
 		$model = $this->getModel();
@@ -288,7 +288,7 @@ class SchemaController extends Controller {
 		$query = "ALTER TABLE `{$data['tableName']}` DROP COLUMN `{$data['columnName']}`";
 		$schema->executeStatement($query);
 		$this->flash("Column Dropped Successfully");
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/compareFields/{$data['tableName']}");
+		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
 	}
 	
 	private function init() {
