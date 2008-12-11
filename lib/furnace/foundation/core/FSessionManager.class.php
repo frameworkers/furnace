@@ -23,7 +23,7 @@ class FSessionManager {
 		 	return false; 
 		 }
 		 $encrypted = md5($pw);
-		 $q = "SELECT * FROM `FAccount` "
+		 $q = "SELECT * FROM `app_accounts` "
 			. "WHERE `username`='{$un}' AND `password`='{$encrypted}' ";
 		 _db()
 		 	->setFetchMode(MDB2_FETCHMODE_ASSOC);

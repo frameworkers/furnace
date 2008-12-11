@@ -102,6 +102,10 @@ class FAccount extends FBaseObject {
 		// Variable: objectId
 		// The id of the primary object associated with this account
 		public $objectId;
+		
+		// Variable: roles
+		// The roles granted to this user account
+		public $roles;
 
 		public function __construct($data) {
 			if (isset($data['objid'])) {$data['objId'] = $data['objid'];}
@@ -117,6 +121,17 @@ class FAccount extends FBaseObject {
 			$this->secretAnswer = $data['secretanswer'];
 			$this->objectClass = $data['objectclass'];
 			$this->objectId = $data['objectid'];
+			
+			// Get Roles
+			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$this->objId}' ";
+			$r = _db()->queryRow($q);
+			$this->roles = array();
+			foreach ($r as $role=>$value) {
+				if ("accountId" == $role) {continue;}
+				if (1 == $value) {
+					$this->roles[$role] = $value;
+				}
+			}
 		}
 
 		public function getUsername() {
@@ -209,7 +224,7 @@ class FAccount extends FBaseObject {
 
 		public function save($attribute = '') {
 			if('' == $attribute) {
-				$q = "UPDATE `FAccount` SET " 
+				$q = "UPDATE `app_accounts` SET " 
 				. "`username`='{$this->username}', "
 				. "`password`='{$this->password}', "
 				. "`emailAddress`='{$this->emailAddress}', "
@@ -220,31 +235,93 @@ class FAccount extends FBaseObject {
 				. "`objectId`='{$this->objectId}' ";
 				$q .= "WHERE `objId`='{$this->objId}'";
 			} else {
-				$q = "UPDATE `FAccount` SET `{$attribute}`='{$this->$attribute}' WHERE `objId`='{$this->objId}' ";
+				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}' WHERE `objId`='{$this->objId}' ";
 			}
 			_db()->exec($q);
 		}
-
-		public static function Create($username) {
-			$q = "INSERT INTO `FAccount` (`username`) VALUES ('{$username}')"; 
+		
+		public function requireRole($namedRole,$failPage='/') {
+			if (isset($this->roles[$namedRole])) {
+				return true;
+			} else {
+				header("Location: {$failPage}");
+				exit;
+			}
+		}
+		
+		public function requireRoles($namedRoles,$failPage='/') {
+			foreach ($namedRoles as $role) {
+				if (! isset($this->roles[$role])) {
+					header("Location: {$failPage}");
+					exit;
+				}
+			}
+			return true;
+		}
+		
+		public function grantRole($namedRole) {
+			$q = "UPDATE `app_roles` SET `{$namedRole}`='1' WHERE `accountId`='{$this->getObjId()}' ";
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
-			$objectId = _db()->lastInsertID("FAccount","objId");
+			$this->roles[$namedRole] = true;
+		}
+		
+		public function denyRole($namedRole) {
+			$q = "UPDATE `app_roles` SET `{$namedRole}`='0' WHERE `accountId`='{$this->getObjId()}' ";
+			$r = _db()->exec($q);
+			if (MDB2::isError($r)) {
+				FDatabaseErrorTranslator::translate($r->getCode());
+			}
+			unset($this->roles[$namedRole]);
+		}
+
+		public static function Create($username) {
+			$q = "INSERT INTO `app_accounts` (`username`) VALUES ('{$username}')"; 
+			$r = _db()->exec($q);
+			if (MDB2::isError($r)) {
+				FDatabaseErrorTranslator::translate($r->getCode());
+			}
+			$objectId = _db()->lastInsertID("app_accounts","objId");
 			$data = array("objId"=>$objectId,"username"=>$username);
+			
+			$q = "INSERT INTO `app_roles` (`accountId`) VALUES ('{$objectId}')";
+			$r = _db()->exec($q);
+			
+			if (MDB2::isError($r)) {
+				FDatabaseErrorTranslator::translate($r->getCode());
+			}
+			
 			return new FAccount($data);
 		}
+		
 		public static function Retrieve($objId) {
 			_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);
-			$q = "SELECT * FROM `FAccount` WHERE `objId`='{$objId}' LIMIT 1 ";
+			$q = "SELECT * FROM `app_accounts` WHERE `objId`='{$objId}' LIMIT 1 ";
 			$r = _db()->queryRow($q);
 			return new FAccount($r);
+		}
+		
+		
+		public static function DefineRole($name,$defaultAttribution) {
+			if (true == $defaultAttribution) {
+				$default = 1;
+			} else {
+				$default = 0;
+			}
+			$q = "ALTER TABLE `app_roles` ADD COLUMN `{$name}` INT(11) DEFAULT {$default} ";
+			$r = _db()->exec($q);
+		}
+		
+		public static function DeleteRole($name) {
+			$q = "ALTER TABLE `app_roles` DROP COLUMN `{$name}` ";
+			$r = _db()->exec($q);
 		}
 	}
 
 	class FAccountCollection extends FObjectCollection {
-		public function __construct($lookupTable="FAccount",$filter="WHERE 1") {
+		public function __construct($lookupTable="app_accounts",$filter="WHERE 1") {
 			parent::__construct("FAccount",$lookupTable,$filter);
 		}
 		public function destroyObject($objectId) {

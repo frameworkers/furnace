@@ -27,6 +27,8 @@ class FAccountManager extends FAccount {
 	 *  pw - The password (in cleartext) for the account. This password
 	 *       will be encrypted before storage.
 	 *  em - The email address for the account
+	 *  cl - The class of object this account will be associated with
+	 *  id - The unique id of the 'cl' object this acct will be associated with
 	 * 
 	 * Returns:
 	 * 
@@ -34,14 +36,12 @@ class FAccountManager extends FAccount {
 	 */
 	public static function Create($un,$pw,$em) {
 		$encrypted = md5($pw);
-		$q = "INSERT INTO `FAccount` "
-			."(`username`,`password`,`emailAddress`,`objectClass`,`objectId`) "
-			."VALUES ('{$un}','{$encrypted}','{$em}','{$class}','{$id}')"; 
-		$r = _db()->exec($q);
-		if (MDB2::isError($r)) {
-			FDatabaseErrorTranslator::translate($r->getCode(),$q);
-		}
-		return _db()->lastInsertID("FAccount","objId");
+		
+		$account = FAccount::Create($un);
+		$account->setPassword($encrypted);
+		$account->setEmailAddress($em);
+
+		return $account->getObjId();
 	}
 }
 ?>
