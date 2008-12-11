@@ -18,7 +18,7 @@
  	
  	public function login() {
  		$this->loadModule('org.frameworkers.core.LoginBox');
- 		$lb = new LoginBox('/user/');
+ 		$lb = new LoginBox();
  		$this->set('loginbox',$lb->render());
  	}
  	
