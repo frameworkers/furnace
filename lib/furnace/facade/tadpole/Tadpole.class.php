@@ -225,22 +225,30 @@ class Tadpole {
 			/** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** *
 			 * CONDITIONAL (BLOCK) Tag
 			 **********************************************************/
-			if ($this->evaluateCondition($identifier)) {
+			$result = $this->evaluateCondition($identifier);
+			if ($result) {
 				// CONDITION HOLDS
 				$before = substr($contents,0,$this->current);
 				$after  = substr($contents,$this->current+strlen($this->marker));
 				// Display the block, minus the tadpole tag
 				$contents = $before.$after;	
+				
 			} else {
 				// CONDITION FAILS
 				list($contentStart,$contentLength) = $this->determineConditionalBlock($contents);
-				$before = substr($contents,0,$contentStart);
-				$after  = substr($contents,$contentStart + $contentLength);
-				$contents = $before . 
-					(empty($commands['else']) 
-						? '' 
-						: $commands['else']
-					).$after;
+				if (isset($this->commands['innerelse'])) {
+					$before = substr($contents,0,$this->current);
+					$after  = substr($contents,$contentStart + ($contentLength-(strlen($this->commands['block'])+3)));
+					$contents = $before . $this->commands['innerelse'] . $after;
+				} else {
+					$before = substr($contents,0,$contentStart);
+					$after  = substr($contents,$contentStart + $contentLength);
+					$contents = $before . 
+						(empty($this->commands['else']) 
+							? '' 
+							: $this->commands['else']
+						).$after;
+				}
 			}
 				
 		} else {
@@ -372,13 +380,21 @@ class Tadpole {
 			if (empty($value) && $bNegate) {
 				$rhs_value = false;
 			} else if (empty($value) || "true" == $value) {
+				// This is a truth comparison, any non-false lhs_value will suffice.
+				// The conditional evaluation is a '===', so, if a non-false lhs_value 
+				// is detected, the lhs_value is set directly to 'true' to satisfy 
+				// the '==='.
 				$rhs_value = true;
+				if ($lhs_value) {
+					$lhs_value = true;
+				}
 			} else if ("false" == $value) {
 				$rhs_value = false;
 			} else {
 				$rhs_value = $value;
 			}
 		}
+		
 		//echo "lhs: {$lhs_value} rhs: {$rhs_value}\r\n";
 		// EVALUATE CONDITION
 		if ($bNegate) {
