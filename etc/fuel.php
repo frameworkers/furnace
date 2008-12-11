@@ -161,4 +161,32 @@
  		return FDatabase::singleton($GLOBALS['fconfig_production_dsn']);
  	}
  }
+
+ 
+ // FUNCTION: _user()
+ //  Provides shorthand notation for accessing the currently logged
+ //  in user.
+ //
+ function _user($failPage = '/') {
+ 	if (FSessionManager::checkLogin()) {
+ 		return true;
+ 	} else {
+ 		header("Location: {$failPage}");
+ 		exit;
+ 	}
+ }
+ 
+ // FUNCTION: _account()
+ //  Provides shorthand notation for accessing the currently logged in
+ //  user's account information (un,pw,etc.)
+ //
+ function _account($failPage = '/') {
+ 	if (false !== ($user = FSessionManager::checkLogin())) {
+ 		return $user->getFAccount();
+ 	} else {
+ 		header("Location: {$failPage}");
+ 		exit;
+ 	}
+ }
+ 
 ?>
