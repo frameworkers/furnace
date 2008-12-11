@@ -7,6 +7,7 @@
 		private $successURI;
 		
 		public function __construct($successURI='/') {
+			$this->successURI = $successURI;
 			parent::__construct(dirname(__FILE__) . "/views/LoginBox.html");
 		}
 		
