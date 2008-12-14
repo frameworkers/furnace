@@ -225,7 +225,7 @@ class Tadpole {
 			/** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** *
 			 * CONDITIONAL (BLOCK) Tag
 			 **********************************************************/
-			$result = $this->evaluateCondition($identifier);
+			$result = $this->evaluateCondition($identifier,$iter_data);
 			if ($result) {
 				// CONDITION HOLDS
 				$before = substr($contents,0,$this->current);
