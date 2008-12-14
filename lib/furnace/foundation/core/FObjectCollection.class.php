@@ -105,12 +105,8 @@
  		}
  		
  		// Set Pagination Data and Stats
-		for ($i=1;$i<=$pages;$i++) {
-			$this->paginationData['data'][] = (($i == $page_number)
-				? array ("pageNumber"=>$i)
-				: array ("pageNumber"=>$i,
-						 "suffix"=>"?page={$i}&sortBy={$key}&sortOrder={$sortOrder}"
-					));
+ 		for ($i=1;$i<=$pages;$i++) {
+			$this->paginationData['data'][] = array ("pageNumber"=>$i,"suffix"=>"?page={$i}&sortBy={$key}&sortOrder={$sortOrder}");
 		}
 		$this->paginationData['stats'] = array(
 			"start" => $offset + 1,
