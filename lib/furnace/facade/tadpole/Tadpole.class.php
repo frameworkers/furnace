@@ -35,6 +35,7 @@ class Tadpole {
 	// The marker currently being processed
 	protected $marker;
 	
+	
 
 	public function __construct($contents='') {
 		$this->contents  = $contents;
@@ -72,6 +73,7 @@ class Tadpole {
 		
 		$offset  = 0;
 		$current = 0;
+		
 		$marker  = '';
 		
 		while (1) {
@@ -101,14 +103,50 @@ class Tadpole {
 			// EXTRACT WHOLE MARKER
 			if ($foundCandidate ) {
 				$this->current =  $nextTagCandidatePosition; 
-				$this->marker  = substr($contents,
-					$this->current,
-					(strpos($contents,$this->endMarker,$this->current) - ($this->current-1)));
+				$nestedMarkerDetected = false;
+				
+				//$markerCandidate = substr($contents,$this->current,(strpos($contents,$this->endMarker,$this->current) - ($this->current-1)));
+				
+				
+				
+				// -- find a closing tag, taking possible nesting into account
+				$contentEnd = strpos($contents,$this->endMarker,min(strlen($contents)-1,$this->current + 1));
+		
+				$tempStart = $this->current + 1;
+				while (false !== ($nestedStart = strpos($contents,"[",$tempStart)) && $nestedStart < $contentEnd) {
+					$nestedMarkerDetected = true;
+					$contentEnd = strpos($contents,$this->endMarker,$contentEnd+1);
+					$tempStart = $nestedStart + 1;
+				}
+				
+				// -- extract the marker
+				$this->marker = substr($contents,$this->current,$contentEnd-$this->current+1);
+				
+				// -- process nested markers if any have been detected
+				if ($nestedMarkerDetected) {
+					// Dynamically replace nested marker(s)
+					$markerProcessString = substr($this->marker,1,strlen($this->marker)-2);	// save the marker w/ nested markers for processing
+					$storeMarkerLen= strlen($this->marker);									// save the length of the original marker
+					$storeCommands = $this->commands;										// save the commands of the original marker
+					$storeCurrent  = $this->current;										// save the current location of the original marker
+					
+					$this->process($markerProcessString,$iter_data);						// recurse to process nested markers
+					
+					$this->commands = $storeCommands;										// restore commands
+					$this->current  = $storeCurrent;										// restore current location
+					
+					$this->marker   = "[{$markerProcessString}]";							// restore the marker
+
+					// Splice in replaced marker in place of old marker
+					$contents = substr($contents,0,$this->current) . $this->marker . substr($contents,$this->current + $storeMarkerLen);
+				}
+				
 			} else {
 				return(true); // No tags left.
 			}
 			// SPLIT IDENTIFIER AND COMMANDS
 			list ($identifier,$commandstr) = explode(";",trim($this->marker,"[]"),2);
+
 			
 			// PROCESS COMMANDS
 			$raw = explode(";",$commandstr);
@@ -202,7 +240,6 @@ class Tadpole {
 
 			// DETERMINE CORRESPONDING DATA
 			$id_parts = explode(".",$identifier);
-			
 			unset($id_parts[0]);	// drop the '@' and use iter_data
 			if (count($id_parts) == 0) {
 				$data = $iter_data;
@@ -367,6 +404,7 @@ class Tadpole {
 			$lhs_value = $this->getRecursively($lhsParts,$iter_data);
 		}
 		
+		
 		// -- Process the right hand side variable (tp,@,~,true,false,_scalar_)
 		if (count($rhsParts) > 1 && ("tp" == $rhsParts[0] || "@" == $rhsParts[0])) {
 			if ("tp" == $rhsParts[0]){
@@ -377,9 +415,9 @@ class Tadpole {
 				$rhs_value = $this->getRecursively($rhsParts,$iter_data);
 			}
 		} else {
-			if (empty($value) && $bNegate) {
-				$rhs_value = false;
-			} else if (empty($value) || "true" == $value) {
+			if ("" == $value && $bNegate) {
+				$rhs_value = true;
+			} else if ("" == $value || "true" == $value) {
 				// This is a truth comparison, any non-false lhs_value will suffice.
 				// The conditional evaluation is a '===', so, if a non-false lhs_value 
 				// is detected, the lhs_value is set directly to 'true' to satisfy 
@@ -395,16 +433,21 @@ class Tadpole {
 			}
 		}
 		
-		//echo "lhs: {$lhs_value} rhs: {$rhs_value}\r\n";
 		// EVALUATE CONDITION
 		if ($bNegate) {
-			if ($lhs_value === $rhs_value) {
+			// Force lhs to be boolean if rhs is boolean
+			if ($rhs_value === true && $lhs_value == true) {return false;}
+			if ($rhs_value === false && $lhs_value == false) {return false;}
+			if ($lhs_value == $rhs_value) {
 				return false;
 			} else {
 				return true;
 			}
 		} else {
-			if ($lhs_value === $rhs_value) {
+			// Force lhs to be boolean if rhs is boolean
+			if ($rhs_value === true && $lhs_value == true) {return true;}
+			if ($rhs_value === false && $lhs_value == false) {return true;}
+			if ($lhs_value == $rhs_value) {
 				return true;
 			} else {
 				return false;
