@@ -165,8 +165,8 @@
  //  in user.
  //
  function _user($failPage = '/') {
- 	if (FSessionManager::checkLogin()) {
- 		return true;
+ 	if (false !== ($user = FSessionManager::checkLogin())) {
+ 		return $user;
  	} else {
  		header("Location: {$failPage}");
  		exit;
@@ -185,5 +185,4 @@
  		exit;
  	}
  }
- 
 ?>
