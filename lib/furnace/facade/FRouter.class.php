@@ -11,11 +11,7 @@
  
 class FRouter {
     
-    public static function Route($request,$base = "/") {
-
-      if ($base != "/") {
-      	$request = substr($request,strlen($base));
-      }
+    public static function Route($request) {
       $parts  = explode("/",ltrim($request,"/"));
       $routes = Spyc::YAMLLoad(file_get_contents($GLOBALS['fconfig_root_directory'].'/app/config/routes.yml'));
       $the_route = array();
