@@ -14,6 +14,15 @@
   * A Front-Controller base class.
   */
  class Entrance {
+ 	
+ 	// Variable: skip
+	// The portion of the request URI to ignore. This is 
+	// useful for FrontControllers residing in subdirectories.
+	private $skip;
+	
+	// Variable: state
+	// The status of the FController after initialization
+	private $state;
 	
 	// Variable: defaultController
 	// The controller to use when no page name is specified
@@ -35,6 +44,10 @@
 	// The filtered request
 	private $request;
 	
+	// Variable: params
+	// The parameters passed in the request
+	private $stateParams;
+	
 	// Variable: controllerName
 	// The controller name as extracted from the request
 	private $controllerName;
@@ -44,7 +57,7 @@
 	private $controllerClassName;
 	
 	// Variable: controller
-	// An instance of the controller object actually invoked
+	// The controller object actually invoked
 	private $controller;
 	
 	// Variable: viewName 
@@ -52,18 +65,20 @@
 	private $viewName;
 	
 	// Variable: viewArguments
-	// The arguments that will be passed to the view function
+	// The arguments that will be passed to the 'viewName' function
 	// in the controller
 	private $viewArguments;
 	
 	// Variable: templatePath
-	// The path to the view's template file
+	// The path to the requested view's template file
 	private $templatePath;
 	
-	public function __construct($controllerDir,$defaultControllerName) {
+	public function __construct($controllerDir,$defaultControllerName,$skip='') {
 		// Assign local variables
+		$this->skip = $skip;
 		$this->defaultControllerName = $defaultControllerName;
 		$this->controllerDirectory   = $controllerDir;
+		$this->stateParams     = array();
 		
 		// Start the session
 		session_start();
@@ -73,8 +88,18 @@
 		// Save the raw REQUEST_URI
 		$this->requestURI =& $req_uri;
 		
+		// Process subdirectory skips if required
+		$processedRequest = $req_uri;
+		if ($this->skip != '') {
+			if (strpos($req_uri,$this->skip) >0) {
+				echo (strpos($req_uri,$this->skip) == 0);
+				$processedRequest = substr($req_uri,
+					strpos($req_uri,$this->skip)+strlen($this->skip));
+			}
+		}
+		
 		// Route the current request to a controller/view pair
-		$route = FRouter::Route($req_uri,$GLOBALS['fconfig_url_base']);
+		$route = FRouter::Route($processedRequest);
 		
 		$this->controllerName      = $route['controller'];
 		// Append 'Controller' to get the controllerClassName
@@ -90,7 +115,7 @@
 	}
 	
 	public function validRequest($req) {
-		$this->processRequestURI($req);
+		$this->state = $this->processRequestURI($req);
 		// Check that the controller file exists
 		if (file_exists("{$this->controllerPath}")) {
 			// Require the controller file
@@ -106,10 +131,7 @@
 				);
 				return true;
 			}
-			// Set the template path for the view. Do not check for existence
-			// at this point because it is unclear whether or not the view will
-			// actually display anything (it may just be an action). This is just a 
-			// priming step. The existence check is handled in dispatchRequest.
+			// Check that the template file exists
 			$this->templatePath = $this->controllerDirectory
 				."/../views/"
 				.$this->controllerName
@@ -147,6 +169,21 @@
 	public function dispatchError() {
 		// use $this->state to determine which error to return
 		
+	}
+	
+	public function handleRedirect($newController,$newView='index',$flashText='',$cssClass='') {
+		// Build new REQUEST_URI
+		if ($newView == 'index') {
+			$request = (($this->skip != '') ? "/{$this->skip}" : "") . "/{$newController}/";
+		} else {
+			$request = (($this->skip != '') ? "/{$this->skip}" : "") . "/{$newController}/{$newView}";
+		}
+		// Execute the new request
+		if ($this->validRequest($request)) {
+			$this->dispatchRequest($flashText,$cssClass);
+		} else {
+			die("Invalid redirect request made.");
+		}
 	}
 	
 	public function getController() {
