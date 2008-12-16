@@ -49,8 +49,13 @@
 	// The array of language-specific strings loaded
 	protected $string_data;
  	
+ 	// Variable: state
+	// Record the state information for this page request
+	protected $state;
+ 	
  	public function __construct($state=array()) {
  		parent::__construct(); 
+ 		$this->state = $state;	
  		$this->register("session",$_SESSION);
  		$this->langcode = "en-us";
  		$this->layout   = 'default';
@@ -130,6 +135,7 @@
 				return false;
 			} else {
 				header("Location: {$failPage}");
+				exit;
 			}
 		} else {
 			return $user;
