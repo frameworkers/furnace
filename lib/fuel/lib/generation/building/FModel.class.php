@@ -37,6 +37,10 @@ class FModel {
  	public $config = array (
  		"AttributeVisibility" => "private"
  	);
+ 		
+ 	// Variable: use_accounts
+	// Whether or not this model requires the built-in user account features
+	public $use_accounts;
 
  	/*
  	 * Function: __construct
@@ -48,6 +52,8 @@ class FModel {
  		$this->obj_data = array();
  		$this->objects  = array();
  		$this->tables   = array();
+ 		
+ 		$this->use_accounts = false;	// By default `app_accounts` and `app_roles` are omitted.
  		
  		$keys = array_keys($arr);
  		$vals = array_values($arr);
@@ -169,6 +175,16 @@ class FModel {
 		 		} else if (strtolower($type) == "extends") {
 		 			// Non-default inheritance specified... capture class name:
 		 			$candidate->setParentClass($this->standardizeName($name));	
+		 			
+		 			if ("FAccount" == $candidate->getParentClass() ) {
+		 				// Create a column in the object table to store the relation to the `app_accounts` table
+						$colname = "faccount_id";
+			 			$c = new FSqlColumn("faccount_id","INT(11) UNSIGNED",false,false,"link to FAccount data for this {$candidate->getName()}");
+			 			$this->tables[$lc_cand_name]->addColumn($c);
+			 			
+			 			// Alert the model that the additional tables: 'app_accounts' and 'app_roles' need to be generated
+						$this->use_accounts = true;
+		 			}
 		 		}
 		 	}	
 		 }
