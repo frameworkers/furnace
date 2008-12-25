@@ -109,8 +109,8 @@ class FAccount extends FBaseObject {
 
 		public function __construct($data) {
 			if (isset($data['objid'])) {$data['objId'] = $data['objid'];}
-			if (!isset($data['objId']) || $data['objId'] <= 0) {
-				throw new FException("Invalid <code>objId</code> value '' in object constructor.");
+			if (!isset($data['objid']) || $data['objid'] <= 0) {
+				throw new FException("Invalid <code>objId</code> value in object constructor.");
 			}
 			$this->objId = $data['objId'];
 			$this->username = $data['username'];
@@ -127,7 +127,7 @@ class FAccount extends FBaseObject {
 			$r = _db()->queryRow($q);
 			$this->roles = array();
 			foreach ($r as $role=>$value) {
-				if ("accountId" == $role) {continue;}
+				if ("accountid" == $role) {continue;}
 				if (1 == $value) {
 					$this->roles[$role] = $value;
 				}
@@ -166,63 +166,66 @@ class FAccount extends FBaseObject {
 			return $this->objectId;
 		}
 
+		public function getRoles() {
+			return $this->roles;
+		}
 		public function setUsername($value,$bSaveImmediately = true) {
 			$this->username = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::USERNAME);
+				$this->faccount_save('username');
 			}
 		}
 
 		public function setPassword($value,$bSaveImmediately = true) {
 			$this->password = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::PASSWORD);
+				$this->faccount_save('password');
 			}
 		}
 
 		public function setEmailAddress($value,$bSaveImmediately = true) {
 			$this->emailAddress = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::EMAILADDRESS);
+				$this->faccount_save('emailAddress');
 			}
 		}
 
 		public function setStatus($value,$bSaveImmediately = true) {
 			$this->status = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::STATUS);
+				$this->faccount_save('status');
 			}
 		}
 
 		public function setSecretQuestion($value,$bSaveImmediately = true) {
 			$this->secretQuestion = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::SECRETQUESTION);
+				$this->faccount_save('secretQuestion');
 			}
 		}
 
 		public function setSecretAnswer($value,$bSaveImmediately = true) {
 			$this->secretAnswer = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::SECRETANSWER);
+				$this->faccount_save('secretAnswer');
 			}
 		}
 
 		public function setObjectClass($value,$bSaveImmediately = true) {
 			$this->objectClass = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::OBJECTCLASS);
+				$this->faccount_save('objectClass');
 			}
 		}
 
 		public function setObjectId($value,$bSaveImmediately = true) {
 			$this->objectId = $value;
 			if ($bSaveImmediately) {
-				$this->save(FAccountAttrs::OBJECTID);
+				$this->faccount_save('objectId');
 			}
 		}
 
-		public function save($attribute = '') {
+		public function faccount_save($attribute = '') {
 			if('' == $attribute) {
 				$q = "UPDATE `app_accounts` SET " 
 				. "`username`='{$this->username}', "
@@ -284,7 +287,7 @@ class FAccount extends FBaseObject {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
 			$objectId = _db()->lastInsertID("app_accounts","objId");
-			$data = array("objId"=>$objectId,"username"=>$username);
+			$data = array("objid"=>$objectId,"username"=>$username);
 			
 			$q = "INSERT INTO `app_roles` (`accountId`) VALUES ('{$objectId}')";
 			$r = _db()->exec($q);
@@ -292,7 +295,6 @@ class FAccount extends FBaseObject {
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
-			
 			return new FAccount($data);
 		}
 		
@@ -303,6 +305,14 @@ class FAccount extends FBaseObject {
 			return new FAccount($r);
 		}
 		
+		public static function Delete($objId) {
+			// Delete the `app_roles` entry associated with this account
+			$q = "DELETE FROM `app_roles` WHERE `accountId`='{$objId}' ";
+			$r = _db()->exec($q);
+			// Delete the `app_accounts` entry itself
+			$q = "DELETE FROM `app_accounts` WHERE `objId`='{$objId}' ";
+			$r = _db()->exec($q);
+		}
 		
 		public static function DefineRole($name,$defaultAttribution) {
 			if (true == $defaultAttribution) {

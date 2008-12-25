@@ -40,8 +40,19 @@ class FAccountManager extends FAccount {
 		$account = FAccount::Create($un);
 		$account->setPassword($encrypted);
 		$account->setEmailAddress($em);
-
+		
+		//$account->save(); // why doesn't this work?
 		return $account->getObjId();
+	}
+	
+	public static function Delete($username) {
+		$q = "SELECT `objId` FROM `app_accounts` WHERE `username` = '{$username}' ";
+		$id= _db()->queryOne($q);
+		FAccount::Delete($id);
+	}
+	
+	public static function DeleteByAccountId($id) {
+		FAccount::Delete($id);
 	}
 }
 ?>

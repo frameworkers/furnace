@@ -105,7 +105,7 @@
  		}
  		
  		// Set Pagination Data and Stats
- 		for ($i=1;$i<=$pages;$i++) {
+		for ($i=1;$i<=$pages;$i++) {
 			$this->paginationData['data'][] = array ("pageNumber"=>$i,"suffix"=>"?page={$i}&sortBy={$key}&sortOrder={$sortOrder}");
 		}
 		$this->paginationData['stats'] = array(
@@ -261,6 +261,7 @@
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);
  		$result = _db()->queryRow($q);
  		//while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  		//	$results[] = new $this->objectType($row);
