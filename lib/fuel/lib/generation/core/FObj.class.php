@@ -359,9 +359,19 @@
  	 *  (string) - The php class
  	 */
  	private function generateObjectClassString() {
- 		$r = "\tclass {$this->getName()} extends FBaseObject {\r\n";
+ 		$r = "\tclass {$this->getName()} extends {$this->parentClass} {\r\n";
  		
  		// Add Attributes
+		if ("FAccount" == $this->parentClass) {
+			$r .= "\t\t/**\r\n"
+				. "\t\t * INHERITED ATTRIBUTES (from FAccount)\r\n"
+				. "\t\t * \r\n"
+				. "\t\t *  - username \r\n"
+				. "\t\t *  - password \r\n"
+				. "\t\t *  - emailAddress \r\n"
+				. "\t\t */\r\n\r\n";
+		}
+		
  		foreach ($this->attributes as $a) {
  			$r .= "\t\t// Variable: {$a->getName()}\r\n"
  				. "\t\t// {$a->getDescription()}\r\n"
@@ -377,11 +387,27 @@
  		
  		// Add Constructor
  		$r .= "\t\tpublic function __construct(\$data) {\r\n";
+ 		
  		$r .= "\t\t\tif (isset(\$data['objid'])) {\$data['objId'] = \$data['objid'];}\r\n";
  		$r .= "\t\t\tif (!isset(\$data['objId']) || \$data['objId'] <= 0) {\r\n"
- 			. "\t\t\t\tthrow new FException(\"Invalid <code>objId</code> value '{\$data['objId']}' in object constructor.\");\r\n"
- 			. "\t\t\t}\r\n"
- 			. "\t\t\t\$this->objId = \$data['objId'];\r\n";
+ 			. "\t\t\t\tthrow new FException(\"Invalid <code>objId</code> value in object constructor.\");\r\n"
+ 			. "\t\t\t}\r\n\r\n";
+
+ 		if ("FAccount" == $this->parentClass) {
+ 			$r .= "\t\t\tif (!isset(\$data['faccount_id']) || \$data['faccount_id'] <= 0) {\r\n"
+ 				. "\t\t\t\tthrow new FException(\"Invalid <code>faccount_id</code> value in object constructor.\");\r\n"
+ 				. "\t\t\t}\r\n\r\n";
+			$r .= "\t\t\t// Initialize inherited attributes:\r\n"
+				. "\t\t\t\$faccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
+				. "\t\t\t\$this->username = \$faccount->getUsername();\r\n"
+				. "\t\t\t\$this->password = \$faccount->getPassword();\r\n"
+				. "\t\t\t\$this->emailAddress = \$faccount->getEmailAddress();\r\n"
+				. "\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
+				. "\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
+				. "\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n";
+		}
+ 		$r .= "\t\t\t// Initialize local attributes and sockets:\r\n"
+			. "\t\t\t\$this->objId = \$data['objId'];\r\n";
  		foreach ($this->sockets as $s) {
  			if ("1" == $s->getQuantity() ) {
  				$r .= "\t\t\t\$this->{$s->getName()} = \$data['".strtolower($s->getName())."_id'];\r\n";	
@@ -408,6 +434,7 @@
  		foreach ($this->attributes as $a) {
  			$r .= "\t\t\t\$this->{$a->getName()} = \$data['".strtolower($a->getName())."'];\r\n";
  		}
+
  		if ($this->doesDepend("FAccount")) {
  			$r .= "\r\n"
 				. "\t\t\t// Preload FAccount details (and set if necessary)\r\n"
@@ -418,7 +445,7 @@
 				. "\t\t\t}\r\n";
  		}
  		$r	.= "\t\t}\r\n\r\n";
- 		
+ 			
  		// Add Getters
  		foreach ($this->attributes as $a) {
  			$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n"
@@ -447,7 +474,7 @@
  			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true) {\r\n"
  				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
  				. "\t\t\tif (\$bSaveImmediately) {\r\n"
- 				. "\t\t\t\t\$this->save({$this->getName()}Attrs::".strtoupper($a->getName()).");\r\n"
+ 				. "\t\t\t\t\$this->save('{$a->getName()}');\r\n"
  				. "\t\t\t}\r\n"
  				. "\t\t}\r\n\r\n";	
  		}
@@ -464,14 +491,17 @@
  		
  		// Add Save Function
  		$r .= "\t\tpublic function save(\$attribute = '') {\r\n"
- 			. "\t\t\tif('' == \$attribute) {\r\n"
- 			. "\t\t\t\t\$q = \"UPDATE `{$this->getName()}` SET \" \r\n";
+ 			. "\t\t\tif('' == \$attribute) {\r\n";
+ 		if ("FAccount" == $this->parentClass) {
+ 			$r .= "\t\t\t\tparent::faccount_save();\r\n";
+ 		}
+ 		$r .= "\t\t\t\t\$q = \"UPDATE `{$this->getName()}` SET \" \r\n";
  			$temp = array();
  			foreach ($this->attributes as $a) {
  			 	if ($a->getType() == "text" || $a->getType() == "string") {
- 					$temp[] = "\t\t\t\t. \"`{$a->getName()}`='\".addslashes(\$this->{$a->getName()}).\"'";
+ 					$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='\".addslashes(\$this->{$a->getName()}).\"'";
  				} else {
- 					$temp[] = "\t\t\t\t. \"`{$a->getName()}`='{\$this->{$a->getName()}}'";
+ 					$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='{\$this->{$a->getName()}}'";
  				}
  			}
  		$r .= implode(", \"\r\n",$temp)
@@ -502,19 +532,64 @@
  				$dataua[] = "{$attr->getName()}";
  			}
  		}
- 		$r .= "\t\tpublic static function Create(".implode(",",$ua).") {\r\n";
+ 		$parentParams = '';
+ 		if ("FAccount" == $this->parentClass) {
+ 			// Include 'faccount_id' as a unique attribute
+			//$ua[]    = "\$faccount_id";
+			$sqlua[] = "`faccount_id`";
+			$sqluv[] = "'{\$faccount_id}'";
+			$dataua[]= "faccount_id"; 
+ 		 	
+			// Allow for specification of inherited FAccount parameters
+ 			$parentParams = '$username,$password,$emailAddress';
+ 			if (count($ua) > 0) {
+ 				$parentParams .= ",";
+ 			}
+ 		}
+ 		
+ 		$r .= "\t\tpublic static function Create(".$parentParams.implode(",",$ua).") {\r\n";	
+ 		if ("FAccount" == $this->parentClass) {	
+ 			// Create an FAccount object
+			$r .= "\r\n"
+				. "\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
+				. "\t\t\t\$faccount_id = FAccountManager::Create(\$username,\$password,\$emailAddress);\r\n\r\n";
+ 		}
+ 		// Create the object in the database
+		$r .= "\t\t\t// Create a new {$this->getName()} object in the database\r\n";
  		$r .= "\t\t\t\$q = \"INSERT INTO `{$this->getName()}` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
  		$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n";
  		$r .= "\t\t\tif (MDB2::isError(\$r)) {\r\n";
  		$r .= "\t\t\t\tFDatabaseErrorTranslator::translate(\$r->getCode());\r\n";
  		$r .= "\t\t\t}\r\n";
  		$r .= "\t\t\t\$objectId = _db()->lastInsertID(\"{$this->getName()}\",\"objId\");\r\n";
+ 	 		
+ 		// If the object extends FAccount, create a new account object first, and store the core
+		// attributes in the list of unique attributes for the class.
+ 	 	if ("FAccount" == $this->parentClass) {
+			// Set the reverse link (object,id)
+			$r .= "\t\t\t\$q = \"UPDATE `app_accounts` SET `objectClass`='{$this->getName()}', "
+				. "`objectId`='{\$objectId}' WHERE `objId`='{\$faccount_id}'\";\r\n"
+				. "\t\t\t\$r = _db()->exec(\$q);\r\n";
+			// Add the inherited parameters to the data array
+			// **NOTE: This might be useless given that the same data is requested by the object's constructor	
+			//foreach (array("username","password","emailAddress") as $parm) {
+ 			//	$ua[] = "\${$parm}";
+ 			//	$sqlua[] = "`{$parm}`";
+ 			//	$sqluv[] = "'{\${$parm}}'";
+ 			//	$dataua[]= "{$parm}";
+ 			//}
+ 	 	}
+ 		$r .= "\r\n"
+			. "\t\t\t// Build the data array to pass to the constructor\r\n";
  		$r .= "\t\t\t\$data = array(\"objId\"=>\$objectId";
  		foreach ($dataua as $a) {
- 			$r .= ",\"".strtolower($a)."\"=>\${$a}";
+ 			$r .= ",\r\n\t\t\t\t\"".strtolower($a)."\"=>\${$a}";
  		}
- 		$r .= ");\r\n";
- 		$r .= "\t\t\treturn new {$this->getName()}(\$data);\r\n";
+ 		$r .= "\r\n\t\t\t);\r\n";
+
+ 		$r .= "\r\n"
+			. "\t\t\t// Return the populated array\r\n"
+			. "\t\t\treturn new {$this->getName()}(\$data);\r\n";
  		$r .= "\t\t}\r\n";
  		
  		// Add Retrieve Function
@@ -549,35 +624,42 @@
 
  		// Add Delete Function
 		$r .= "\t\tpublic static function Delete(\$objId) {\r\n";
+		
+		if ("FAccount" == $this->parentClass) {
+			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
+			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `{$this->getName()}` WHERE `objId` = '{\$objId}'\"; \r\n";
+			$r .= "\t\t\t\$acct_id = _db()->queryOne(\$q);\r\n";
+			$r .= "\t\t\tFAccountManager::DeleteByAccountId(\$acct_id);\r\n\r\n";
+		}
 		if ($this->doesDepend("FAccount")) {
 			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
 			$r .= "\t\t\t\$q = \"DELETE FROM `FAccount` WHERE `objectClass`='{$this->getName()}' AND `objectId`='{\$objId}'\";\r\n";
 			$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";
 		}
-			foreach ($this->delete_info as $info ) {
-				if ("depends" == $info['type']) {
-					$r .= "\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
-					$r .= "\t\t\t\$q= \"SELECT `objId` FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
-					$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
-					$r .= "\t\t\twhile (\$data = \$r->fetchRow(MDB2_FETCHMODE_ASSOC)) {\r\n"
-						. "\t\t\t\t{$info['class']}::Delete(\$data['objid']);\r\n"
-						. "\t\t\t}\r\n\r\n";
-				}
+		foreach ($this->delete_info as $info ) {
+			if ("depends" == $info['type']) {
+				$r .= "\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
+				$r .= "\t\t\t\$q= \"SELECT `objId` FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+				$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
+				$r .= "\t\t\twhile (\$data = \$r->fetchRow(MDB2_FETCHMODE_ASSOC)) {\r\n"
+					. "\t\t\t\t{$info['class']}::Delete(\$data['objid']);\r\n"
+					. "\t\t\t}\r\n\r\n";
 			}
-			foreach ($this->delete_info as $info) {
-				if ("lookup" == $info['type']) {
-					$r .= "\t\t\t// Delete entries in {$info['sqltable']} containing this object\r\n";
-					if ($this->getName() == $info['class']) {
-						$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
-					} else {
-						$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
-					}
-					$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";	
+		}
+		foreach ($this->delete_info as $info) {
+			if ("lookup" == $info['type']) {
+				$r .= "\t\t\t// Delete entries in {$info['sqltable']} containing this object\r\n";
+				if ($this->getName() == $info['class']) {
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
+				} else {
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
 				}
+				$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";	
 			}
-			$r .= "\t\t\t// Delete the object itself\r\n"
-				. "\t\t\t\$q = \"DELETE FROM `{$this->getName()}` WHERE `objId`='{\$objId}'\";\r\n"
-				. "\t\t\t\$r = _db()->exec(\$q);\r\n";
+		}
+		$r .= "\t\t\t// Delete the object itself\r\n"
+			. "\t\t\t\$q = \"DELETE FROM `{$this->getName()}` WHERE `objId`='{\$objId}'\";\r\n"
+			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
 		$r .= "\t\t}\r\n";
  		
  		$r .= "\t}\r\n\r\n";
