@@ -77,12 +77,14 @@ class ModelController extends Controller {
 		 	$output[] =  "<li>Writing table definition for: {$t->getName()}</li>";
 			fwrite($sqlOutputFile,$t->toSqlString()."\r\n\r\n");
 		 }
-		 $fAccount = <<<END
+		 
+		 if ($model->use_accounts) {
+		 	$fAccount = <<<END
 -- 
--- Table structure for table `FAccount`
+-- Table structure for table `app_accounts`
 -- 
 
-CREATE TABLE `FAccount` (
+CREATE TABLE `app_accounts` (
   `objId` int(11) unsigned NOT NULL auto_increment COMMENT 'The unique id of this object in the database',
   `username` varchar(20) NOT NULL COMMENT 'The username associated with this account',
   `password` varchar(160) NOT NULL COMMENT 'The password for the account',
@@ -94,9 +96,21 @@ CREATE TABLE `FAccount` (
   `objectId` int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
   PRIMARY KEY  (`objId`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
+
+
+-- 
+-- Table structure for table `app_roles`
+-- 
+
+CREATE TABLE `app_roles` (
+  `accountId` int(10) unsigned NOT NULL,
+  PRIMARY KEY  (`accountId`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
 
 END;
+		 } // END if(model->use_accounts)
+
 		 fwrite($sqlOutputFile,$fAccount."\r\n\r\n");
 		 fclose($sqlOutputFile);
 		 
