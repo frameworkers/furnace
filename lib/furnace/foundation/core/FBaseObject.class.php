@@ -7,7 +7,6 @@
  *
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
- * TESTING POST-COMMIT HOOK SCRIPT AGAIN x2
  * 
  */
  
