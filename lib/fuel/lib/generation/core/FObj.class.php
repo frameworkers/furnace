@@ -14,7 +14,6 @@
   * Defines a basic Foundation Model Object. <FObj> objects
   * form the basis for a data-driven application and usually (unless
   * they are declared as abstract) correspond to a database table. 
-  * TEST
   * 
   */
  class FObj {
