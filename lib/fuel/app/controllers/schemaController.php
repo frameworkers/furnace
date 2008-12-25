@@ -93,7 +93,7 @@ class SchemaController extends Controller {
 			$schema->executeStatement($query);
 			$this->flash("Table Dropped Successfully");
 		}
-		$this->redirect("{$GLOBALS['fconfig_url_base']}/fuel/schema/");
+		$this->redirect("/fuel/schema/");
 	}
 	public function renameDbTable() {
 		$data =& $this->form;
