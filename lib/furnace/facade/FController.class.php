@@ -23,7 +23,7 @@ class FController extends FPage {
 	}
 	
 	protected function redirect($url) {
-		header("Location: {$GLOBALS['fconfig_url_base']}{$url}");
+		header("Location: {$url}");
 		exit();
 	}
 	
