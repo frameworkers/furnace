@@ -20,34 +20,29 @@
 ##
 
 ###########################################################
-## FUEL ROUTES
-## These routes make the Fuel data management application 
-## available. These should be disabled (commented out) for
-## a production application
-##
-fuel_default:
-  url: /fuel/:controller/:view
-fuel_index:
-  url: /fuel/:controller
-  map: {view: index}
-fuel_homepage:
-  url: /fuel/
-  map: {controller: _default, view: index}
-  
-###########################################################
 ## SITEWIDE DEFAULT ROUTES
 ## These routes ship with every furnace installation.
 ## Since they appear at the bottom of the file, they will
 ## only be matched if every previous rule fails. 
 ##
 ##
+fuel_default:
+  url: /fuel/:controller/:view
+fuel_index:
+  url: /fuel/:controller
+  map: {view: index}
+  
+
 
 default:
   url: /:controller/:view
-  
-#custom_default_view:
-#  url: /someview
-#  map: {controller: _defualt, view:someview}
+
+default_index:
+  url: /:controller
+  map: {view: index}
+
+default:
+  url: /:controller/:view
 
 default_index:
   url: /:controller
