@@ -41,6 +41,10 @@ class FModel {
  	// Variable: use_accounts
 	// Whether or not this model requires the built-in user account features
 	public $use_accounts;
+	
+	// Variable: checkLookupTables
+	// Whether or not to verify that all lookup tables are valid
+	public $checkLookupTables;
 
  	/*
  	 * Function: __construct
@@ -53,7 +57,8 @@ class FModel {
  		$this->objects  = array();
  		$this->tables   = array();
  		
- 		$this->use_accounts = false;	// By default `app_accounts` and `app_roles` are omitted.
+ 		$this->use_accounts = false;		// By default `app_accounts` and `app_roles` are omitted.
+		$this->checkLookupTables = false;	// By default, no need to double-check
  		
  		$keys = array_keys($arr);
  		$vals = array_values($arr);
@@ -72,7 +77,7 @@ class FModel {
 			list($type,$name) = explode(" ",$objLabel);
 			
 			$lc_name  = strtolower($name);				// lower case name
-			$std_name = $this->standardizeName($name);	// standardized name
+			$std_name = FModel::standardizeName($name);	// standardized name
 			
 			if ( strtolower($type) == "object") {
 				// Save this object's raw data in obj_data.
@@ -92,10 +97,34 @@ class FModel {
 		 * indexed by the object's name. $obj_data contains the raw 
 		 * array data for each of the objects, also indexed by name.
 		 */
+
+					
+		// Check for non-default inheritance (FAccount)
+		foreach ($this->objects as $candidate) {
+			// Set the parentClass attribute of the candidate object
+			$lc_cand_name = strtolower($candidate->getName());
+			if (isset($this->obj_data[$lc_cand_name]['extends'])) {
+				$candidate->setParentClass(FModel::standardizeName($this->obj_data[$lc_cand_name]['extends']));
+			}
+			// Special processing for those objects which extend the built-in FAccount class
+		 	if ("FAccount" == $candidate->getParentClass() ) {
+ 				// Create a column in the object table to store the relation to the `app_accounts` table
+				$colname = "faccount_id";
+	 			$c = new FSqlColumn("faccount_id","INT(11) UNSIGNED",false,false,"link to FAccount data for this {$candidate->getName()}");
+	 			$this->tables[$lc_cand_name]->addColumn($c);
+	 			
+	 			// Alert the model that the additional tables: 'app_accounts' and 'app_roles' need to be generated
+				$this->use_accounts = true;
+ 			}
+		}
 		 
 		 // Discover Inter-Object Dependencies
 		 foreach ($this->objects as $candidate) {
 		 	$lc_cand_name = strtolower($candidate->getName()); 
+		 	
+		 	if (!$this->obj_data[$lc_cand_name]) {
+		 		continue; 	// no dependencies defined for this object
+		 	}
 		 	$ckeys = array_keys($this->obj_data[$lc_cand_name]);
 		 	$cvals = array_values($this->obj_data[$lc_cand_name]);
 		 	
@@ -110,15 +139,15 @@ class FModel {
 						$candidate->addDependency(
 							strtolower($name),
 							'',
-							$this->standardizeAttributeName($name)
+							FModel::standardizeAttributeName($name)
 						);
 						// Create a socket to service this dependency. This allows a child
 			 			// object to call upon its parent.
-			 			$s = new FObjSocket($this->standardizeAttributeName($name),$candidate->getName());
-			 			$s->setForeign($this->standardizeName($name));
+			 			$s = new FObjSocket(FModel::standardizeAttributeName($name),$candidate->getName());
+			 			$s->setForeign(FModel::standardizeName($name));
 			 			$s->setQuantity("1");
 			 			$s->setReflection(false);
-			 			$s->setLookupTable($this->standardizeName($name));
+			 			$s->setLookupTable(FModel::standardizeName($name));
 			 			$s->setVisibility($this->config['AttributeVisibility']);
 			 			$candidate->addSocket($s);
 			 			// Create a column in the object table to store the relation
@@ -144,15 +173,16 @@ class FModel {
 								(isset($matchData['matches']) 
 									? strtolower($matchData['matches'])
 									: ''),
-								$this->standardizeAttributeName($socketName)
+								FModel::standardizeAttributeName($socketName)
 							);
 							// Create a socket to service this dependency. This allows a child
 				 			// object to call upon its parent.
-				 			$s = new FObjSocket($this->standardizeAttributeName($socketName),$candidate->getName());
-				 			$s->setForeign($this->standardizeName($name));
+				 			$s = new FObjSocket(FModel::standardizeAttributeName($socketName),$candidate->getName());
+				 			$s->setForeign(FModel::standardizeName($name));
+			 				$s->setDescription($matchData['desc']);
 				 			$s->setQuantity("1");
 				 			$s->setReflection(false);
-				 			$s->setLookupTable($this->standardizeName($name));
+				 			$s->setLookupTable(FModel::standardizeName($name));
 				 			$s->setVisibility($this->config['AttributeVisibility']);
 				 			$candidate->addSocket($s);
 				 			// Create a column in the object table to store the relation
@@ -172,20 +202,7 @@ class FModel {
 							}
 						}
 					}
-		 		} else if (strtolower($type) == "extends") {
-		 			// Non-default inheritance specified... capture class name:
-		 			$candidate->setParentClass($this->standardizeName($name));	
-		 			
-		 			if ("FAccount" == $candidate->getParentClass() ) {
-		 				// Create a column in the object table to store the relation to the `app_accounts` table
-						$colname = "faccount_id";
-			 			$c = new FSqlColumn("faccount_id","INT(11) UNSIGNED",false,false,"link to FAccount data for this {$candidate->getName()}");
-			 			$this->tables[$lc_cand_name]->addColumn($c);
-			 			
-			 			// Alert the model that the additional tables: 'app_accounts' and 'app_roles' need to be generated
-						$this->use_accounts = true;
-		 			}
-		 		}
+		 		} 
 		 	}	
 		 }
 		
@@ -199,6 +216,10 @@ class FModel {
 		 // Discover Sockets
 		 foreach ($this->objects as $candidate) {
 		 	$lc_cand_name = strtolower($candidate->getName());
+			
+		 	if (!$this->obj_data[$lc_cand_name]) {
+		 		continue; 	// no attrs || dependencies defined for this object
+		 	}
 		 	$ckeys = array_keys($this->obj_data[$lc_cand_name]);
 		 	$cvals = array_values($this->obj_data[$lc_cand_name]);
 		 	
@@ -206,14 +227,14 @@ class FModel {
 		 		list($type,$name) = explode(" ",$statement);
 		 		if (strtolower($type) == "attr") {
 		 			if (isset($this->obj_data[$lc_cand_name][$statement]['foreign'])) {
-		 				$foreignClass = $this->standardizeName($this->obj_data[$lc_cand_name][$statement]['foreign']);
+		 				$foreignClass = FModel::standardizeName($this->obj_data[$lc_cand_name][$statement]['foreign']);
 		 				$s = new FObjSocket(
-		 					$this->standardizeAttributeName($name),
+		 					FModel::standardizeAttributeName($name),
 		 					$candidate->getName(),
 		 					$this->determineActualRemoteVariableName(
 				 				$candidate->getName(),					/* the class */
-				 				$this->standardizeAttributeName($name),	/* the socket name */
-				 				$this->standardizeName($foreignClass)	/* the foreign class */
+				 				FModel::standardizeAttributeName($name),	/* the socket name */
+				 				FModel::standardizeName($foreignClass)	/* the foreign class */
 								/* return attr name where: foreign class has a dependency on class which matches socketname */
 				 			)
 				 		);
@@ -248,55 +269,62 @@ class FModel {
 		 							break;	
 		 						}
 		 					}
+		 					
 		 					if ("" == $s->getLookupTable()) {
 	 							// No dependency detected (from above).
 	 							if ($s->doesReflect()){
-	 								// Use the lookup table from an earlier specified object
-	 								$fs = $this->objects[strtolower($foreignClass)]->getSockets();
-	 								foreach ($fs as $ffs) {
-	 									if (strtolower($ffs->getName()) == $s->getReflectVariable()) {
-	 										// Found reflected socket, use same lookup table
-	 										$s->setLookupTable($ffs->getLookupTable());	
-	 										break;
-	 									}		
-	 								}
-	 							} else {
-	 								// No dependency and no reflection, create a new lookup table 
-	 								// based on a FCFS naming scheme
-	 								$lt_name = "{$candidate->getName()}_{$foreignClass}_{$s->getName()}";
-	 								$lt = new FSqlTable($lt_name,true);
-	 								$lc_pk1name = strtolower(substr($candidate->getName(),0,1)).substr($candidate->getName(),1);
-	 								$lc_pk2name = strtolower(substr($foreignClass,0,1)).substr($foreignClass,1);
-	 								if ($lc_pk1name == $lc_pk2name) {
-	 									$lc_pk1name .= "1";
-	 									$lc_pk2name .= "2";
-	 								}
-	 								$c1 = new FSqlColumn("{$lc_pk1name}_id","INT(11) UNSIGNED");
-	 								$c2 = new FSqlColumn("{$lc_pk2name}_id","INT(11) UNSIGNED");
-	 								// Add Columns
-	 								$lt->addColumn($c1);
-	 								$lt->addColumn($c2);
-	 								// Add Primary Keys 
-	 								$lt->addPrimaryKey($c1);
-	 								$lt->addPrimaryKey($c2);
-	 								
-	 								$this->tables[strtolower($lt->getName())] = $lt;
-	 								$s->setLookupTable($lt_name);
-	 								
-	 								// Add delete information about this socket
-									if ("FAccount" == $name) {
-										die("improper use of 'FAccount' class");
-									} else {
-							 			$candidate->addDeleteInfo($this->createDeleteInfo(
-							 				$foreignClass,					/* foreign class */
-							 				"lookup",						/* relation type */
-							 				$s->getName(),					/* php variable name */
-							 				$lt->getName(),					/* sql lookup table name */
-							 				"{$lc_pk1name}_id",				/* sql column name */
-							 				"{$lc_pk2name}_id"));			/* sql column name */
+	 								// Check whether the object on the other end of the socket has already defined
+									// a lookup table for this relationship. If it has, use it:
+									$fs = $this->objects[strtolower($foreignClass)]->getSockets();
+									foreach ($fs as $ffs) {
+										if (strtolower($ffs->getName()) == $s->getReflectVariable()) {
+											// Found reflected socket, set the lookup table
+											$s->setLookupTable($ffs->getLookupTable($lt_name));
+											break;
+										}
 									}
-		 						}
+	 							}
 		 					}
+		 					
+		 					if ("" == $s->getLookupTable() && $s->doesReflect()) {
+		 						// No dependency detected (from above,above) and 
+								// No pre-defined lookup table for this relationship (from above)
+
+ 								// Create a new lookup table based on a FCFS naming scheme
+ 								$lt_name = "{$candidate->getName()}_{$foreignClass}_{$s->getName()}";
+ 								$lt = new FSqlTable($lt_name,true);
+ 								$lc_pk1name = strtolower(substr($candidate->getName(),0,1)).substr($candidate->getName(),1);
+ 								$lc_pk2name = strtolower(substr($foreignClass,0,1)).substr($foreignClass,1);
+ 								if ($lc_pk1name == $lc_pk2name) {
+ 									$lc_pk1name .= "1";
+ 									$lc_pk2name .= "2";
+ 								}
+ 								$c1 = new FSqlColumn("{$lc_pk1name}_id","INT(11) UNSIGNED");
+ 								$c2 = new FSqlColumn("{$lc_pk2name}_id","INT(11) UNSIGNED");
+ 								// Add Columns
+ 								$lt->addColumn($c1);
+ 								$lt->addColumn($c2);
+ 								// Add Primary Keys 
+ 								$lt->addPrimaryKey($c1);
+ 								$lt->addPrimaryKey($c2);
+ 								
+ 								$this->tables[strtolower($lt->getName())] = $lt;
+ 								$s->setLookupTable($lt_name);
+ 								
+ 								
+ 								// Add delete information about this socket
+								if ("FAccount" == $name) {
+									die("improper use of 'FAccount' class");
+								} else {
+						 			$candidate->addDeleteInfo($this->createDeleteInfo(
+						 				$foreignClass,					/* foreign class */
+						 				"lookup",						/* relation type */
+						 				$s->getName(),					/* php variable name */
+						 				$lt->getName(),					/* sql lookup table name */
+						 				"{$lc_pk1name}_id",				/* sql column name */
+						 				"{$lc_pk2name}_id"));			/* sql column name */
+								}
+	 						}
 		 				} else {
 		 					// In the case that a relationship is anything other than M:M, the lookup 
 		 					// table is simply the foreign class name.
@@ -304,14 +332,17 @@ class FModel {
 		 					$s->setLookupTable($lt);
 		 				}
 		 				if ($s->getLookupTable() == "") {
-		 					die("Could not determine lookup table to use for {$candidate->getName()}.{$s->getName()}");	
+		 					// This should theoretically be reached only in the event that a 'reflect' statement on a M:M socket
+							// references a relationship that has not been completely built yet. In that case, do nothing, but 
+							// perform a final check for empty lookuptable references after all objects have been built.
+							$this->checkLookupTables = true;
 		 				}
 		 				// Add the socket to the object's sockets array.
 		 				$candidate->addSocket($s);
 		 				
 		 			}/* end if isset 'foreign' */ else {
 		 				// Create and flesh out a normal (local) attribute
-		 				$a = new FObjAttr($this->standardizeAttributeName($name));
+		 				$a = new FObjAttr(FModel::standardizeAttributeName($name));
 		 				$attr_candidate = $this->obj_data[$lc_cand_name][$statement];
 		 				  $a->setType(((isset($attr_candidate['type'])) ? $attr_candidate['type'] : ""));
 		  				$a->setDescription(((isset($attr_candidate['desc'])) ? $attr_candidate['desc'] : ""));
@@ -345,6 +376,81 @@ class FModel {
 		  * have been modeled using FObjSocket objects, and all local attributes modeled using FObjAttr objects.
 		  * All required lookup tables have been determined, and, essentially, the hard work is done. 
 		  */ 
+		 
+		 /* If the 'checkLookupTables' flag has been set, run through all the objects to verify that their
+		  * 'lookupTable' values are valid (not empty).
+		  */
+		  if ($this->checkLookupTables) {
+		  	foreach ($this->objects as $o) {
+		  		foreach ($o->getSockets() as $s) {
+		  			if ("" == $s->getLookupTable()) {
+		  				die("Could not determine lookup table to use for {$o->getName()}.{$s->getName()}");	
+		  			}
+		  		}
+		  	}
+		  }
+    }
+    
+    public function export($format="YML") {
+    	switch (strtoupper($format)) {
+    		case "YML":
+    			return $this->exportYML();
+    			break;
+    		case "XML":
+    			return $this->exportXML();
+    			break;
+    		default:
+    			die("Unsupported export format '{$format}' requested.");
+    	}
+    }
+    
+    private function exportYML() {
+    	$r = "# Auto-generated application model file. \r\n\r\n";
+    	foreach ($this->objects as $o) {
+    		$r .= "# {$o->getName()}\r\n"
+				. "object {$o->getName()}:\r\n";
+				if ("FAccount" == $o->getParentClass() ) {
+					$r .= "  extends: FAccount\r\n";
+				}
+				foreach ($o->getSockets() as $s) {
+					if ($s->getQuantity() == "1") {
+						$matchVariable = $o->lookupDependency($s->getForeign(),$s->getName());
+						$r .= "  depends {$s->getForeign()}:\r\n"
+							. "    attr {$s->getName()}:\r\n"
+							. "      desc: {$s->getDescription()}\r\n"
+							. "      matches: {$matchVariable}\r\n";
+					}
+				}
+				
+				foreach ($o->getAttributes() as $a) {
+					$r .= "  attr {$a->getName()}:\r\n"
+						. "    desc: {$a->getDescription()}\r\n"
+						. "    type: {$a->getType()}\r\n"
+						. "    size: {$a->getSize()}\r\n"
+						. "    min:  {$a->getMin()}\r\n"
+						. "    max:  {$a->getMax()}\r\n"
+						. "    default: {$a->getDefaultValue()}\r\n"
+						. "    unique: " . (($a->isUnique() ? "yes" : "")) ."\r\n";
+				}
+				
+				foreach ($o->getSockets() as $s) {
+					if ($s->getQuantity() == "M") {
+						$r .= "  attr {$s->getName()}:\r\n"
+							. "    desc: {$s->getDescription()}\r\n"
+							. "    foreign: {$s->getForeign()}\r\n"
+							. "    quantity: {$s->getQuantity()}\r\n";
+						if ($s->doesReflect()) {
+							$r .= "    reflect: {$s->getForeign()}.{$s->getReflectVariable()}\r\n";
+						}
+					}
+				}
+			$r .= "\r\n\r\n";
+    	}
+    	return $r;
+    }
+    
+    private function exportXML() {
+    	
     }
     
  	/*
@@ -362,7 +468,7 @@ class FModel {
  	 * 
  	 *  (string) The standardized name.
  	 */
- 	private function standardizeName($name) {
+ 	public static function standardizeName($name) {
   		// 1. Replace all '_' with ' ';
   		// 2. Capitalize all words
   		// 3. Concatenate words
@@ -388,7 +494,7 @@ class FModel {
   	 * 
   	 *  (string) The standardized attribute name
   	 */
-  	private function standardizeAttributeName($name) {
+  	public static function standardizeAttributeName($name) {
   		// 1. Replace all '_' with ' ';
   		// 2. Capitalize all words
   		// 3. Concatenate words
@@ -460,7 +566,7 @@ class FModel {
 					list($ignore,$match) = explode(".",$attrData['matches']);
 					$lc_match = strtolower($match);
 					if ($lc_match == strtolower($socketName)) {
-						$std_attr = $this->standardizeName($attrName);
+						$std_attr = FModel::standardizeName($attrName);
 						return strtolower(substr($std_attr,0,1).substr($std_attr,1));
 					}
 				}
