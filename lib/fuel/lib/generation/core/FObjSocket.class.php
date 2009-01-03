@@ -186,7 +186,7 @@
   	 *  (string) - The socket's description
   	 */
  	public function getDescription() {
- 		return $this->description;	
+ 		return stripslashes($this->description);
  	}
  	
  	/*
