@@ -173,7 +173,8 @@ class FModel {
 								(isset($matchData['matches']) 
 									? strtolower($matchData['matches'])
 									: ''),
-								FModel::standardizeAttributeName($socketName)
+								FModel::standardizeAttributeName($socketName),
+								$matchData['desc']
 							);
 							// Create a socket to service this dependency. This allows a child
 				 			// object to call upon its parent.
@@ -232,9 +233,9 @@ class FModel {
 		 					FModel::standardizeAttributeName($name),
 		 					$candidate->getName(),
 		 					$this->determineActualRemoteVariableName(
-				 				$candidate->getName(),					/* the class */
+				 				$candidate->getName(),						/* the class */
 				 				FModel::standardizeAttributeName($name),	/* the socket name */
-				 				FModel::standardizeName($foreignClass)	/* the foreign class */
+				 				FModel::standardizeName($foreignClass)		/* the foreign class */
 								/* return attr name where: foreign class has a dependency on class which matches socketname */
 				 			)
 				 		);
@@ -412,11 +413,17 @@ class FModel {
 				if ("FAccount" == $o->getParentClass() ) {
 					$r .= "  extends: FAccount\r\n";
 				}
+				$socketsByClass = array();
 				foreach ($o->getSockets() as $s) {
 					if ($s->getQuantity() == "1") {
-						$matchVariable = $o->lookupDependency($s->getForeign(),$s->getName());
-						$r .= "  depends {$s->getForeign()}:\r\n"
-							. "    attr {$s->getName()}:\r\n"
+						$socketsByClass[$s->getForeign()][] = $s;
+					}
+				}
+				foreach ($socketsByClass as $foreignClass => $socketData) {
+					$r .= "  depends {$foreignClass}:\r\n";
+					foreach ($socketData as $s) {
+						$matchVariable = $o->lookupDependency($foreignClass,$s->getName());
+						$r .= "    attr {$s->getName()}:\r\n"
 							. "      desc: {$s->getDescription()}\r\n"
 							. "      matches: {$matchVariable}\r\n";
 					}
@@ -496,13 +503,14 @@ class FModel {
   	 */
   	public static function standardizeAttributeName($name) {
   		// 1. Replace all '_' with ' ';
-  		// 2. Capitalize all words
-  		// 3. Concatenate words
-  		// 4. Make the first letter lowercase
+		// 2. Replace all '-' with ' ';
+  		// 3. Capitalize all words
+  		// 4. Concatenate words
+  		// 5. Make the first letter lowercase
   		//
   		// Turns: long_variable_name
   		// into:  longVariableName
-  		$s = str_replace(" ","",ucwords(str_replace("_"," ",$name)));
+  		$s = str_replace(" ","",ucwords(str_replace("-"," ",str_replace("_"," ",$name))));
   		return strtolower(substr($s,0,1)) . substr($s,1);
   	} 	
 
@@ -556,6 +564,8 @@ class FModel {
   	 */
   	private function determineActualRemoteVariableName($requestingClass,$socketName,$remoteClass) {
   		/* return attr name where: remoteClass has a dependency on requestingClass which matches socketName */
+		/* or */
+		/* return attr name where: reflected attribute is $requestingClass.$socketName */
 		
 		$data =& $this->obj_data[strtolower($remoteClass)];
 		
@@ -570,6 +580,9 @@ class FModel {
 						return strtolower(substr($std_attr,0,1).substr($std_attr,1));
 					}
 				}
+			} else if ("{$requestingClass}.{$socketName}" == $subdata['reflect']) {
+				list($ignore,$remoteSocketName) = split(" ",$label);
+				return ($remoteSocketName);
 			}
 		}	
   	}
