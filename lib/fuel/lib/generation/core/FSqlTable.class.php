@@ -75,6 +75,9 @@
   	}
   	public function addColumn($obj) {
   		$this->columns[strtolower($obj->getName())] = $obj;
+  		if ("PRIMARY" == $obj->getKey() ) {
+  			$this->addPrimaryKey($obj);
+  		}
   	}
   	
   	public function removeColumn($name) {

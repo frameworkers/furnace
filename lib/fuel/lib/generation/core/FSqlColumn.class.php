@@ -156,7 +156,7 @@
   		$comment = (("" == $this->getComment())? "" : "COMMENT '".str_replace("'","''",$this->getComment())."' ");
   		$default = (("" == $this->getDefaultValue())? "" : "DEFAULT \"{$this->getDefaultValue()}\" ");
   		$autoinc = (($this->isAutoinc())? "auto_increment " : "");
-  		return "`{$this->getName()}` {$this->getColType()} {$null}{$default}{$autoinc}{$comment}";
+  		return "`{$this->getName()}` {$this->getColType()} {$null} {$default} {$autoinc} {$comment} ";
   	}  
 }
 ?>
