@@ -165,7 +165,6 @@ class DataController extends Controller {
 				}
 			}
 			
-			$o = new $objectType(false);
 			$obj = call_user_func_array(array($objectType,"Create"),$params);
 			foreach ($object->getAttributes() as $attr) {
 				$set = "set{$attr->getName()}";
@@ -185,6 +184,28 @@ class DataController extends Controller {
 		$this->redirect("/fuel/data/objects/{$class}");
 	}
 	
+	public function objectSave() {
+		if ($this->form) {
+			$this->init();
+			$objectClass = $this->form['objectClass'];
+			$objectId = $this->form['objectId'];
+			
+			$object = call_user_func(array($objectClass,"Retrieve"),$objectId);
+			
+			foreach ($this->form as $attr => $value) {
+				list($prefix,$attrName) = explode("_",$attr);
+				
+				if ("attr" == $prefix) {
+					$func = "set".FModel::standardizeAttributeName($attrName);
+					$object->$func($value,false);
+				}
+			}
+			$object->save();
+			
+			$this->flash("Changes saved!");
+			$this->redirect("/fuel/data/object/{$objectClass}/{$objectId}");
+		}
+	}
 	
 	private function init() {
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/MDB2/FDatabase.class.php");

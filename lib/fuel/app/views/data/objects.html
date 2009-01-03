@@ -1,0 +1,101 @@
+<style type="text/css">
+ tr {
+ 
+ }
+ th {
+ 	border-bottom:solid 2px #888;
+ }
+ td {
+ 	border-bottom:solid 1px #ccc;
+ 	border-right:solid 1px #ccc;
+ 	padding:5px;
+ }
+ div#pagination {
+ 	margin-top:15px;
+ 	padding-top:8px;
+ 	padding-left:5px;
+ 	padding-right:5px;
+ 	color:#345;
+ 	font-size:80%;
+ 	border-top:solid 2px #8a8;
+ }
+ ul#pagination {
+ 	margin:0px;
+ 	padding:0px;
+ 	margin-top:10px;
+ 	display:inline;
+ }
+ ul#pagination li {
+ 	display:inline;
+ 	margin:3px;
+ }
+ ul#pagination li a {
+ 	padding:5px;
+ 	padding-left:8px;
+ 	padding-right:8px;
+ 	background-color:#abc;
+ 	border:solid 1px #888;
+ 	color:#456;
+ }
+ ul#pagination li a:hover {
+ 	background-color:#89a;
+ }
+ ul#pagination li a.activeLink {
+ 	border:0;
+ 	background-color:transparent;
+ }
+</style>
+<span style="margin-left:15px;">
+<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/data/">Application Data</a>&nbsp;/
+[tp.object.name]
+</span>
+<h1>Application Data Manager</h1>
+<h3>Object Type: <a href="[tp..fconfig_url_base]/fuel/model/editObject/[tp.object.name]">[tp.object.name]</a></h3>
+
+<table cellspacing="0" cellpadding="3">
+<tr>
+  <th>[tp.headers;block=th][@]</th>
+</tr>
+<tr>
+  <td>[tp.obj_data;block=tr][@;glue=</td><td>]</td>
+</tr>
+</table>
+Displaying objects [tp.objPagination.stats.start] through 
+[tp.objPagination.stats.end] of [tp.objPagination.stats.total]<br/>
+<div id="pagination">
+Pages: 
+<ul id="pagination">
+  <li>[tp.objPagination.data;block=li]
+  	<a class="[tp-if:tp.currentPage=@.pageNumber;content=`activeLink`]" href="[tp..fconfig_url_base]/fuel/data/objects/[tp.object.name]/[@.suffix]">[@.pageNumber]</a>
+  </li>
+</ul>
+</div>
+
+
+<h2>Create a new '[tp.objectClass.name]' object:</h2>
+<form action="[tp..fconfig_url_base]/fuel/data/create/[tp.objectClass.name]" method="POST"/>
+<input type="hidden" name="fobjectType" value="[tp.objectClass.name]"/>
+<table>
+<tr><th>[tp-if:tp.objectClass.parentClass=FAccount;block=table]Username:</th>
+	<td><input type="text" name="username"/></td>
+</tr>
+<tr><th>Password:</th>
+	<td><input type="password" name="password"/></td>
+</tr>
+<tr><th>Email Address:</th>
+	<td><input type="text" name="emailAddress"/></td>
+</tr>
+</table>
+<table>
+  <tr>
+    <th>[tp.objectClass.attributes;block=tr][@.name]</th>
+    <td><input type="text" name="[@.name]"/></td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td><input type="submit" value="Create"/></td>
+  </tr>
+</table>
+</form>
