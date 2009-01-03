@@ -155,6 +155,24 @@
  		return $this->attributes;	
  	}
  	
+ 	public function getAttribute($name) {
+ 		foreach ($this->attributes as $a) {
+ 			if (strtolower($name) == strtolower($a->getName())) {
+ 				return $a;
+ 			}
+ 		}
+ 	}
+ 	
+ 	public function deleteAttribute($name) {
+ 		for ($i = 0; $i < count($this->attributes); $i++) {
+ 			if (strtolower($this->attributes[$i]->getName()) == strtolower($name)) {
+ 				unset($this->attributes[$i]);
+ 				return true;
+ 			}
+ 		}
+ 		return false;
+ 	}
+ 	
  	/*
  	 * Function: addSocket
  	 * 
@@ -187,6 +205,16 @@
  	 */
  	public function getSockets() {
  		return $this->sockets;	
+ 	}
+ 	
+ 	public function deleteSocket($socketName) {
+ 		for ($i = 0; $i < count($this->sockets); $i++ ) {
+ 			if (strtolower($this->sockets[$i]->getName()) == strtolower($socketName)) {
+ 				unset($this->sockets[$i]);
+ 				return true;
+ 			}
+ 		}
+ 		return false;
  	}
  	
  	/*
@@ -275,11 +303,28 @@
  	 *  matchVariable - The match variable
  	 *  socketName - The name of the socket representing this dependency
  	 */
- 	public function addDependency($className,$matchVariable='',$socketName='') {
-		$this->depends[$className] = 
+ 	public function addDependency($className,$matchVariable='',$socketName='',$description='') {
+		$this->depends[] = 
 			array("class"=>$className,
 				"var"=>$matchVariable,
-				"name"=>$socketName);
+				"name"=>$socketName,
+				"desc"=>$description);
+		//var_dump($this->depends);
+ 	}
+ 	
+ 	public function lookupDependency($className,$socketName) {
+ 		//var_dump($className);
+ 		//var_dump($socketName);
+ 		$matchVariable = false;
+ 		foreach ($this->depends as $d) {
+ 			if (strtolower($className) == strtolower($d['class']) 
+ 				&& strtolower($socketName) == strtolower($d['name'])){
+ 					$matchVariable = $d['var'];
+ 					break;
+ 			}
+ 		}
+ 		//var_dump($matchVariable);
+ 		return $matchVariable;
  	}
  	
  	/*
@@ -324,7 +369,13 @@
  	 * 
  	 */
  	public function toPhpString() {
- 		return $this->generateObjectAttrsClassString()
+ 		$header = "\r\n\r\n"
+			. "/**\r\n"
+			. " *\tObject: {$this->name}\r\n"
+			. " *\t\tExtends: {$this->getParentClass()}\r\n"
+			. " *\t\t\r\n"
+			. " */\r\n";
+ 		return $header
  				. $this->generateObjectClassString()
  				. $this->generateObjectCollectionClassString();
  		
@@ -445,13 +496,16 @@
 				. "\t\t\t}\r\n";
  		}
  		$r	.= "\t\t}\r\n\r\n";
- 			
+ 		
+ 		
+ 		
  		// Add Getters
  		foreach ($this->attributes as $a) {
  			$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n"
  				. "\t\t\treturn \$this->{$a->getName()};\r\n"
  				. "\t\t}\r\n\r\n";	
  		}
+ 		
  		foreach ($this->sockets as $s) {
  			if ("1" == $s->getQuantity() ) {
  				$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n"
@@ -495,19 +549,21 @@
  		if ("FAccount" == $this->parentClass) {
  			$r .= "\t\t\t\tparent::faccount_save();\r\n";
  		}
- 		$r .= "\t\t\t\t\$q = \"UPDATE `{$this->getName()}` SET \" \r\n";
- 			$temp = array();
- 			foreach ($this->attributes as $a) {
- 			 	if ($a->getType() == "text" || $a->getType() == "string") {
- 					$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='\".addslashes(\$this->{$a->getName()}).\"'";
- 				} else {
- 					$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='{\$this->{$a->getName()}}'";
+ 		if (count($this->attributes) > 0) {
+ 			$r .= "\t\t\t\t\$q = \"UPDATE `{$this->getName()}` SET \" \r\n";
+ 				$temp = array();
+ 				foreach ($this->attributes as $a) {
+ 				 	if ($a->getType() == "text" || $a->getType() == "string") {
+ 						$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='\".addslashes(\$this->{$a->getName()}).\"'";
+ 					} else {
+ 						$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='{\$this->{$a->getName()}}'";
+ 					}
  				}
- 			}
- 		$r .= implode(", \"\r\n",$temp)
- 			. " \";\r\n"
- 			. "\t\t\t\t\$q .= \"WHERE `objId`='{\$this->objId}'\";\r\n"
- 			. "\t\t\t} else {\r\n"
+ 			$r .= implode(", \"\r\n",$temp)
+ 				. " \";\r\n"
+ 				. "\t\t\t\t\$q .= \"WHERE `objId`='{\$this->objId}'\";\r\n";
+			}
+ 			$r .= "\t\t\t} else {\r\n"
  			. "\t\t\t\t\$q = \"UPDATE `{$this->getName()}` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `objId`='{\$this->objId}' \";\r\n" 
  			. "\t\t\t}\r\n"
  			. "\t\t\t_db()->exec(\$q);\r\n"
