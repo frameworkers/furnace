@@ -1,0 +1,41 @@
+<span style="margin-left:15px;">
+<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
+Users and Roles:</span>
+<h1>Existing Users and Roles</h1>
+<table>
+  <tr>
+    <th>Username</th><th>Email Address</th>
+    <th>[tp.defined_roles.#;block=th][@]</th>
+  <tr>
+    <td>[tp.users.#;block=tr][@.username]</td>
+    <td>[@.emailAddress]</td>
+    
+    <td style="text-align:center;">[@.roles.#;block=td][@]</td>
+    <td><a href="[tp..fconfig_url_base]/fuel/roles/deleteUser/[@.objId]">Delete</a></td>
+  </tr>
+</table>
+
+<h2>Create a New Account</h2>
+<form action="[tp..fconfig_url_base]/fuel/roles/createAccount" method="POST">
+	<table>
+	  <tr>
+	    <td>Username:</td>
+	    <td><input type="text" name="username" id="new-username"/></td>
+	  </tr>
+	  <tr>
+	    <td>Password:</td>
+	    <td><input type="password" name="password"/></td>
+	  </tr>
+	  <tr>
+	    <td>Email Address:</td>
+	    <td><input type="text" name="email"/></td>
+	  </tr>
+	  <tr>
+	    <td>&nbsp;</td>
+	    <td style="text-align:right;"><input type="submit" value="Create"/></td>
+	  </tr>
+	</table>
+
+</form>
+
