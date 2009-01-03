@@ -1,0 +1,253 @@
+<style type="text/css"> 
+	input[type=text] {
+		border:solid 0px #888;
+		width:100%;
+		height:100%;
+		padding:3px;
+		padding-right:0px;
+		padding-left:0px;
+		background-color:#f3f3f3;
+	}
+	table {
+		border:solid 1px #888;
+		font-size:90%;
+	}
+	th {
+		border-bottom:solid 1px #888;
+		padding:3px;
+	}
+	td {
+		border-left:solid 1px #bbb;
+		border-bottom:solid 1px #bbb;
+		background-color:#f3f3f3;
+		padding:3px;
+	}
+	select {
+		width:100%;
+		border:solid 1px #888;
+	}
+	input[type=submit] {
+		padding:1px;
+	}
+	div.container {
+		width:80%;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:20px;
+		border-left:solid 1px #ccc;
+		border-bottom:solid 1px #ccc;
+		padding:5px;
+		padding-bottom:35px;
+	}
+
+	h2 {
+		border-bottom:solid 2px #ccc;
+		margin:0px;
+		margin-top:15px;
+		margin-left:-5px;
+		padding-left:5px;
+		color:#333;
+	}
+	h3 {
+		border-bottom:solid 1px #468;
+		margin-bottom:2px;
+		margin-top:50px;
+		font-weight:normal;
+		color:#333;
+	}
+	h4 {
+		font-weight:normal;
+		margin-top:16px;
+		margin-bottom:4px;
+	}
+</style>
+<span style="margin-left:15px;">
+<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/model/">AppChemistry</a></span>&nbsp;/
+Edit Object: [tp.object.name]
+
+<div class="container">
+
+<h2>[tp.object.name]</h2>
+
+<h3 style="margin-top:20px;">Attributes:</h3>
+<h4>Local</h4>
+<form action="[tp..fconfig_url_base]/fuel/model/addAttribute" method="POST">
+<input type="hidden" name="objectClass" value="[tp.object.name]"/>
+<table style="width:100%;" cellspacing="0" cellpadding="0">
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Type</th>
+    <th>Size</th>
+    <th>Min</th>
+    <th>Max</th>
+    <th>Default</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+    <td>[tp.object.attributes;block=tr][@.name]</td>
+    <td>[@.description]</td>
+    <td>[@.type]</td>
+    <td>[@.size]</td>
+    <td>[@.min]</td>
+    <td>[@.max]</td>
+    <td>[@.defaultValue]</td>
+    <td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteAttribute/[tp.object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  </tr>
+  <tr>
+  	<td style="width:18%;"><input type="text" name="attrName"/></td>
+  	<td style="width:30%;"><input type="text" name="attrDescription"/></td>
+  	<td style="width:10%;"><select name="attrType">
+  		<option value="integer">integer</option>
+  		<option value="float">float</option>
+  		<option	value="string">string</option>
+  		<option value="text">text</option>
+  		<option value="datetime">datetime</option>
+  		<option value="date">date</option>
+  	</select></td>
+  	<td style="width:5%;"><input type="text" name="attrSize"/></td>
+  	<td style="width:5%;"><input type="text" name="attrMin"/></td>
+  	<td style="width:5%;"><input type="text" name="attrMax"/></td>
+  	<td style="width:10%;"><input type="text" name="attrDefault"/></td>
+  	<td style="width:10%;"><input type="submit" value="Create"/></td>
+  
+  </tr>
+</table>
+</form>
+<div>
+[tp-if:tp.object.parentClass=FAccount;block=div]
+<h4>Inherited from FAccount</h4>
+<table style="width:100%;" cellspacing="0" cellpadding="0">
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Type</th>
+    <th>Size</th>
+    <th>Min</th>
+    <th>Max</th>
+    <th>Default</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+  	<td style="width:18%;">username</td>
+  	<td style="width:30%;">The unique name for the [tp.object.name]</td>
+  	<td style="width:10%;">string</td>
+  	<td style="width:5%;">20</td>
+  	<td style="width:5%;"></td>
+  	<td style="width:5%;"></td>
+  	<td style="width:10%;"></td>
+  	<td style="width:10%;"></td>
+  </tr>
+  <tr>
+  	<td style="width:18%;">password</td>
+  	<td style="width:30%;">An MD5 encrypted password field </td>
+  	<td style="width:10%;">string</td>
+  	<td style="width:5%;">255</td>
+  	<td style="width:5%;"></td>
+  	<td style="width:5%;"></td>
+  	<td style="width:10%;"></td>
+  	<td style="width:10%;"></td>
+  </tr>
+  <tr>
+  	<td style="width:18%;">emailAddress</td>
+  	<td style="width:30%;">The unique email address for the [tp.object.name]</td>
+  	<td style="width:10%;">string</td>
+  	<td style="width:5%;">80</td>
+  	<td style="width:5%;"></td>
+  	<td style="width:5%;"></td>
+  	<td style="width:10%;"></td>
+  	<td style="width:10%;"></td>
+  </tr>
+</table>
+</div>
+
+<h3>Relationships:</h3>
+<h4>M-1 (Parents)</h4>
+<form action="[tp..fconfig_url_base]/fuel/model/addDependency" method="POST">
+<input type="hidden" name="objectClass" value="[tp.object.name]"/>
+<table style="width:100%;" cellspacing="0" cellpadding="0">
+  <tr>
+    <th>Local Attribute Name</th>
+    <th>Foreign Object</th>
+    <th>Description</th>
+    <th>(optional) Foreign Attribute Name</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+  	<td>[tp.object.dependencies;block=tr][@.name]</td>
+  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.class]">[@.class]</a></td>
+  	<td>[@.desc]</td>
+  	<td>[@.var]</td>
+  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteDependency/[tp.object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  </tr>
+  <tr>
+    <td style="width:15%;"><input type="text" name="socketName"/></td>
+    <td style="width:20%;"><select name="dependingClass">
+    		<option>[tp.model.objects;block=option][@.name]</option>
+    	</select>
+    </td>
+    <td style="width:30%;"><input type="text" name="description"/></td>
+    <td><input type="text" name="matchVariable"/></td>
+    <td style="width:10%;"><input type="submit" value="Create"/></td>
+  </tr>
+</table>
+</form>
+<h4>1-M (Children)</h4>
+<table style="width:100%;" cellspacing="0" cellpadding="0">
+  <tr>
+    <th>Local Attribute Name</th>
+    <th>Foreign Object</th>
+    <th>Quantity</th>
+    <th>Description</th>
+    <th>(optional) Foreign Attribute Name</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+  	<td>[tp.children;block=tr][@.name]</td>
+  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+  	<td>[@.quantity]</td>
+  	<td>[@.description]</td>
+  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  </tr>
+</table>
+
+<h4>M-M (Peers)</h4>
+<form action="[tp..fconfig_url_base]/fuel/model/addMMRelationship" method="POST">
+<input type="hidden" name="objectClass" value="[tp.object.name]"/>
+<input type="hidden" name="quantity" value="M"/>
+<table style="width:100%;" cellspacing="0" cellpadding="0">
+  <tr>
+    <th>Local Attribute Name</th>
+    <th>Foreign Object</th>
+    <th>Quantity</th>
+    <th>Description</th>
+    <th>(optional) Foreign Attribute Name</th>
+    <th>Action</th>
+  </tr>
+  <tr>
+  	<td>[tp.relationships;block=tr][@.name]</td>
+  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+  	<td>[@.quantity]</td>
+  	<td>[@.description]</td>
+  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  </tr>
+  <tr>
+  	<td style="width:15%;"><input type="text" name="socketName"/></td>
+  	<td style="width:20%;"><select name="dependingClass">
+    		<option>[tp.model.objects;block=option][@.name]</option>
+    	</select>
+    </td>
+    <td style="width:5%;">M</td>
+    
+    
+    <td style="width:30%;"><input type="text" name="description"/></td>
+    <td><input type="text" name="matchVariable"/></td>
+    <td style="width:10%;"><input type="submit" value="Create"/></td>
+  </tr>
+</table>
+</form>
+</div><!-- end container -->

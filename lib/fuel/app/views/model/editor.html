@@ -1,0 +1,21 @@
+<style type="text/css">
+	textarea#ff_modelEditor {
+		margin:15px;
+		margin-top:5px;
+		width:85%;	
+		height:500px;
+	}
+</style>
+<span style="margin-left:15px;">
+<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
+Edit Model File (YAML):</span>
+<form method="POST" action="[tp..fconfig_url_base]/fuel/model/saveModel/">
+	<textarea id="ff_modelEditor" name="contents">[tp.modelcontents]</textarea><br/>
+	<span style="margin-left:15px;">
+		<input type="submit" value="Save Changes"/>&nbsp;
+		<a style="border:0;" href="[tp..fconfig_url_base]/fuel/">
+			<input type="button" value="Return Without Saving"/>
+		</a>
+	</span>
+</form>
