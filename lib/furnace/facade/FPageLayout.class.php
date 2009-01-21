@@ -12,6 +12,7 @@
 class FPageLayout extends FPage {
 
 	public function __construct($templatePath) {
+		parent::__construct();
 		parent::setTemplate($templatePath);
 	}
 }
