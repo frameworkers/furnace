@@ -84,6 +84,21 @@
 		return $r;
 	}
 	
+    public function queryAll($q) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
+			$bm_start = microtime(true);	
+		}	
+		$r = $this->mdb2->queryAll($q);
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
+			$bm_end   = microtime(true);
+			$GLOBALS['queries'][] = array( 
+				'sql'   => $q,
+				'delay' => $bm_end - $bm_start
+			);	
+		}
+		return $r;
+	}
+	
 	public function setLimit($count,$offset) {
 		$this->mdb2->setLimit($count,$offset);
 	}
