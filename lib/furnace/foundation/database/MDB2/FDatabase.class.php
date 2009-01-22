@@ -84,7 +84,7 @@
 		return $r;
 	}
 	
-    public function queryAll($q) {
+	public function queryAll($q) {
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
