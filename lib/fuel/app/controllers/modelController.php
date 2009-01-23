@@ -470,9 +470,23 @@ END;
 			$s->setQuantity("M");
 			$s->setReflection(true,FModel::standardizeAttributeName($this->form['matchVariable']));
 			
-			$lookupTable = FModel::standardizeName($this->form['objectClass'])
-				. "_" . FModel::standardizeName($this->form['dependingClass'])
-				. "_" . FModel::standardizeAttributeName($this->form['socketName']);
+			
+			// Determine Lookup table name for the socket
+			$ordered_names = array(
+				$this->form['objectClass'],
+				$this->form['dependingClass']
+			);
+			sort($ordered_names);
+			
+			if ($ordered_names[0] == $this->form['objectClass']) {
+				$lookupTable = FModel::standardizeName($this->form['objectClass'])
+					. "_" . FModel::standardizeName($this->form['dependingClass'])
+					. "_" . FModel::standardizeAttributeName($this->form['socketName']);
+			} else {
+				$lookupTable = FModel::standardizeName($this->form['dependingClass'])
+					. "_" . FModel::standardizeName($this->form['objectClass'])
+					. "_" . FModel::standardizeAttributeName($this->form['matchVariable']);
+			}
 			
 			$s->setLookupTable($lookupTable);
 			$s->setVisibility($m->config['AttributeVisibility']);

@@ -291,8 +291,25 @@ class FModel {
 		 						// No dependency detected (from above,above) and 
 								// No pre-defined lookup table for this relationship (from above)
 
- 								// Create a new lookup table based on a FCFS naming scheme
- 								$lt_name = "{$candidate->getName()}_{$foreignClass}_{$s->getName()}";
+ 								// Create a new lookup table based on a ALPHABETIC naming scheme
+								$ordered_names = array(
+									$candidate->getName(),
+									$foreignClass
+								);
+								sort($ordered_names);
+								
+								if ($ordered_names[0] == $candidate->getName()) {
+									$lt_name = FModel::standardizeName($candidate->getName())
+										. "_" . FModel::standardizeName($foreignClass)
+										. "_" . FModel::standardizeAttributeName($s->getName());
+								} else {
+									$lt_name = FModel::standardizeName($foreignClass)
+										. "_" . FModel::standardizeName($candidate->getName())
+										. "_" . FModel::standardizeAttributeName(
+											$this->determineActualRemoteVariableName($candidate->getName(),$s->getName(),$foreignClass));
+								}
+			
+ 								//$lt_name = "{$candidate->getName()}_{$foreignClass}_{$s->getName()}";
  								$lt = new FSqlTable($lt_name,true);
  								$lc_pk1name = strtolower(substr($candidate->getName(),0,1)).substr($candidate->getName(),1);
  								$lc_pk2name = strtolower(substr($foreignClass,0,1)).substr($foreignClass,1);
