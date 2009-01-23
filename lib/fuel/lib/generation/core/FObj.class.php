@@ -542,6 +542,38 @@
 					. "\t\t}\r\n\r\n";
 			}
 		}
+		
+		// Adders and removers (for MM relationships)
+		foreach ($this->sockets as $s) {
+			if (false !== strstr($s->getLookupTable(),"_") ) {
+				$r .= "\t\tpublic function add{$s->getFunctionName()}(\$ids) {\r\n";
+				$owner   = FModel::standardizeAttributeName($s->getOwner());
+				$foreign = FModel::standardizeAttributeName($s->getForeign());
+				if ($s->getOwner() == $s->getForeign()) {
+					$r .= "\t\t\t\$q = \"INSERT INTO `{$s->getLookupTable()}` (`{$owner}1_id`,`{$owner}2_id`) VALUES \";\r\n";
+				} else {
+					$r .= "\t\t\t\$q = \"INSERT INTO `{$s->getLookupTable()}` (`{$owner}_id`,`{$foreign}_id`) VALUES  \";\r\n";
+				}
+				$r .= "\t\t\tif (is_array(\$ids)) {\r\n"
+					. "\t\t\t\t\$subq = array();\r\n"
+					. "\t\t\t\tforeach (\$ids as \$id) { \$subq[] = \"({\$this->getObjId()},{\$id})\";}\r\n"
+					. "\t\t\t\t\$q .= implode(\",\",\$subq);\r\n"
+					. "\t\t\t} else {\r\n"
+					. "\t\t\t\t\$q .= \"({\$this->getObjId()},{\$ids})\";\r\n"
+					. "\t\t\t}\r\n"
+					. "\t\t\t_db()->exec(\$q);\r\n"
+					. "\t\t}\r\n"
+					. "\t\t\r\n"
+					. "\t\tpublic function remove{$s->getFunctionName()}(\$ids) {\r\n";
+				if ($s->getOwner() == $s->getForeign()) {
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$s->getLookupTable()}` WHERE ((`{$owner}1_id`={\$this->getObjId()} AND `{$owner}2_id` IN (\".implode(',',\$ids).\")) OR (`{$owner}2_id`={\$this->getObjId()} AND `{$owner}1_id` IN (\".implode(',',\$ids).\"))  \";\r\n";
+				} else {
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$s->getLookupTable()}` WHERE `{$owner}_id`={\$this->getObjId()} AND `{$foreign}_id` IN (\".implode(',',\$ids).\") \";\r\n";
+				}
+				$r .= "\t\t\t_db()->exec(\$q);\r\n"
+					. "\t\t}\r\n\r\n";
+			}
+		}
  		
  		// Add Save Function
  		$r .= "\t\tpublic function save(\$attribute = '') {\r\n"
