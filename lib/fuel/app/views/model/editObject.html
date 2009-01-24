@@ -84,6 +84,7 @@ Edit Object: [tp.object.name]
     <th>Min</th>
     <th>Max</th>
     <th>Default</th>
+    <th>Unique?</th>
     <th>Action</th>
   </tr>
   <tr>
@@ -94,6 +95,7 @@ Edit Object: [tp.object.name]
     <td>[@.min]</td>
     <td>[@.max]</td>
     <td>[@.defaultValue]</td>
+    <td style="text-align:center;">[tp-if:@.isUnique;content=`Yes`;else=`No`]</td>
     <td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteAttribute/[tp.object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
@@ -111,7 +113,8 @@ Edit Object: [tp.object.name]
   	<td style="width:5%;"><input type="text" name="attrMin"/></td>
   	<td style="width:5%;"><input type="text" name="attrMax"/></td>
   	<td style="width:10%;"><input type="text" name="attrDefault"/></td>
-  	<td style="width:10%;"><input type="submit" value="Create"/></td>
+  	<td style="width:2%;text-align:center;"><input type="checkbox" name="attrUnique"/></td>
+  	<td style="width:10%;text-align:center;"><input type="submit" value="Create"/></td>
   
   </tr>
 </table>

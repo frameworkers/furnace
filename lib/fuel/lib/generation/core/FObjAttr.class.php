@@ -44,7 +44,7 @@
   	
   	// Variable: isUnique
   	// A boolean flag indicating whether or not the value is unique.
-  	private $isUnique;
+  	public $isUnique;
   	
   	// Variable: default
   	// A default value for the variable.

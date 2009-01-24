@@ -234,6 +234,7 @@ END;
 	
 	public function addAttribute() {
 		if ($this->form) {
+
 			$objectClass = $this->form['objectClass'];
 			
 			$this->init();
@@ -245,6 +246,7 @@ END;
 			$attr->setMin($this->form['attrMin']);
 			$attr->setMax($this->form['attrMax']);
 			$attr->setDefaultValue($this->form['attrDefault']);
+			$attr->setIsUnique(isset($this->form['attrUnique']));
 			
 			$columnExtraData = array(
 				'size' => $attr->getSize(),
@@ -257,11 +259,17 @@ END;
 				false,												/* null */
 				false,												/* autoinc */
 				$attr->getDescription());							/* description */
+
+			if ($attr->isUnique()) {
+				$column->setKey("UNIQUE");
+			}
+			
 			
 			$m = $this->getModel();
 			if (!isset($m->objects[strtolower($objectClass)])) {
 				die("Object '{$objectClass}' is not defined in the model.");
 			}
+			
 			$object = $m->objects[strtolower($objectClass)];
 			$object->addAttribute($attr);
 			$m->tables[strtolower($objectClass)]->addColumn($column);
@@ -271,6 +279,9 @@ END;
 			
 			// Execute SQL commands
 			_db()->exec("ALTER TABLE `{$objectClass}` ADD COLUMN {$column->toSqlString()}");
+			if ($attr->isUnique()) {
+				_db()->exec("ALTER TABLE `{$objectClass}` ADD UNIQUE (`{$attr->getName()}`) ");
+			}
 			
 			// Regenerate PHP code
 			$this->generateObjects();
@@ -300,6 +311,11 @@ END;
 			
 			// Execute SQL commands
 			_db()->exec("ALTER TABLE `{$objectClass}` DROP COLUMN `{$attributeName}`");
+			try {
+				_db()->exec("ALTER TABLE `{$objectClass}` DROP INDEX `{$attributeName}` ");
+			} catch (Exception $e) {
+				// silently ignore
+			}
 			
 			// Regenerate PHP code
 			$this->generateObjects();
