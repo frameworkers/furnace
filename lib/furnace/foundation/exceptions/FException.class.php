@@ -117,4 +117,10 @@ class FDatabaseErrorTranslator {
 		}
 	}
 }
+
+class MDB2_ErrorTranslator {
+	public static function translate($obj) {
+		return $obj->message;
+	}	
+}
 ?>

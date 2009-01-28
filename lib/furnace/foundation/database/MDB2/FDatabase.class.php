@@ -44,6 +44,10 @@
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->query($q);
+		if ( MDB2::isError($r) ) {
+			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
+			die($e->__toString());	
+		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
@@ -59,6 +63,10 @@
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->queryRow($q);
+		if ( MDB2::isError($r) ) {
+			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
+			die($e->__toString());	
+		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
@@ -74,6 +82,29 @@
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->queryOne($q);
+		if ( MDB2::isError($r) ) {
+			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
+			die($e->__toString());	
+		}
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
+			$bm_end   = microtime(true);
+			$GLOBALS['queries'][] = array( 
+				'sql'   => $q,
+				'delay' => $bm_end - $bm_start
+			);	
+		}
+		return $r;
+	}
+	
+	public function queryAll($q) {
+		if ($GLOBALS['fconfig_debug_level'] == 2) {
+			$bm_start = microtime(true);	
+		}	
+		$r = $this->mdb2->queryAll($q);
+		if ( MDB2::isError($r) ) {
+			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
+			die($e->__toString());	
+		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
@@ -108,6 +139,10 @@
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->exec($q);
+		if ( MDB2::isError($r) ) {
+			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
+			die($e->__toString());	
+		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
@@ -121,7 +156,11 @@
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->lastInsertID($q);
+		$r = $this->mdb2->lastInsertID();
+		if ( MDB2::isError($r) ) {
+			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
+			die($e->__toString());	
+		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
