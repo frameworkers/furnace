@@ -58,11 +58,11 @@
 		return $r;		
 	}
 	
-	public function queryRow($q) {
+	public function queryRow($q,$fetchmode = MDB2_FETCHMODE_DEFAULT) {
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryRow($q);
+		$r = $this->mdb2->queryRow($q,$fetchmode);
 		if ( MDB2::isError($r) ) {
 			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
 			die($e->__toString());	
@@ -96,30 +96,15 @@
 		return $r;
 	}
 	
-	public function queryAll($q) {
+	public function queryAll($q,$fetchmode = MDB2_FETCHMODE_DEFAULT) {
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryAll($q);
+		$r = $this->mdb2->queryAll($q,$fetchmode);
 		if ( MDB2::isError($r) ) {
 			$e = new FDatabaseException(MDB2_ErrorTranslator::translate($r),"\"{$q}\"");
 			die($e->__toString());	
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
-			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
-				'sql'   => $q,
-				'delay' => $bm_end - $bm_start
-			);	
-		}
-		return $r;
-	}
-	
-	public function queryAll($q) {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
-			$bm_start = microtime(true);	
-		}	
-		$r = $this->mdb2->queryAll($q);
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
