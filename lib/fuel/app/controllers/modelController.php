@@ -45,17 +45,7 @@ class ModelController extends Controller {
 	}
 	
 	public function generate() {
-		if (!$this->form) {
-			$this->set('rootdir',$GLOBALS['fconfig_root_directory']);
-			$bRootDirectorySet = 
-				($GLOBALS['fconfig_root_directory'] != '' &&
-				 $GLOBALS['fconfig_root_directory'] != '/path/to/project/root');
-			$bModelExists = file_exists($GLOBALS['fconfig_root_directory'] . '/app/model/model.yml');
-			$this->set('preflt',array(
-				'modelFileExists' =>$bModelExists,
-				'rootDirectorySet'=>$bRootDirectorySet));
-			$this->set('allgood', ($bRootDirectorySet && $bModelExists));
-		}	
+	
 	}
 	
 	public function export($format="YML") {

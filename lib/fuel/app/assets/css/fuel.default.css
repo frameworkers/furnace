@@ -8,13 +8,34 @@ body.ff {
 }
 div.ff_header {
 	position:relative;
-	
 	height:110px;
 	background:url(../images/fuel_logo.png) scroll center center no-repeat;
 	background-color:#fff;
 	border:solid 4px #cbcbcb;
 	border-left:0px;
 	border-right:0px;
+}
+div.ff_breadcrumbs {
+	background-color:#999;
+	padding-bottom:5px;
+	
+	border-bottom:solid 2px #eee;
+}
+div.ff_breadcrumbs ul {
+	list-style:none;
+	margin-left:0px;
+	margin-top:0px;
+	margin-bottom:2px;
+	padding-left:5px;
+	padding-top:3px;
+	border-top:solid 1px #888;
+}
+div.ff_breadcrumbs ul li {
+	display:inline;
+}
+div.ff_breadcrumbs ul li a {
+	color:#eee;
+	font-weight:bold;
 }
 div.ff_sectionContainer {
 	position:relative;	
