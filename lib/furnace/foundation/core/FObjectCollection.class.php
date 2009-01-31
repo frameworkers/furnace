@@ -336,6 +336,11 @@
  		}
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
+ 		// If only 1 result matches, return it as a scalar value
+ 		if (1 == $result->numRows()) {
+ 			return new $this->objectType($result->fetchRow(MDB2_FETCHMODE_ASSOC));
+ 		}
+ 		// If more than 1 result matches, construct an array
  		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
  			if ($k == "objId") {
  				$results[] = new $this->objectType($row);	
