@@ -168,8 +168,45 @@
  	if (false !== ($user = FSessionManager::checkLogin())) {
  		return $user;
  	} else {
+ 		_err('You must be logged in to continue...');
  		header("Location: {$failPage}");
  		exit;
+ 	}
+ }
+ 
+ // FUNCTION: _err()
+ function _err($productionMessage,$debugMessage='',$isFatal = false,$handler='unknown') {
+ 	// display the error to the user
+ 	// if debugging, display the debug message, if defined, else the production message
+ 	// if not debugging, display the production message
+ 	if (0 == $GLOBALS['fconfig_debug_level']) {
+ 		// Production Mode
+ 		if ('' != $productionMessage) {
+ 			// Display the production message
+ 			$_SESSION['flashes'][] = array(
+				'message' => $productionMessage,
+				'cssClass'=> 'error',
+				'title'   => 'Error:'
+			);	
+ 		}
+ 	} else {
+ 		// Debug Mode
+		$_SESSION['flashes'][] = array(
+			'message' => (($GLOBALS['fconfig_debug_level'] > 0) 
+					? (('' == $debugMessage)
+						? $productionMessage 
+						: $debugMessage) 
+					: $productionMessage),
+			'cssClass'=> 'error',
+			'title'   => 'Error:'
+		);
+ 	}
+ 	// log the error (and email?) if fatal
+ 	
+ 	// redirect if fatal
+ 	if ($isFatal) {
+ 		_start_request("/_error/{$handler}");
+ 		exit();
  	}
  }
  

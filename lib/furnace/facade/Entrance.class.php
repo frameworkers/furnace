@@ -125,11 +125,12 @@
 			$this->controller = new $this->controllerClassName();
 			// Check that the appropriate function has been defined in the class
 			if (!is_callable(array($this->controller,$this->viewName))) {
-				$this->fatal(
-					"The function {$this->controllerClassName}::{$this->viewName} "
-					."has not been implemented yet."
-				);
-				return true;
+				_err('',
+					 "The function <pre>{$this->controllerClassName}::{$this->viewName}</pre> has not been implemented yet."
+					 ."<br/>Insert the following code: <pre>public function {$this->viewName}() {}</pre>"
+					 ."<br/>Into the file: <pre>/app/controllers/{$this->controllerClassName}.php</pre>",
+					 true,
+					 'http404');
 			}
 			// Check that the template file exists
 			$this->templatePath = $this->controllerDirectory
@@ -142,10 +143,12 @@
 			// If everything above this passed, return true
 			return true;
 		} else {
-			$this->fatal(
-				"The controller file 'app/controllers/{$this->controllerClassName}.php' "
-				."does not exist yet.");
-			return true;
+			_err('',
+					 "The controller file <pre>/app/controllers/{$this->controllerClassName}.php</pre> does not exist yet."
+					 ."<br/>Insert the following code: <pre>class {$this->controllerClassName} {}</pre>"
+					 ."<br/>Into the file: <pre>/app/controllers/{$this->controllerClassName}.php</pre>",
+					 true,
+					 'http404');
 		}
 	}
 	
@@ -156,9 +159,11 @@
 			$this->viewArguments
 		);
 		if (!file_exists($this->templatePath)) {
-			$this->fatal(
-				"The view 'app/views/{$this->controllerName}/{$this->viewName}.html "
-				. "does not exist yet.");
+			_err('',
+					 "The view <pre>/app/views/{$this->controllerName}/{$this->viewName}.html</pre> does not exist yet."
+					 ."<br/>Create the file to remove this error. ",
+					 true,
+					 'http404');
 		}
 		$this->controller->setTemplate($this->templatePath);
 		
@@ -182,7 +187,7 @@
 		if ($this->validRequest($request)) {
 			$this->dispatchRequest($flashText,$cssClass);
 		} else {
-			die("Invalid redirect request made.");
+			_err('Invalid redirect request made','',true);
 		}
 	}
 	
@@ -194,24 +199,6 @@
 	}
 	public function getControllerClassName() {
 		return $this->controllerClassName;	
-	}
-	
-	private function fatal($debug_message) {
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$this->controllerClassName = "_furnaceController";
-			$this->viewName            = "debug";
-			$this->viewArguments       = array($debug_message,$this->requestURI);
-			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
-			$this->controller = new $this->controllerClassName();
-			$this->templatePath = $this->controllerDirectory . "/../views/_furnace/debug.html";
-		} else {
-			$this->controllerClassName = "_errorController";
-			$this->viewName   = "http404";
-			$this->viewArguments = array($this->requestURI);
-			require_once("{$this->controllerDirectory}/{$this->controllerClassName}.php");
-			$this->controller = new $this->controllerClassName();
-			$this->templatePath = $this->controllerDirectory . "/../views/_error/404.html";
-		}
 	}
  }
 ?>
