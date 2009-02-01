@@ -1,0 +1,20 @@
+div.error {
+	border:solid 1px red;
+	background-color:#fcc;
+	padding:5px;
+	margin-top:3px;
+	margin-bottom:3px;
+}
+
+div.error h1 {
+	font-size:110%;
+	margin:0px;
+	color:#911;
+}
+
+div.error pre {
+	display:inline;
+	font-weight:bold;
+	padding-left:5px;
+	padding-right:5px;
+}
