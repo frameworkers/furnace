@@ -63,7 +63,11 @@
  	$bm_current_request = null;
  }
  
- _start_request($_SERVER['REQUEST_URI']);
+ if (checkFuelLogin() ) {
+ 	_start_request($_SERVER['REQUEST_URI']);
+ } else {
+ 	_start_request("/fuel/login");
+ }
  
  if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$bm_end = microtime(true);
@@ -226,4 +230,12 @@
  	}
  }
 
+ 
+ function checkFuelLogin() {
+ 	if (isset($_SESSION['fuel']['loggedin']) && $_SESSION['fuel']['loggedin']) {
+ 		return true;
+ 	} else {
+ 		return false;
+ 	}
+ }
 ?>

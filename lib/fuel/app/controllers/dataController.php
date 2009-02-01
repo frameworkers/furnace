@@ -161,7 +161,13 @@ class DataController extends Controller {
 			}
 			foreach ($object->getAttributes() as $attr) {
 				if ($attr->isUnique()) {
-					$params[] = $attr->getName();
+					$params[] = $this->form[$attr->getName()];
+				}
+			}
+			
+			foreach ($object->getSockets() as $sock) {
+				if ($sock->getQuantity() == 1) {
+					$params[] = $this->form[$sock->getName().'_id'];
 				}
 			}
 			

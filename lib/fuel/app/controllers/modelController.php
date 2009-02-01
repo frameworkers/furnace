@@ -242,6 +242,8 @@ END;
 			
 			// Redirect to the new object's edit page
 			$this->redirect("/fuel/model/editObject/{$objectType}");
+		} else {
+			die("GET not supported. Try again using POST");
 		}
 	}
 	

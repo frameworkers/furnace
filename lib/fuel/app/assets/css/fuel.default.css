@@ -15,6 +15,11 @@ div.ff_header {
 	border-left:0px;
 	border-right:0px;
 }
+div.ffuel_loginDetails {
+	position:absolute;
+	top:134px;
+	right:5px;
+}
 div.ff_breadcrumbs {
 	background-color:#999;
 	padding-bottom:5px;

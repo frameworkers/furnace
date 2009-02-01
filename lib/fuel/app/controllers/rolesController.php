@@ -45,25 +45,26 @@ class RolesController extends Controller {
  			$id = FAccountManager::Create($this->form['username'],$this->form['password'],$this->form['email']);
  			$this->flash("A new account was created for user '{$this->form['username']}' with unique id '{$id}'");
  		} else {
- 			$this->flash("Could not create account. Try POSTing the data.","error");
- 		}
+			die("GET not supported. Try again using POST");
+		}
  		$this->redirect("/fuel/roles");
  	}
  	
- 	public function defineRole($name,$default) {
- 		if (_user("/login")) {
- 			_account()->requireRole("administrator","/login");
- 			FAccount::DefineRole($name,$default);
- 			$this->redirect("/");
- 		}
+ 	public function defineRole() {
+		if ($this->form) {
+			$name    =& $this->form['name'];
+			$desc    =& $this->form['desc'];
+			$default = ("grant" == $this->form['default']) ? true : false;
+			FAccount::DefineRole($name,$default,$desc);
+			$this->redirect("/");
+		} else {
+			die("GET not supported. Try again using POST");
+		}
  	}
  	
  	public function deleteRole($name) {
- 		if (_user("/login")) {
- 			_account()->requireRole("administrator","/login");
- 			FAccount::DeleteRole($name);
- 			$this->redirect("/");
- 		}
+		FAccount::DeleteRole($name);
+		$this->redirect("/");
  	}
  	
  	public function getPower() {

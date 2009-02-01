@@ -17,6 +17,14 @@
 $fconfig_root_directory = dirname(dirname(dirname(__FILE__)));
 
 /*
+ * ROOT PASSWORD
+ *   Setting this password will allow you to manage your application
+ * using the FUEL web-based management interface. If this password
+ * is blank, you will not be able to use FUEL.
+ */
+$fconfig_root_password  = '';
+
+/*
  * URL_BASE
  * The base url (default is /) to expect at the beginning of 
  * each request. This is particularly helpful when your 

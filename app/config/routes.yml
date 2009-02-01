@@ -29,6 +29,12 @@ login:
 ## only be matched if every previous rule fails. 
 ##
 ##
+fuel_login:
+  url: /fuel/login
+  map: {controller: _default, view: login}
+fuel_logout:
+  url: /fuel/logout
+  map: {controller: _default, view: logout}
 fuel_default:
   url: /fuel/:controller/:view
 fuel_index:

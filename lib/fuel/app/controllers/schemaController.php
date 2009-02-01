@@ -27,7 +27,6 @@ class SchemaController extends Controller {
 		
 		// Analyze differences DATABASE vs MODEL
 		foreach ($model->tables as $mt) {
-			if ($mt->getName() == "FAccount") {continue;}
 			$tables[$mt->getName()] = array("name"=>$mt->getName(),"found"=>false,"status"=>false);
 			foreach ($d->getTables() as $dt) {
 				if ($dt->getName() == $mt->getName()) {
@@ -60,7 +59,9 @@ class SchemaController extends Controller {
 		// Analyze differences MODEL vs DATABASE
 		foreach ($d->getTables() as $dt) {
 			if ($dt->getName() == "FAccount") {continue;}
-			
+			if ($dt->getName() == "app_accounts") {continue;}
+			if ($dt->getName() == "app_roles") {continue;}
+						
 			$bFound = false;
 			foreach ($model->tables as $mt) {
 				if ($mt->getName() == $dt->getName()) {

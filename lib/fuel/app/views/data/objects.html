@@ -97,6 +97,10 @@ Pages:
     <td><input type="text" name="[@.name]"/></td>
   </tr>
   <tr>
+  	<th [tp.objectClass.sockets;block=tr]>[@.name] [tp-if:@.quantity=1;content=`ID`;else=` (NOT FUNCTIONAL)`]</th>
+  	<td><input type="text" name="[@.name]_id"/></td>
+  </tr>
+  <tr>
     <td>&nbsp;</td>
     <td><input type="submit" value="Create"/></td>
   </tr>
