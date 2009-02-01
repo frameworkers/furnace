@@ -11,9 +11,7 @@
 class _FurnaceController extends Controller {
 	
 	public function debug($message) {
-		
 		$this->set('message',$message);
-		
 	}
 	
 	public function unavailable() {

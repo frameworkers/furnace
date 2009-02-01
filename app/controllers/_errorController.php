@@ -12,9 +12,15 @@ class _ErrorController extends Controller {
 	
 	
 	
-	public function http404($request) {
-		$this->set('request',$request);
+	public function http404($request='') {
+		$this->addStylesheet('error');
+		$this->set('request',$_SERVER['REQUEST_URI']);
 		
+	}
+	
+	public function unknown($request='') {
+		$this->addStylesheet('error');
+		$this->set('request',$request);	
 	}
 	
 }
