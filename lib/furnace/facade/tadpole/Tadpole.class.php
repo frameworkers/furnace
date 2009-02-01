@@ -397,12 +397,18 @@ class Tadpole {
 		
 		// -- Process the left hand side variable (tp,@)
 		if ("tp" == $lhsParts[0]){
-			unset($lhsParts[0]);
-			$lhs_value = $this->getRecursively($lhsParts);
+			if (count($lhsParts) > 1 && "" == $lhsParts[1]) {
+				unset($lhsParts[0]);
+				unset($lhsParts[1]);
+				$lhs_value = $this->getRecursively($lhsParts,$GLOBALS);
+			} else {
+				unset($lhsParts[0]);
+				$lhs_value = $this->getRecursively($lhsParts);
+			}
 		} else if ("@" == $lhsParts[0]) {
 			unset($lhsParts[0]);
 			$lhs_value = $this->getRecursively($lhsParts,$iter_data);
-		}
+		} 
 		
 		
 		// -- Process the right hand side variable (tp,@,~,true,false,_scalar_)
