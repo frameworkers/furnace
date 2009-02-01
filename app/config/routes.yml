@@ -18,6 +18,9 @@
 ## ADD CUSTOM ROUTES HERE:
 ## Add custom routes (if needed) for your application here.
 ##
+login:
+  url: /login
+  map: { controller: _default, view: login }
 
 ###########################################################
 ## SITEWIDE DEFAULT ROUTES
