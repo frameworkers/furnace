@@ -314,13 +314,13 @@ class FAccount extends FBaseObject {
 			$r = _db()->exec($q);
 		}
 		
-		public static function DefineRole($name,$defaultAttribution) {
+		public static function DefineRole($name,$defaultAttribution,$description='') {
 			if (true == $defaultAttribution) {
 				$default = 1;
 			} else {
 				$default = 0;
 			}
-			$q = "ALTER TABLE `app_roles` ADD COLUMN `{$name}` INT(11) DEFAULT {$default} ";
+			$q = "ALTER TABLE `app_roles` ADD COLUMN `{$name}` INT(11) DEFAULT {$default} COMMENT '{$description}' ";
 			$r = _db()->exec($q);
 		}
 		
