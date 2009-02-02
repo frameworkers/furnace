@@ -58,7 +58,10 @@ div.pageFooter a {
 div.pageFooter a:hover {
 	text-decoration:underline;
 }
-
+div.ff_benchmark {
+	margin:5px;
+	font-size:80%;	
+}
 h2.ff {
 	font-weight:normal;
 	font-size:21px;

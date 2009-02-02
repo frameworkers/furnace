@@ -71,7 +71,7 @@
  /* BENCHMARKING REPORTING ***********************************************/
  if ($GLOBALS['fconfig_debug_level'] == 2) {
  	$setupTime   = $bm_setup_end - $bm_start;
- 	echo "Page loaded in " . ($bm_end - $bm_start) . " seconds\r\n";
+ 	echo "<div class=\"ff_benchmark\">Page loaded in " . ($bm_end - $bm_start) . " seconds\r\n";
  	echo "\r\n<table class=\"ff_benchmark\">\r\n";
  	echo "\r\n<caption>".count($GLOBALS['queries']) ." Queries:</caption>\r\n";
  	$queryTime = 0;
@@ -85,6 +85,7 @@
  		echo "--- {$r['uri']} : " . ($r['stop'] - $r['start']) . "<br/>\r\n";	
  	}
  	echo "-- Total Query Delay: {$queryTime}<br/>\r\n";
+ 	echo "</div><!--end benchmarking-->";
  }
  exit();
  
