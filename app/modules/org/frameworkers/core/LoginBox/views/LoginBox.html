@@ -1,28 +1,21 @@
-<div>
-	[tp-if:tp.session._fwauth;block=div]
-	Logged in as [tp.session._fwauth.username]
-</div>
-<div>
-	[tp-if:tp.session._fwauth=~;block=div]
-	Not logged in.
-</div>
 <div class="error">
 	[tp-if:tp.loginError;block=div]
 	Incorrect username/password combination provided. Please Try again...
 </div>
 <form method="POST" >
-	<table>
+	<table class="LoginBox">
 	  <tr>
 	    <td>Username:</td>
-	    <td><input type="text" name="username"/></td>
+	    <td colspan="2"><input type="text" name="username"/></td>
 	  </tr>
 	  <tr>
 	    <td>Password:</td>
 	    <td><input type="password" name="password"/></td>
+	    <td><input id="LoginBoxLoginButton" type="submit" value="Log In"/></td>
 	  </tr>
 	  <tr>
-	    <td><input type="submit" value="Log In"/></td>
 	    <td>&nbsp;</td>
+	    
 	  </tr>
 	</table>
 </form>
