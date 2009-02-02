@@ -2,7 +2,7 @@
 
 class FController extends FPage {
 	
-	protected $form;
+	protected $form = array();
 	
 	public function __construct () {
 		parent::__construct();
