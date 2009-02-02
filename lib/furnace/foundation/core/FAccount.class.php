@@ -211,6 +211,13 @@ class FAccount extends FBaseObject {
 			}
 		}
 
+/*
+ * THESE SHOULD NEVER BE CALLED.
+ * Once an account has been associated with a unique object, it is mated for life.
+ * The values of 'objectClass' and 'objectId' must be invariant across the lifetime
+ * of an object. They are used by faccount_save to properly access object's faccount
+ * attributes.
+ * 
 		public function setObjectClass($value,$bSaveImmediately = true) {
 			$this->objectClass = $value;
 			if ($bSaveImmediately) {
@@ -224,6 +231,9 @@ class FAccount extends FBaseObject {
 				$this->faccount_save('objectId');
 			}
 		}
+*
+* 
+*/
 
 		public function faccount_save($attribute = '') {
 			if('' == $attribute) {
@@ -238,7 +248,7 @@ class FAccount extends FBaseObject {
 				. "`objectId`='{$this->objectId}' ";
 				$q .= "WHERE `objId`='{$this->objId}'";
 			} else {
-				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}' WHERE `objId`='{$this->objId}' ";
+				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}' WHERE `objectId`='{$this->objectId}' AND `objectClass`='{$this->objectClass}' ";
 			}
 			_db()->exec($q);
 		}
