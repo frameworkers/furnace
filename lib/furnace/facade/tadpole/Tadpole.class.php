@@ -13,7 +13,7 @@ class Tadpole {
 		"[tp."    => "processAbsolute",
 		"[@"      => "processRelative",
 		"[tp-if:" => "processConditional",
-		"[!"      => "processSuper"
+		"[tp!"      => "processSuper"
 	);
 		
 	protected $endMarker = "]";
@@ -200,6 +200,8 @@ class Tadpole {
 			if ("" == $id_parts[1]) {
 				unset($id_parts[1]);// drop the '' and use GLOBALS
 				$data = $this->getRecursively($id_parts,$GLOBALS);
+			} else if ("!" == $id_parts[1][0]) {
+				$data = $this->processSuper(trim($id_parts[1],"!"),$contents,$identifier,$iter_data = array()); 
 			} else {
 				$data = $this->getRecursively($id_parts);
 			}
@@ -311,6 +313,21 @@ class Tadpole {
 			}
 		}
 		
+	}
+	
+	protected function processSuper($id,&$contents,$identifier,$iter_data = array()) {
+		switch ($id) {
+			case "now":
+				return date((isset($this->commands['format'])
+					? $this->commands['format']
+					: 'Y-m-d h:i:s'),mktime());
+			case "today":
+				return date((isset($this->commands['format'])
+					? $this->commands['format']
+					: 'Y-m-d'),mktime());
+			default:
+				break;
+		}
 	}
 	
 	protected function getRecursively(&$vars,$data_source=null,$start="",$ordinal=null) {
@@ -566,23 +583,23 @@ class Tadpole {
 	
 	protected function processTagCommands(&$data) {
 		// USE DEFAULT VALUE, IF SPECIFIED
-		if ("" == $data && "" != $this->commands['ifempty']) {
+		if (isset($this->commands['ifempty']) && "" == $data ) {
 			$data = $this->commands['ifempty'];
 		}
 		
 		
 		// USE DEFAULT VALUE FOR DATES, IF SPECIFIED
-		if ("0000-00-00" == $data && "" != $this->commands['ifnever']) {
+		if (isset($this->commands['ifnever']) && "0000-00-00" == $data) {
 			$data = $this->commands['ifnever'];
 		}
 		
 		// USE DEFAULT VALUE FOR 0-valued NUMBERS, IF SPECIFIED 
-		if ("0" == $data && "" != $this->commands['ifzero']) {
+		if (isset($this->commands['ifzero']) && "0" == $data ) {
 			$data = $this->commands['ifzero'];
 		}
 		
 		// GLUE DATA TOGETHER, IF REQUIRED
-		if (is_array($data) && isset($this->commands['glue'])) {
+		if (isset($this->commands['glue']) && is_array($data) ) {
 			$data = implode($this->commands['glue'],$data);
 		}
 		
@@ -597,6 +614,13 @@ class Tadpole {
 					break;
 				}
 			}	
+		}
+		
+		// PROCESS DATE FORMATS
+		if (isset($this->commands['type']) && $this->commands['type'] == 'date') {
+			$data = date((isset($this->commands['format'])
+				? $this->commands['format']
+				: 'Y-m-d h:i:s'),strtotime($data));
 		}
 	}
 	
