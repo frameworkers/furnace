@@ -45,7 +45,17 @@ class ModelController extends Controller {
 	}
 	
 	public function generate() {
-	
+		if (!$this->form) {
+			$this->set('rootdir',$GLOBALS['fconfig_root_directory']);
+			$bRootDirectorySet = 
+				($GLOBALS['fconfig_root_directory'] != '' &&
+				 $GLOBALS['fconfig_root_directory'] != '/path/to/project/root');
+			$bModelExists = file_exists($GLOBALS['fconfig_root_directory'] . '/app/model/model.yml');
+			$this->set('preflt',array(
+				'modelFileExists' =>$bModelExists,
+				'rootDirectorySet'=>$bRootDirectorySet));
+			$this->set('allgood', ($bRootDirectorySet && $bModelExists));
+		}	
 	}
 	
 	public function export($format="YML") {
@@ -159,57 +169,6 @@ END;
 				$this->flash("<strong>Error!</strong> &nbsp;Please provide all required information before submitting!","error");
 				$this->redirect("/fuel/model/");
 			}
-			if ($objectParent == "FAccount") {
-				// Check whether `app_accounts` and `app_roles` already exist in the database
-				$tables = _db()->queryAll("SHOW TABLES");
-				$foundAccounts = $foundRoles = false;
-				foreach ($tables as $t) {
-					if ("app_accounts" == $t[0]) {
-						$foundAccounts = true;
-					}
-					if ("app_roles" == $t[0]) {
-						$foundRoles = true;
-					}	
-				}
-				// If one or more do not exist, add them:
-				if (!$foundAccounts) {
-					$fAccounts = <<<END
--- 
--- Table structure for table `app_accounts`
--- 
-
-CREATE TABLE `app_accounts` (
-  `objId` int(11) unsigned NOT NULL auto_increment COMMENT 'The unique id of this object in the database',
-  `username` varchar(20) NOT NULL COMMENT 'The username associated with this account',
-  `password` varchar(160) NOT NULL COMMENT 'The password for the account',
-  `emailAddress` varchar(80) NOT NULL COMMENT 'The email address associated with this account',
-  `status` varchar(20) NOT NULL COMMENT 'The status of this account',
-  `secretQuestion` varchar(160) NOT NULL COMMENT 'The secret question for access to this account',
-  `secretAnswer` varchar(160) NOT NULL COMMENT 'The secret answer for the secret question',
-  `objectClass` varchar(50) NOT NULL COMMENT 'The class of the primary object associated with this account',
-  `objectId` int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
-  PRIMARY KEY  (`objId`),
-  UNIQUE KEY `username` (`username`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
-END;
-					_db()->exec($fAccounts);
-
-				}
-				if (!$foundRoles) {
-					$fRoles = <<<END
--- 
--- Table structure for table `app_roles`
--- 
-
-CREATE TABLE `app_roles` (
-  `accountId` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`accountId`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
-END;
-					_db()->exec($fRoles);
-					
-				}
-			}
 			// Actually create the object
 			$m = $this->getModel();
 			$m->objects[$lc_objectType] = new FObj($objectType,false,$objectParent);
@@ -242,8 +201,6 @@ END;
 			
 			// Redirect to the new object's edit page
 			$this->redirect("/fuel/model/editObject/{$objectType}");
-		} else {
-			die("GET not supported. Try again using POST");
 		}
 	}
 	
@@ -683,7 +640,7 @@ END;
 	}
 	
 	private function init() {
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/MDB2/FDatabase.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");

@@ -3,56 +3,55 @@
  * frameworkers-foundation
  * 
  * FDatabase.class.php
- * Created on May 30, 2008
+ * Created on Feb, 03, 2009
  *
- * Copyright 2008 Frameworkers.org. 
+ * Copyright 2008-2009 Frameworkers.org. 
  * http://www.frameworkers.org
  */
  
  /*
   * Class: FDatabase
   * 
-  * Lightweight wrapper for the PEAR MDB2 database abstraction package.
+  * Lightweight wrapper for the PEAR DB database abstraction package.
   * 
   */
-  require_once("MDB2.php");
+
+  require_once("DB.php");
   
-  //CONSTANT DEFINITIONS
-  define("FDATABASE_FETCHMODE_ASSOC",MDB2_FETCHMODE_ASSOC);
+  // CONSTANT DEFINITIONS
+  define("FDATABASE_FETCHMODE_ASSOC", DB_FETCHMODE_ASSOC);
   
-  //DATABASE WRAPPER
+  
+  // DATABASE WRAPPER
   class FDatabase  {
   	
-  	private $mdb2;
+  	private $db;
   	
   	private function __construct() {
   		if ($GLOBALS['fconfig_debug_level'] > 0) {
-  			$this->mdb2 = MDB2::singleton($GLOBALS['fconfig_debug_dsn']);
+  			$this->db = DB::connect($GLOBALS['fconfig_debug_dsn']);
   		} else {
-  			$this->mdb2 = MDB2::singleton($GLOBALS['fconfig_production_dsn']);
+  			$this->db = DB::connect($GLOBALS['fconfig_production_dsn']);
   		}
-  		// Turn off case-fixing portability switch
-		$this->mdb2->setOption('portability',MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);
   	}
-	
-	public static function singleton() {
-		static $db;
-		
-		if (!isset($db)) {
-			$c  = __CLASS__;
-			$db = new $c();	
-		}	
-		
-		return $db;
-	}
+  	
+  	public static function singleton() {
+  		static $database;
+  		if (!isset($database)) {
+  			$c = __CLASS__;
+  			$database = new $c();
+  		}
+  		
+  		return $database;
+  	}
 		
 	public function query($q) {
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->query($q);
-		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
+		$r = $this->db->query($q);
+		if ( DB::isError($r) ) {
+			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
 			die($e->__toString());	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
@@ -69,9 +68,9 @@
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryRow($q);
-		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
+		$r = $this->db->getRow($q);
+		if ( DB::isError($r) ) {
+			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
 			die($e->__toString());	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
@@ -88,9 +87,9 @@
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryOne($q);
-		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
+		$r = $this->db->getOne($q);
+		if ( DB::isError($r) ) {
+			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
 			die($e->__toString());	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
@@ -107,9 +106,9 @@
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryAll($q);
-		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
+		$r = $this->db->getAll($q);
+		if ( DB::isError($r) ) {
+			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
 			die($e->__toString());	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
@@ -123,16 +122,16 @@
 	}
 	
 	public function setLimit($count,$offset) {
-		$this->mdb2->setLimit($count,$offset);
+		$this->db->setLimit($count,$offset);
 	}
 	
 	public function exec($q) {
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->exec($q);
-		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
+		$r = $this->db->query($q);
+		if ( DB::isError($r) ) {
+			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
 			die($e->__toString());	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
@@ -148,27 +147,27 @@
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->lastInsertID($q);
-		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
+		$r =& $this->queryOne('select last_insert_id()');
+		if ( DB::isError($r) ) {
+			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
 			die($e->__toString());	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
 			$GLOBALS['queries'][] = array( 
-				'sql'   => 'LAST INSERT ID',
+				'sql'   => 'SELECT LAST_INSERT_ID',
 				'delay' => $bm_end - $bm_start
 			);	
 		}
-		return $r;		
+		return $r;	
 	}
 	
 	public function setFetchMode($mode) {
-		return $this->mdb2->setFetchMode($mode);	
+		return $this->db->setFetchMode($mode);	
 	}
-  
+	
 	public static function isError($result) {
-		return MDB2::isError($result);
+		return DB::isError($result);
 	}
   }
 

@@ -26,7 +26,7 @@ class FSessionManager {
 		 $q = "SELECT * FROM `app_accounts` "
 			. "WHERE `username`='{$un}' AND `password`='{$encrypted}' ";
 		 _db()
-		 	->setFetchMode(MDB2_FETCHMODE_ASSOC);
+		 	->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
 		 $r = _db()->queryRow($q);
 		 if (is_array($r)) {
 		 	// Populate session
@@ -49,14 +49,14 @@ class FSessionManager {
 		$fws['activity'] = mktime();
 		$fws['idleseconds'] = 0;
 		$fws['username'] = $data['username'];
-		$fws['accountid']= $data['objid'];
-		$fws['objectId'] = $data['objectid'];
-		$fws['objectClass'] = $data['objectclass'];
+		$fws['accountid']= $data['objId'];
+		$fws['objectId'] = $data['objectId'];
+		$fws['objectClass'] = $data['objectClass'];
 		$fws['status']   = $data['status'];
 		$_SESSION['_fwauth'] = $fws;
 		
 		$_SESSION['username'] = $data['username'];
-		$_SESSION['userid']   = $data['objectid'];
+		$_SESSION['userid']   = $data['objectId'];
 	}
 	
 	private function uninitSession() {

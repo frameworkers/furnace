@@ -461,7 +461,7 @@
 			. "\t\t\t\$this->objId = \$data['objId'];\r\n";
  		foreach ($this->sockets as $s) {
  			if ("1" == $s->getQuantity() ) {
- 				$r .= "\t\t\t\$this->{$s->getName()} = \$data['".strtolower($s->getName())."_id'];\r\n";	
+ 				$r .= "\t\t\t\$this->{$s->getName()} = \$data['{$s->getName()}_id'];\r\n";	
  			} else {
  				if ("1" == $s->getQuantity()) {
  					$filter = "WHERE `" . $s->getOwner() . "_id`='{\$data['objId']}'";
@@ -483,7 +483,7 @@
  			}
  		}
  		foreach ($this->attributes as $a) {
- 			$r .= "\t\t\t\$this->{$a->getName()} = \$data['".strtolower($a->getName())."'];\r\n";
+ 			$r .= "\t\t\t\$this->{$a->getName()} = \$data['{$a->getName()}'];\r\n";
  		}
 
  		if ($this->doesDepend("FAccount")) {
@@ -646,9 +646,6 @@
 		$r .= "\t\t\t// Create a new {$this->getName()} object in the database\r\n";
  		$r .= "\t\t\t\$q = \"INSERT INTO `{$this->getName()}` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
  		$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n";
- 		$r .= "\t\t\tif (MDB2::isError(\$r)) {\r\n";
- 		$r .= "\t\t\t\tFDatabaseErrorTranslator::translate(\$r->getCode());\r\n";
- 		$r .= "\t\t\t}\r\n";
  		$r .= "\t\t\t\$objectId = _db()->lastInsertID(\"{$this->getName()}\",\"objId\");\r\n";
  	 		
  		// If the object extends FAccount, create a new account object first, and store the core
@@ -671,7 +668,7 @@
 			. "\t\t\t// Build the data array to pass to the constructor\r\n";
  		$r .= "\t\t\t\$data = array(\"objId\"=>\$objectId";
  		foreach ($dataua as $a) {
- 			$r .= ",\r\n\t\t\t\t\"".strtolower($a)."\"=>\${$a}";
+ 			$r .= ",\r\n\t\t\t\t\"{$a}\"=>\${$a}";
  		}
  		$r .= "\r\n\t\t\t);\r\n";
 
@@ -682,7 +679,7 @@
  		
  		// Add Retrieve Function
  		$r .= "\t\tpublic static function Retrieve(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n";
-		$r .= "\t\t\t_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);\r\n";
+		$r .= "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n";
 		$r .= "\t\t\t\$collection = new {$this->getName()}Collection();\r\n";
  		$r .= "\t\t\treturn \$collection->get(\$uniqueValues,\$returnType,\$key,\$sortOrder);\r\n";
 // 		$r .= "\t\t\t\$q = \"SELECT * FROM `{$this->getName()}` WHERE `objId`='{\$objId}' LIMIT 1 \";\r\n";
@@ -696,14 +693,14 @@
  		// Add RetrieveByAccountId Function if object depends on FAccount
  		if ($this->doesDepend("FAccount")) {
  			$r .= "\t\tpublic static function RetrieveByAccountId(\$accountId) {\r\n"
- 				. "\t\t\t_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);\r\n"
+ 				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
  				. "\t\t\t\$q = \"SELECT * FROM `{$this->getName()}` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
  				. "\t\t\t\$r = _db()->queryRow(\$q);\r\n"
  				. "\t\t\treturn new {$this->getName()}(\$r);\r\n"
  				. "\t\t}\r\n";
  				
  			$r .= "\t\tpublic static function ObjIdFromAccountId(\$accountId) {\r\n"
- 				. "\t\t\t_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);\r\n"
+ 				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
  				. "\t\t\t\$q = \"SELECT `objId` FROM `{$this->getName()}` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
  				. "\t\t\t\$r = _db()->queryOne(\$q);\r\n"
  				. "\t\t\treturn \$r;\r\n"
@@ -729,7 +726,7 @@
 				$r .= "\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
 				$r .= "\t\t\t\$q= \"SELECT `objId` FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
 				$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
-				$r .= "\t\t\twhile (\$data = \$r->fetchRow(MDB2_FETCHMODE_ASSOC)) {\r\n"
+				$r .= "\t\t\twhile (\$data = \$r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {\r\n"
 					. "\t\t\t\t{$info['class']}::Delete(\$data['objid']);\r\n"
 					. "\t\t\t}\r\n\r\n";
 			}

@@ -161,13 +161,7 @@ class DataController extends Controller {
 			}
 			foreach ($object->getAttributes() as $attr) {
 				if ($attr->isUnique()) {
-					$params[] = $this->form[$attr->getName()];
-				}
-			}
-			
-			foreach ($object->getSockets() as $sock) {
-				if ($sock->getQuantity() == 1) {
-					$params[] = $this->form[$sock->getName().'_id'];
+					$params[] = $attr->getName();
 				}
 			}
 			
@@ -214,7 +208,7 @@ class DataController extends Controller {
 	}
 	
 	private function init() {
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/MDB2/FDatabase.class.php");
+		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
 		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");

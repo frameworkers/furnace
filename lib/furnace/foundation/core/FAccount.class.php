@@ -109,7 +109,7 @@ class FAccount extends FBaseObject {
 
 		public function __construct($data) {
 			if (isset($data['objid'])) {$data['objId'] = $data['objid'];}
-			if (!isset($data['objid']) || $data['objid'] <= 0) {
+			if ($data['objId'] <= 0) {
 				throw new FException("Invalid <code>objId</code> value in object constructor.");
 			}
 			$this->objId = $data['objId'];
@@ -211,13 +211,6 @@ class FAccount extends FBaseObject {
 			}
 		}
 
-/*
- * THESE SHOULD NEVER BE CALLED.
- * Once an account has been associated with a unique object, it is mated for life.
- * The values of 'objectClass' and 'objectId' must be invariant across the lifetime
- * of an object. They are used by faccount_save to properly access object's faccount
- * attributes.
- * 
 		public function setObjectClass($value,$bSaveImmediately = true) {
 			$this->objectClass = $value;
 			if ($bSaveImmediately) {
@@ -231,9 +224,6 @@ class FAccount extends FBaseObject {
 				$this->faccount_save('objectId');
 			}
 		}
-*
-* 
-*/
 
 		public function faccount_save($attribute = '') {
 			if('' == $attribute) {
@@ -248,7 +238,7 @@ class FAccount extends FBaseObject {
 				. "`objectId`='{$this->objectId}' ";
 				$q .= "WHERE `objId`='{$this->objId}'";
 			} else {
-				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}' WHERE `objectId`='{$this->objectId}' AND `objectClass`='{$this->objectClass}' ";
+				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}' WHERE `objId`='{$this->objId}' ";
 			}
 			_db()->exec($q);
 		}
@@ -309,7 +299,7 @@ class FAccount extends FBaseObject {
 		}
 		
 		public static function Retrieve($objId) {
-			_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);
+			_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
 			$q = "SELECT * FROM `app_accounts` WHERE `objId`='{$objId}' LIMIT 1 ";
 			$r = _db()->queryRow($q);
 			return new FAccount($r);
@@ -324,13 +314,13 @@ class FAccount extends FBaseObject {
 			$r = _db()->exec($q);
 		}
 		
-		public static function DefineRole($name,$defaultAttribution,$description='') {
+		public static function DefineRole($name,$defaultAttribution) {
 			if (true == $defaultAttribution) {
 				$default = 1;
 			} else {
 				$default = 0;
 			}
-			$q = "ALTER TABLE `app_roles` ADD COLUMN `{$name}` INT(11) DEFAULT {$default} COMMENT '{$description}' ";
+			$q = "ALTER TABLE `app_roles` ADD COLUMN `{$name}` INT(11) DEFAULT {$default} ";
 			$r = _db()->exec($q);
 		}
 		

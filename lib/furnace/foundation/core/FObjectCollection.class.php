@@ -100,7 +100,7 @@
 		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($per_page,$offset);
 		$result = _db()->query($q);
-		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[/*$row[strtolower($key)]*/] = new $this->objectType($row);	
  		}
  		
@@ -231,7 +231,7 @@
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
- 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+ 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);	
  		}
  		return $results;
@@ -261,9 +261,9 @@
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
- 		_db()->setFetchMode(MDB2_FETCHMODE_ASSOC);
+ 		_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
  		$result = _db()->queryRow($q);
- 		//while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+ 		//while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  		//	$results[] = new $this->objectType($row);
  		//}
 		return ((null == $result)
@@ -300,7 +300,7 @@
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");	
  		$result = _db()->query($q);
-		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);	
  		}
  		return $results;
@@ -338,10 +338,10 @@
  		$result = _db()->query($q);
  		// If only 1 result matches, return it as a scalar value
  		if (1 == $result->numRows()) {
- 			return new $this->objectType($result->fetchRow(MDB2_FETCHMODE_ASSOC));
+ 			return new $this->objectType($result->fetchRow(FDATABASE_FETCHMODE_ASSOC));
  		}
  		// If more than 1 result matches, construct an array
- 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+ 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			if ($k == "objId") {
  				$results[] = new $this->objectType($row);	
  			} else {
@@ -388,7 +388,7 @@
  	public function advancedGet($filter) {
  		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " AND (" . $filter . " ) ";
  		$result = _db()->query($q);
- 		while ($row = $result->fetchRow(MDB2_FETCHMODE_ASSOC)) {
+ 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);
  		}	
  		return (count($results) >0)
