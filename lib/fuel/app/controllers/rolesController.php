@@ -10,16 +10,16 @@ class RolesController extends Controller {
 		$roles_results = _db()->query($q);
 
 		$defined_roles = array();
-		while ($role = $roles_results->fetchRow()) {
-			if ($role[0] == "accountId") {continue;}
-			$defined_roles[] = $role[0];
+		
+		while ($role = $roles_results->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
+			if ($role['field'] == "accountId") {continue;}
+			$defined_roles[] = $role;
 		}
 		
 		$users = User::Retrieve();
 		
 		$this->set('defined_roles',$defined_roles);
 		$this->set('users',$users);
-		
 	}
 	
 	public function createUser($fn,$ln,$un,$pw,$email) {
