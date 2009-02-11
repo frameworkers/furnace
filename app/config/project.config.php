@@ -22,7 +22,7 @@ $fconfig_root_directory = dirname(dirname(dirname(__FILE__)));
  * using the FUEL web-based management interface. If this password
  * is blank, you will not be able to use FUEL.
  */
-$fconfig_root_password  = '';
+$fconfig_root_password  = '/';
 
 /*
  * URL_BASE
