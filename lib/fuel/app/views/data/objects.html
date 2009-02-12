@@ -46,16 +46,16 @@
  }
 </style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]/fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <span style="margin-left:15px;">
-<a href="[tp..fconfig_url_base]/">App</a>&nbsp;/
-<a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/
-<a href="[tp..fconfig_url_base]/fuel/data/">Application Data</a>&nbsp;/
+<a href="[tp..fconfig_url_base]">App</a>&nbsp;/
+<a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/
+<a href="[tp..fconfig_url_base]fuel/data/">Application Data</a>&nbsp;/
 [tp.object.name]
 </span>
 <h1>Application Data Manager</h1>
-<h3>Object Type: <a href="[tp..fconfig_url_base]/fuel/model/editObject/[tp.object.name]">[tp.object.name]</a></h3>
+<h3>Object Type: <a href="[tp..fconfig_url_base]fuel/model/editObject/[tp.object.name]">[tp.object.name]</a></h3>
 
 <table cellspacing="0" cellpadding="3">
 <tr>
@@ -71,14 +71,14 @@ Displaying objects [tp.objPagination.stats.start] through
 Pages: 
 <ul id="pagination">
   <li>[tp.objPagination.data;block=li]
-  	<a class="[tp-if:tp.currentPage=@.pageNumber;content=`activeLink`]" href="[tp..fconfig_url_base]/fuel/data/objects/[tp.object.name]/[@.suffix]">[@.pageNumber]</a>
+  	<a class="[tp-if:tp.currentPage=@.pageNumber;content=`activeLink`]" href="[tp..fconfig_url_base]fuel/data/objects/[tp.object.name]/[@.suffix]">[@.pageNumber]</a>
   </li>
 </ul>
 </div>
 
 
 <h2>Create a new '[tp.objectClass.name]' object:</h2>
-<form action="[tp..fconfig_url_base]/fuel/data/create/[tp.objectClass.name]" method="POST"/>
+<form action="[tp..fconfig_url_base]fuel/data/create/[tp.objectClass.name]" method="POST"/>
 <input type="hidden" name="fobjectType" value="[tp.objectClass.name]"/>
 <table>
 <tr><th>[tp-if:tp.objectClass.parentClass=FAccount;block=table]Username:</th>

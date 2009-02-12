@@ -168,7 +168,7 @@ class SchemaController extends Controller {
 						$choices = array(array(
 							'type'=>'edit',
 							'text'=>'Apply model definition to database field',
-							'action'=>"/fuel/schema/editColumn/",
+							'action'=>"fuel/schema/editColumn/",
 							'tableName' =>$modelTable->getName(),
 							'columnName'=>$mc->getName()
 							));
@@ -185,7 +185,7 @@ class SchemaController extends Controller {
 				$choices = array(array(
 					'type'=>'add',
 					'text'=>'Add as new column',
-					'action'=>"/fuel/schema/addColumn/",
+					'action'=>"fuel/schema/addColumn/",
 					'tableName'=>$modelTable->getName(),
 					'columnName'=>$mc->getName()),
 					array(
@@ -216,7 +216,7 @@ class SchemaController extends Controller {
 				$choices[] = array(
 					'type'  => 'unknown',
 					'text'  => 'Database Column does not exist in the Model',
-					'action'=> "/fuel/schema/deleteDbField/",
+					'action'=> "fuel/schema/deleteDbField/",
 					'tableName'  =>$modelTable->getName(),
 					'columnName' =>$dbc->getName()
 				);

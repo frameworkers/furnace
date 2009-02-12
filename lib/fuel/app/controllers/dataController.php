@@ -62,7 +62,7 @@ class DataController extends Controller {
 		$headers = array("objId");
 		$object_datas = array();
 		foreach ($objects as $o) {
-			$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['fconfig_url_base']}/fuel/data/object/{$name}/{$o->getObjId()}\">{$o->getObjId()}</a>";
+			$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['fconfig_url_base']}fuel/data/object/{$name}/{$o->getObjId()}\">{$o->getObjId()}</a>";
 		}
 		foreach ($object->getAttributes() as $attr) {
 			$attr_name    = $attr->getName();

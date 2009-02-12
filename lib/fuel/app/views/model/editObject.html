@@ -62,18 +62,18 @@
 	}
 </style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]/fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]/">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]/fuel/model/">AppChemistry</a>&nbsp;/</li>
+	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[tp..fconfig_url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
 	  <li>Edit Object: [tp.object.name]</li>
 	</ul>
 </div>
 <div class="ffuel_loginDetails">
-	Logged in as Root. <a href="[tp..fconfig_url_base]/fuel/logout"/>Log Out</a>
+	Logged in as Root. <a href="[tp..fconfig_url_base]fuel/logout"/>Log Out</a>
 </div>
 
 <div class="container">
@@ -82,7 +82,7 @@
 
 <h3 style="margin-top:20px;">Attributes:</h3>
 <h4>Local</h4>
-<form action="[tp..fconfig_url_base]/fuel/model/addAttribute" method="POST">
+<form action="[tp..fconfig_url_base]fuel/model/addAttribute" method="POST">
 <input type="hidden" name="objectClass" value="[tp.object.name]"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
@@ -105,7 +105,7 @@
     <td>[@.max]</td>
     <td>[@.defaultValue]</td>
     <td style="text-align:center;">[tp-if:@.isUnique;content=`Yes`;else=`No`]</td>
-    <td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteAttribute/[tp.object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+    <td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteAttribute/[tp.object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
   	<td style="width:18%;"><input type="text" name="attrName"/></td>
@@ -177,7 +177,7 @@
 
 <h3>Relationships:</h3>
 <h4>M-1 (Parents)</h4>
-<form action="[tp..fconfig_url_base]/fuel/model/addDependency" method="POST">
+<form action="[tp..fconfig_url_base]fuel/model/addDependency" method="POST">
 <input type="hidden" name="objectClass" value="[tp.object.name]"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
@@ -189,10 +189,10 @@
   </tr>
   <tr>
   	<td>[tp.object.dependencies;block=tr][@.name]</td>
-  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.class]">[@.class]</a></td>
+  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.class]">[@.class]</a></td>
   	<td>[@.desc]</td>
   	<td>[@.var]</td>
-  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteDependency/[tp.object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteDependency/[tp.object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
     <td style="width:15%;"><input type="text" name="socketName"/></td>
@@ -218,16 +218,16 @@
   </tr>
   <tr>
   	<td>[tp.children;block=tr][@.name]</td>
-  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
   	<td>[@.quantity]</td>
   	<td>[@.description]</td>
-  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
   	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
 </table>
 
 <h4>M-M (Peers)</h4>
-<form action="[tp..fconfig_url_base]/fuel/model/addMMRelationship" method="POST">
+<form action="[tp..fconfig_url_base]fuel/model/addMMRelationship" method="POST">
 <input type="hidden" name="objectClass" value="[tp.object.name]"/>
 <input type="hidden" name="quantity" value="M"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
@@ -241,11 +241,11 @@
   </tr>
   <tr>
   	<td>[tp.relationships;block=tr][@.name]</td>
-  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
   	<td>[@.quantity]</td>
   	<td>[@.description]</td>
-  	<td><a href="[tp..fconfig_url_base]/fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
   	<td style="width:15%;"><input type="text" name="socketName"/></td>
