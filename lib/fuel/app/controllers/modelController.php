@@ -232,6 +232,40 @@ END;
 		$this->set('children',$children);
 	}
 	
+	public function editField($ot='',$attr='') {
+		if ($this->form) {
+			
+		} else {
+			$objectType = $ot;
+			$attrName   = $attr;
+			
+			if ($objectType == '' || $attr='') {
+				die("Not enough information provided.");
+			}
+			
+			$this->init();
+			$m = $this->getModel();
+			if (!isset($m->objects[strtolower($objectType)])) {
+				die("Object '{$objectType}' is not defined in the model.");
+			}
+			
+			$attribute = false;
+			foreach ($m->objects[strtolower($objectType)]->getAttributes() as $a) {
+				if ($a->getName() == $attrName) {
+					$attribute = $a;
+				}
+			}
+			
+			if (! $attribute) {
+				die("Attribute {$attrName} is not defined in object {$objectType}.");
+			}
+			
+			$this->set('model',$m);
+			$this->set('object',$m->objects[strtolower($objectType)]);
+			$this->set('attr',$attribute);
+		}
+	}
+
 	public function addAttribute() {
 		if ($this->form) {
 
@@ -295,6 +329,47 @@ END;
 	public function editAttribute() {
 		if ($this->form) {
 			
+			// INITIAL SETUP
+			$this->init();
+			$m = $this->getModel();
+			if (!isset($m->objects[strtolower($this->form['objectType'])]) ) {
+				die("Object '{$objectType}' is not defined in the model.");
+			}
+			
+			$attribute = false;
+			$attributes =& $m->objects[strtolower($this->form['objectType'])]->getAttributes();
+			for ($i =0; $i < count($attributes); $i++) {
+				if ($attributes[$i]->getName() == $this->form['attrName']) {
+					$attribute =& $attributes[$i];
+					break;
+				}
+			}
+			
+			if (! $attribute) {
+				die("Attribute {$this->form['attrName']} is not defined in object {$this->form['objectType']}.");
+			}
+			
+			
+			$column =& $m->tables[strtolower($this->form['objectType'])]->getColumn($this->form['attrName']);
+			
+			
+			if ($this->form['action'] == "rename") {
+				// RENAME AN ATTRIBUTE
+				$columnOldName = $column->getName();
+				$newName = FModel::standardizeAttributeName($this->form['attrNewName']);
+				$attribute->setName($newName);
+				$column->setName($newName);
+
+				$query = "ALTER TABLE `{$this->form['objectType']}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
+				_db()->exec($query);
+		
+				$this->flash("Renamed attribute");
+			}
+			
+			// Write changes to the model file
+			$this->writeModelFile($m->export());
+			$this->generateObjects();
+			$this->redirect("/fuel/model/editObject/{$this->form['objectType']}");
 		}
 	}
 	

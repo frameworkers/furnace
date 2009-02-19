@@ -202,6 +202,9 @@
   		return $this->visibility;	
   	}
   	
+  	public function setName($value) {
+  		$this->name = $value;
+  	}
   	
   	/*
   	 * Function: setDescription
