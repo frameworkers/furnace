@@ -13,7 +13,7 @@ class Tadpole {
 		"[tp."    => "processAbsolute",
 		"[@"      => "processRelative",
 		"[tp-if:" => "processConditional",
-		"[tp!"      => "processSuper"
+		"[tp!"    => "processSuper"
 	);
 		
 	protected $endMarker = "]";
@@ -176,9 +176,9 @@ class Tadpole {
 			$id_parts = explode(".",$identifier);
 			$id_parts_size = count($id_parts);
 			unset($id_parts[0]);	// drop the 'tp.'
-			if ("#" == $id_parts[$id_parts_size-1]) {
-				unset($id_parts[$id_parts_size-1]);	
-			}
+//			if ("#" == $id_parts[$id_parts_size-1]) {
+//				unset($id_parts[$id_parts_size-1]);	
+//			}
 
 			// PROCESS THE BLOCK
 			$this->processBlock($contents,$this->getRecursively($id_parts));
@@ -227,9 +227,9 @@ class Tadpole {
 			$id_parts_size = count($id_parts);
 
 			unset($id_parts[0]);	// drop the '@'
-			if ("#" == $id_parts[$id_parts_size-1]) {
-				unset($id_parts[$id_parts_size-1]);	
-			}
+//			if ("#" == $id_parts[$id_parts_size-1]) {
+//				unset($id_parts[$id_parts_size-1]);	
+//			}
 			
 			// PROCESS THE BLOCK
 			$this->processBlock($contents,$this->getRecursively($id_parts,$iter_data));
@@ -331,7 +331,6 @@ class Tadpole {
 	}
 	
 	protected function getRecursively(&$vars,$data_source=null,$start="",$ordinal=null) {
-
 		if ("" == $start) {
 			$flashlight = (null == $data_source) ? $this->page_data : $data_source;
 		} else {
@@ -356,17 +355,37 @@ class Tadpole {
 					$exists = true;
 				}
 			} else {
-				$exists = ((isset($flashlight[$elmt]))
+				$exists = ((isset($flashlight[$elmt]) || "#" == $elmt)
 					? true
 					: false
 				);
 			}
 			if ($exists) {
 				if ($count == count($vars)-1) {
+					// If a count (#) is requested, return the count of the element
+					if ($vars[$count + 1] == "#") {
+						return count($flashlight);
+					}
 					// Return the current data
 					if ($bIsObject) {
 						if (is_callable(array($flashlight,$privateMethod))) {
-							return $flashlight->$privateMethod();
+							if (isset($this->commands['start']) || isset($this->commands['limit'])) {
+								return array_slice($flashlight->$privateMethod(
+									"*",
+									"object",
+									(isset($this->commands['sortkey'])? $this->commands['sortkey'] : "objId"),
+									(isset($this->commands['order'])  ? $this->commands['order']   : "asc" )
+								),
+								(isset($this->commands['start'])? $this->commands['start'] : 0),
+								(isset($this->commands['limit'])? $this->commands['limit'] : null));
+							} else {
+								return $flashlight->$privateMethod(
+									"*",
+									"object",
+									(isset($this->commands['sortkey'])? $this->commands['sortkey'] : "objId"),
+									(isset($this->commands['order'])  ? $this->commands['order']   : "asc" )
+								);
+							}
 						} else {
 							return $flashlight->$elmt;	
 						}
@@ -587,7 +606,6 @@ class Tadpole {
 			$data = $this->commands['ifempty'];
 		}
 		
-		
 		// USE DEFAULT VALUE FOR DATES, IF SPECIFIED
 		if (isset($this->commands['ifnever']) && "0000-00-00" == $data) {
 			$data = $this->commands['ifnever'];
@@ -621,6 +639,11 @@ class Tadpole {
 			$data = date((isset($this->commands['format'])
 				? $this->commands['format']
 				: 'Y-m-d h:i:s'),strtotime($data));
+		}
+		
+		// RESPECT SPECIFIED MAX-LENGTH
+		if (isset($this->commands['maxlen']) && strlen($data) > $this->commands['maxlen']) {
+				$data = substr($data,0,$this->commands['maxlen']) . $this->commands['trailer'];
 		}
 	}
 	
