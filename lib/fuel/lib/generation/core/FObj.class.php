@@ -501,9 +501,13 @@
  		
  		// Add Getters
  		foreach ($this->attributes as $a) {
- 			$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n"
- 				. "\t\t\treturn \$this->{$a->getName()};\r\n"
- 				. "\t\t}\r\n\r\n";	
+ 			$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n";
+ 				if ($a->getType() == "string" || $a->getType() == "text") {
+ 					$r .= "\t\treturn stripslashes(\$this->{$a->getName()});\r\n";
+ 				} else {
+ 					$r .= "\t\t\treturn \$this->{$a->getName()};\r\n";
+ 				}
+ 			$r .= "\t\t}\r\n\r\n";	
  		}
  		
  		foreach ($this->sockets as $s) {
