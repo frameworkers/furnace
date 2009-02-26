@@ -18,20 +18,20 @@
 	    <th>Field Name</th><th>Type</th><th>Is Null</th><th>Default Value</th><th>State</th><th>Choices</th>
 	  </tr>
 	  <tr>
-		<td>[tp.fields.#;block=tr][@.column.name]</td>
+		<td>[tp.fields;block=tr][@.column.name]</td>
 		<td>[@.column.colType]</td>
 		<td>[@.column.isNull]</td>
 		<td>[@.column.defaultValue]</td>
 		<td>[@.state]</td>
 		<td>
 			<ul>
-				<li>[@.choices.#;block=li][@.text]
+				<li>[@.choices;block=li][@.text]
 				  <form  method="POST" style="display:inline;" action="[tp..fconfig_url_base][@.action]">
 					<input type="hidden" name="tableName" value="[@.tableName]"/>
 					<input type="[tp-if:@.type=~rename;block=self]hidden" name="columnName" value="[@.columnName]"/>
 					<input type="[tp-if:@.type=rename;block=self]hidden" name="renameTo"  value="[@.renameTo]"/>
 					<select name="columnName">[tp-if:@.type=rename;block=select]
-						<option value="[tp.renameList.#;block=option][@]">[@]</option>
+						<option value="[tp.renameList;block=option][@]">[@]</option>
 					</select>
 					<input type="submit" value="Apply"/>
 					</form>
@@ -49,11 +49,11 @@
 	    <th>Field Name</th><th>Type</th>
 	  </tr>
 	  <tr>
-	    <td>[tp.unknowns.#;block=tr][@.column.name]</td>
+	    <td>[tp.unknowns;block=tr][@.column.name]</td>
 	    <td>[@.column.colType]</td>
 	    <td>
 			<ul>
-				<li>[@.choices.#;block=li][@.text]
+				<li>[@.choices;block=li][@.text]
 				<form  method="POST" style="display:inline;" action="[tp..fconfig_url_base][@.action]">
 					<input type="hidden" name="tableName" value="[@.tableName]"/>
 					<input type="hidden" name="columnName" value="[@.columnName]"/>

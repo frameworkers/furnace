@@ -10,7 +10,7 @@
 </div>
 <h3>Table Summary:</h3>
 <ul>
-	<li>[tp.tables.#;block=li] <span>[tp-if:@.found;block=span]Found</span> Required Model Table `[@.name]`
+	<li>[tp.tables;block=li] <span>[tp-if:@.found;block=span]Found</span> Required Model Table `[@.name]`
 	<span>[tp-if:@.status=fieldsDiffer;block=span]<a href="[tp..fconfig_url_base]/fuel/schema/compareFields/[@.name]">Fields Differ</a>!</span>
 	<span>[tp-if:@.status=ok;block=span]No Changes Detected.</span>
 	<span>[tp-if:@.found=~;block=span]
@@ -21,7 +21,7 @@
 		    <form style="display:inline;" action="[tp..fconfig_url_base]/fuel/schema/renameDbTable/" method="POST">
 		    	<input type="hidden" name="renameTo" value="[@.name]"/>
 			 	<select name="tableName">
-			  		<option value="[tp.existingTableNames.#;block=option][@]">[@]</option>
+			  		<option value="[tp.existingTableNames;block=option][@]">[@]</option>
 			  	</select>
 			  	<input type="submit" value="Apply"/>
 		  	</form>
@@ -32,5 +32,5 @@
 </ul>
 <p>&nbsp;</p>
 <ul>
- <li class="ff_notice notice">[tp.notices.#;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="[tp..fconfig_url_base]/fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
+ <li class="ff_notice notice">[tp.notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="[tp..fconfig_url_base]/fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
 </ul>
