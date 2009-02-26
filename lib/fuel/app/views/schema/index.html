@@ -1,24 +1,24 @@
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]/fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]/">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]/fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
 	  <li>Database Schema Updater</li>
 	</ul>
 </div>
 <h3>Table Summary:</h3>
 <ul>
 	<li>[tp.tables;block=li] <span>[tp-if:@.found;block=span]Found</span> Required Model Table `[@.name]`
-	<span>[tp-if:@.status=fieldsDiffer;block=span]<a href="[tp..fconfig_url_base]/fuel/schema/compareFields/[@.name]">Fields Differ</a>!</span>
+	<span>[tp-if:@.status=fieldsDiffer;block=span]<a href="[tp..fconfig_url_base]fuel/schema/compareFields/[@.name]">Fields Differ</a>!</span>
 	<span>[tp-if:@.status=ok;block=span]No Changes Detected.</span>
 	<span>[tp-if:@.found=~;block=span]
 		Not found in database. Options are: 
 		<ul>
-		  <li><a href="[tp..fconfig_url_base]/fuel/schema/createTable/[@.name]">create</a></li>
+		  <li><a href="[tp..fconfig_url_base]fuel/schema/createTable/[@.name]">create</a></li>
 		  <li>Rename existing database table 
-		    <form style="display:inline;" action="[tp..fconfig_url_base]/fuel/schema/renameDbTable/" method="POST">
+		    <form style="display:inline;" action="[tp..fconfig_url_base]fuel/schema/renameDbTable/" method="POST">
 		    	<input type="hidden" name="renameTo" value="[@.name]"/>
 			 	<select name="tableName">
 			  		<option value="[tp.existingTableNames;block=option][@]">[@]</option>
@@ -32,5 +32,5 @@
 </ul>
 <p>&nbsp;</p>
 <ul>
- <li class="ff_notice notice">[tp.notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="[tp..fconfig_url_base]/fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
+ <li class="ff_notice notice">[tp.notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="[tp..fconfig_url_base]fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
 </ul>
