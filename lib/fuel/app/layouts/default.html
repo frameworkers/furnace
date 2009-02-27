@@ -4,18 +4,18 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <!-- CSS Stylesheet Includes -->
 <link rel="stylesheet" type="text/css" href="[tp..fconfig_url_base]fuel/assets/css/fuel.default.css"/>
-<link rel="stylesheet" type="text/css" href="[tp..fconfig_url_base]fuel/assets/css/[tp.StylesheetsFromView.#;block=self][@].css"/>
+<link rel="stylesheet" type="text/css" href="[tp..fconfig_url_base]fuel/assets/css/[tp.StylesheetsFromView;block=self][@].css"/>
 
 
 <!-- Javascript Includes -->
-<script type="text/javascript" src="[tp..fconfig_url_base]fuel/assets/js/[tp.JavascriptsFromView.#;block=script][@].js"></script>
+<script type="text/javascript" src="[tp..fconfig_url_base]fuel/assets/js/[tp.JavascriptsFromView;block=script][@].js"></script>
 
 
 <title>[tp.PageTitleFromView]</title>
 </head>
 <body class="ff">
 <div class="ff_messages">
-	<div class="ff_message [tp.MessagesFromView.#;block=div][@.cssClass]">
+	<div class="ff_message [tp.MessagesFromView;block=div][@.cssClass]">
 		<h1>[tp-if:@.title;block=h1][@.title]</h1>
 		[@.message]
 	</div>

@@ -159,9 +159,20 @@ class DataController extends Controller {
 				$params[]  = $this->form['password'];
 				$params[]  = $this->form['emailAddress']; 
 			}
+			/**
+			 * UNIQUE ATTRIBUTES
+			 */
 			foreach ($object->getAttributes() as $attr) {
 				if ($attr->isUnique()) {
 					$params[] = $attr->getName();
+				}
+			}
+			/**
+			 * SOCKETS
+			 */
+			foreach ($object->getSockets() as $sock) {
+				if ($sock->getQuantity() == "1") {
+					$params[] = $this->form[$sock->getName()."_id"];
 				}
 			}
 			
