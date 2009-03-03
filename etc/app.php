@@ -21,6 +21,12 @@
  // Compute the project root directory based on the location of this file.
  $rootdir = dirname(dirname(__FILE__));
 
+ // Compute the SVN revision of the project (if applicable)
+ if (file_exists($rootdir . "/.svn/entries")) {
+ 	$data = explode("\n",file_get_contents($rootdir . "/.svn/entries",0,null,0,256));
+ 	$GLOBALS['fproject_svn_revision'] = trim($data[3]);
+ }
+ 
  // Load the application configuration files
  require_once($rootdir . "/app/config/project.config.php");
  	
