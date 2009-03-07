@@ -119,6 +119,17 @@
  		return $results;
  	}
  	
+ 	public function getSubset($firstIndex,$count,$key='objId',$sortOrder="default") {
+ 		// Return an array of objects according to the subset details given
+		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
+		_db()->setLimit($count,$firstIndex);
+		$result = _db()->query($q);
+		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
+ 			$results[/*$row[strtolower($key)]*/] = new $this->objectType($row);	
+ 		}
+ 		return $results;
+ 	}
+ 	
  	public function getPaginationData() {
  		return $this->paginationData;
  	}
@@ -336,11 +347,7 @@
  		}
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
- 		// If only 1 result matches, return it as a scalar value
- 		if (1 == $result->numRows()) {
- 			return new $this->objectType($result->fetchRow(FDATABASE_FETCHMODE_ASSOC));
- 		}
- 		// If more than 1 result matches, construct an array
+
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			if ($k == "objId") {
  				$results[] = new $this->objectType($row);	
