@@ -27,6 +27,11 @@ class FController extends FPage {
 		exit();
 	}
 	
+	protected function internalRedirect($url) {
+		_start_request($url);
+		exit();
+	}
+	
 	protected function loadModule($uri) {
 		$path = $GLOBALS['fconfig_root_directory'] . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
 		if (file_exists($path)) {
