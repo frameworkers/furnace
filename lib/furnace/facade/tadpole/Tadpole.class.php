@@ -370,14 +370,13 @@ class Tadpole {
 					if ($bIsObject) {
 						if (is_callable(array($flashlight,$privateMethod))) {
 							if (isset($this->commands['start']) || isset($this->commands['limit'])) {
-								return array_slice($flashlight->$privateMethod(
-									"*",
-									"object",
-									(isset($this->commands['sortkey'])? $this->commands['sortkey'] : "objId"),
-									(isset($this->commands['order'])  ? $this->commands['order']   : "asc" )
-								),
-								(isset($this->commands['start'])? $this->commands['start'] : 0),
-								(isset($this->commands['limit'])? $this->commands['limit'] : null));
+								return $flashlight
+									->$privateMethod("*","collection")
+										->getSubset(
+											(isset($this->commands['start'])? $this->commands['start'] : 0),
+											(isset($this->commands['limit'])? $this->commands['limit'] : 0),
+											(isset($this->commands['sortkey'])? $this->commands['sortkey'] : "objId"),
+											(isset($this->commands['order'])  ? $this->commands['order']   : "asc" ));
 							} else {
 								return $flashlight->$privateMethod(
 									"*",
@@ -387,10 +386,22 @@ class Tadpole {
 								);
 							}
 						} else {
-							return $flashlight->$elmt;	
+							if (isset($this->commands['start']) || isset($this->commands['limit'])) {
+								return array_slice($flashlight->elmt,
+									(isset($this->commands['start'])? $this->commands['start'] : 0),
+									(isset($this->commands['limit'])? $this->commands['limit'] : sizeof($flashlight->elmt)));
+							} else {
+								return $flashlight->$elmt;	
+							}
 						}
 					} else {
-						return $flashlight[$elmt];
+						if (isset($this->commands['start']) || isset($this->commands['limit'])) {
+							return array_slice($flashlight[$elmt],
+								(isset($this->commands['start'])? $this->commands['start'] : 0),
+								(isset($this->commands['limit'])? $this->commands['limit'] : sizeof($flashlight[$elmt])));
+						} else {
+							return $flashlight[$elmt];
+						}
 					}
 				} else {
 					// Advance through the data
@@ -601,20 +612,7 @@ class Tadpole {
 	}
 	
 	protected function processTagCommands(&$data) {
-		// USE DEFAULT VALUE, IF SPECIFIED
-		if (isset($this->commands['ifempty']) && "" == $data ) {
-			$data = $this->commands['ifempty'];
-		}
 		
-		// USE DEFAULT VALUE FOR DATES, IF SPECIFIED
-		if (isset($this->commands['ifnever']) && "0000-00-00" == $data) {
-			$data = $this->commands['ifnever'];
-		}
-		
-		// USE DEFAULT VALUE FOR 0-valued NUMBERS, IF SPECIFIED 
-		if (isset($this->commands['ifzero']) && "0" == $data ) {
-			$data = $this->commands['ifzero'];
-		}
 		
 		// GLUE DATA TOGETHER, IF REQUIRED
 		if (isset($this->commands['glue']) && is_array($data) ) {
@@ -643,7 +641,27 @@ class Tadpole {
 		
 		// RESPECT SPECIFIED MAX-LENGTH
 		if (isset($this->commands['maxlen']) && strlen($data) > $this->commands['maxlen']) {
-				$data = substr($data,0,$this->commands['maxlen']) . $this->commands['trailer'];
+			$data = substr($data,0,$this->commands['maxlen']) . $this->commands['trailer'];
+		}
+		
+		// APPEND TRAILER TO DATA IF NOT EMPTY
+		if (isset($this->commands['trailer']) && !isset($this->commands['maxlen']) && $data) {
+			$data .= $this->commands['trailer'];	
+		}
+		
+		// USE DEFAULT VALUE, IF SPECIFIED
+		if (isset($this->commands['ifempty']) && "" == $data ) {
+			$data = $this->commands['ifempty'];
+		}
+		
+		// USE DEFAULT VALUE FOR DATES, IF SPECIFIED
+		if (isset($this->commands['ifnever']) && "0000-00-00" == $data) {
+			$data = $this->commands['ifnever'];
+		}
+		
+		// USE DEFAULT VALUE FOR 0-valued NUMBERS, IF SPECIFIED 
+		if (isset($this->commands['ifzero']) && "0" == $data ) {
+			$data = $this->commands['ifzero'];
 		}
 	}
 	
