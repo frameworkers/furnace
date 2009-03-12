@@ -115,12 +115,12 @@ class FAccount extends FBaseObject {
 			$this->objId = $data['objId'];
 			$this->username = $data['username'];
 			$this->password = $data['password'];
-			$this->emailAddress = $data['emailaddress'];
+			$this->emailAddress = $data['emailAddress'];
 			$this->status = $data['status'];
-			$this->secretQuestion = $data['secretquestion'];
-			$this->secretAnswer = $data['secretanswer'];
-			$this->objectClass = $data['objectclass'];
-			$this->objectId = $data['objectid'];
+			$this->secretQuestion = $data['secretQuestion'];
+			$this->secretAnswer = $data['secretAnswer'];
+			$this->objectClass = $data['objectClass'];
+			$this->objectId = $data['objectId'];
 			
 			// Get Roles
 			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$this->objId}' ";
