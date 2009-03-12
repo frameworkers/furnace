@@ -103,7 +103,7 @@
     <td>[@.size]</td>
     <td>[@.min]</td>
     <td>[@.max]</td>
-    <td>[@.defaultValue]</td>
+    <td>[@.defaultValue;map=0|False,1|True]</td>
     <td style="text-align:center;">[tp-if:@.isUnique;content=`Yes`;else=`No`]</td>
     <td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteAttribute/[tp.object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
@@ -117,6 +117,7 @@
   		<option value="text">text</option>
   		<option value="datetime">datetime</option>
   		<option value="date">date</option>
+  		<option value="boolean">boolean</option>
   	</select></td>
   	<td style="width:5%;"><input type="text" name="attrSize"/></td>
   	<td style="width:5%;"><input type="text" name="attrMin"/></td>

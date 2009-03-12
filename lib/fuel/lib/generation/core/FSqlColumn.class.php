@@ -38,7 +38,7 @@
   	
   	// Variable: defaultValue
   	// A default value for this column
-  	private $defaultValue;
+  	private $defaultValue = null;
   	
   	// Variable: comment
   	// A comment about this column
@@ -120,10 +120,10 @@
   	public static function convertToSqlType($value,$extra=array()) {
   		switch (strtolower($value)) {
   			case "string":
-  				if (isset($extra['size'])){
-  					return (($extra['size'] >= 255)
+  				if (isset($extra['size']) && !empty($extra['size'])){
+  					return (($extra['size'] > 255)
   						? "TEXT"
-  						: "VARCHAR({$extra['size']})");	
+  						: "VARCHAR(".max(1,$extra['size']).")");	
   				} else {
   					return "VARCHAR(255)";	
   				}
@@ -145,6 +145,9 @@
   				break;
   			case "float":
   				return "FLOAT";
+  				break;
+  			case "boolean":
+  				return "INT(11) UNSIGNED";
   				break;
   			default:
   				return false;

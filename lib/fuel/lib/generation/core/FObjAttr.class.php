@@ -287,7 +287,13 @@
   	 * 
   	 */
   	public function setDefaultValue($value) {
-  		$this->defaultValue = $value;	
+  		if ("false" == strtolower($value)) {
+  			$this->defaultValue = false;	
+  		} else if ("true" == strtolower($value)) {
+  			$this->defaultValue = true;	
+  		} else {
+  			$this->defaultValue = $value;	
+  		}
   	}
   	
   	/*

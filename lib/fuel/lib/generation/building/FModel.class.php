@@ -280,7 +280,7 @@ class FModel {
 									foreach ($fs as $ffs) {
 										if (strtolower($ffs->getName()) == $s->getReflectVariable()) {
 											// Found reflected socket, set the lookup table
-											$s->setLookupTable($ffs->getLookupTable($lt_name));
+											$s->setLookupTable($ffs->getLookupTable());
 											break;
 										}
 									}
@@ -367,6 +367,7 @@ class FModel {
 		  				$a->setSize(((isset($attr_candidate['size'])) ? $attr_candidate['size'] : ""));
 		  				$a->setMin(((isset($attr_candidate['min'])) ? $attr_candidate['min'] : ""));
 		  				$a->setMax(((isset($attr_candidate['max'])) ? $attr_candidate['max'] : ""));
+		  				$a->setDefaultValue(((isset($attr_candidate['default'])) ? $attr_candidate['default'] : ""));
 		  				$a->setIsUnique(((isset($attr_candidate['unique'])) ? true : false));
 		  				$a->setVisibility(((isset($attr_candidate['visibility'])) 
 		  					? $attr_candidate['visibility'] 
@@ -380,9 +381,18 @@ class FModel {
 		  					false,
 		  					false,
 		  					$a->getDescription());
+		  				// Handle uniqueness
 		  				if (isset($attr_candidate['unique'])) {
 		  					$col->setKey("UNIQUE");
 		  				}
+		  				// Handle default value
+						if (false === $a->getDefaultValue()) {
+							$col->setDefaultValue('0');	
+						} else if (true === $a->getDefaultValue()) {
+							$col->setDefaultValue('1');
+						} else {
+							$col->setDefaultValue($a->getDefaultValue());	
+						}
 		  				$this->tables[$lc_cand_name]->addColumn($col);
 		  				
 		 			}
@@ -452,9 +462,15 @@ class FModel {
 						. "    type: {$a->getType()}\r\n"
 						. "    size: {$a->getSize()}\r\n"
 						. "    min:  {$a->getMin()}\r\n"
-						. "    max:  {$a->getMax()}\r\n"
-						. "    default: {$a->getDefaultValue()}\r\n"
-						. "    unique: " . (($a->isUnique() ? "yes" : "")) ."\r\n";
+						. "    max:  {$a->getMax()}\r\n";
+						if (false === $a->getDefaultValue()) {
+							$r .= "    default: false\r\n";
+						} else if (true === $a->getDefaultValue()) {
+							$r .= "    default: true\r\n";	
+						} else {
+							$r .= "    default: {$a->getDefaultValue()}\r\n";
+						}
+						$r .= "    unique: " . (($a->isUnique() ? "yes" : "")) ."\r\n";
 				}
 				
 				foreach ($o->getSockets() as $s) {
@@ -474,7 +490,7 @@ class FModel {
     }
     
     private function exportXML() {
-    	
+    	die("XML export format not available yet.");
     }
     
  	/*

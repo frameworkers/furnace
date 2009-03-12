@@ -193,7 +193,11 @@ END;
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
-			_db()->exec($m->tables[$lc_objectType]->toSqlString());
+			try {
+				_db()->exec($m->tables[$lc_objectType]->toSqlString());
+			} catch (FDatabaseException $e) {
+				die($e->__toString());
+			}
 			
 			// Regenerate PHP code
 			$this->generateObjects();
@@ -282,11 +286,13 @@ END;
 			$attr->setDefaultValue($this->form['attrDefault']);
 			$attr->setIsUnique(isset($this->form['attrUnique']));
 			
+			// Prepare extra information about the attribute
 			$columnExtraData = array(
 				'size' => $attr->getSize(),
 				'min'  => $attr->getMin(),
 				'max'  => $attr->getMax());
 				
+			// Create an FSqlColumn instance for the attribute
 			$column = new FSqlColumn(
 				$attr->getName(),									/* name */
 				FSqlColumn::convertToSqlType($attr->getType(),$columnExtraData), /* type */
@@ -294,8 +300,18 @@ END;
 				false,												/* autoinc */
 				$attr->getDescription());							/* description */
 
+			// Handle uniqueness
 			if ($attr->isUnique()) {
 				$column->setKey("UNIQUE");
+			}
+			
+			// Handle default value
+			if (false === $attr->getDefaultValue()) {
+				$column->setDefaultValue('0');	
+			} else if (true === $attr->getDefaultValue()) {
+				$column->setDefaultValue('1');
+			} else {
+				$column->setDefaultValue($attr->getDefaultValue());	
 			}
 			
 			
@@ -304,17 +320,21 @@ END;
 				die("Object '{$objectClass}' is not defined in the model.");
 			}
 			
-			$object = $m->objects[strtolower($objectClass)];
-			$object->addAttribute($attr);
+			// Add the attribute and the column to the model
+			$m->objects[strtolower($objectClass)]->addAttribute($attr);
 			$m->tables[strtolower($objectClass)]->addColumn($column);
 			
 			// Write the changes to the model file
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
-			_db()->exec("ALTER TABLE `{$objectClass}` ADD COLUMN {$column->toSqlString()}");
-			if ($attr->isUnique()) {
-				_db()->exec("ALTER TABLE `{$objectClass}` ADD UNIQUE (`{$attr->getName()}`) ");
+			try {
+				_db()->exec("ALTER TABLE `{$objectClass}` ADD COLUMN {$column->toSqlString()}");
+				if ($attr->isUnique()) {
+					_db()->exec("ALTER TABLE `{$objectClass}` ADD UNIQUE (`{$attr->getName()}`) ");
+				}
+			} catch (FDatabaseException $e) {
+				die($e->__toString());	
 			}
 			
 			// Regenerate PHP code
@@ -360,8 +380,12 @@ END;
 				$attribute->setName($newName);
 				$column->setName($newName);
 
-				$query = "ALTER TABLE `{$this->form['objectType']}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
-				_db()->exec($query);
+				try {
+					$query = "ALTER TABLE `{$this->form['objectType']}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
+					_db()->exec($query);
+				} catch (FDatabaseException $e) {
+					die($e->__toString());	
+				}
 		
 				$this->flash("Renamed attribute");
 			}
@@ -385,10 +409,10 @@ END;
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
-			_db()->exec("ALTER TABLE `{$objectClass}` DROP COLUMN `{$attributeName}`");
 			try {
+				_db()->exec("ALTER TABLE `{$objectClass}` DROP COLUMN `{$attributeName}`");
 				_db()->exec("ALTER TABLE `{$objectClass}` DROP INDEX `{$attributeName}` ");
-			} catch (Exception $e) {
+			} catch (FDatabaseException $e) {
 				// silently ignore
 			}
 			
@@ -470,9 +494,13 @@ END;
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
-			$q = "ALTER TABLE `" . FModel::standardizeName($this->form['objectClass'])
-				."` ADD COLUMN {$column->toSqlString()} AFTER `objId`";
-			_db()->exec($q);
+			try {
+				$q = "ALTER TABLE `" . FModel::standardizeName($this->form['objectClass'])
+					."` ADD COLUMN {$column->toSqlString()} AFTER `objId`";
+				_db()->exec($q);
+			} catch (FDatabaseException $e) {
+				die($e->__toString());	
+			}
 			
 			// Regenerate PHP code
 			$this->generateObjects();
@@ -527,10 +555,14 @@ END;
 		$this->writeModelFile($m->export());
 		
 		// Execute SQL commands
-		$q = "ALTER TABLE `{$localObject->getName()}` DROP COLUMN `"
-			. FModel::standardizeAttributeName($actualRemoteVariableName)
-			. "_id` ";
-		_db()->exec($q);
+		try {
+			$q = "ALTER TABLE `{$localObject->getName()}` DROP COLUMN `"
+				. FModel::standardizeAttributeName($actualRemoteVariableName)
+				. "_id` ";
+			_db()->exec($q);
+		} catch (FDatabaseException $e) {
+			die($e->__toString());	
+		}
 		
 		// Regenerate PHP code
 		$this->generateObjects();
@@ -619,7 +651,11 @@ END;
 			$this->tables[strtolower($lt->getName())] = $lt;
 			
 			// Execute SQL Commands
-			_db()->exec($lt->toSqlString()); 								
+			try {
+				_db()->exec($lt->toSqlString()); 	
+			} catch (FDatabaseException $e) {
+				die($e->__toString());	
+			}							
 
 			// Write the changes to the model file
 			$this->writeModelFile($m->export());
@@ -657,8 +693,12 @@ END;
 				// make it impossible to delete a remote dependency from this location.
 				// Only delete an sql table if the socket has reflection (is MM)
 				if ($localSockets[$i]->doesReflect()) {
-					$q = "DROP TABLE `{$localSockets[$i]->getLookupTable()}`";
-					_db()->exec($q);
+					try {
+						$q = "DROP TABLE `{$localSockets[$i]->getLookupTable()}`";
+						_db()->exec($q);
+					} catch (FDatabaseException $e) {
+						die($e->__toString());	
+					}
 				}
 				
 				// Delete the local object's socket

@@ -424,8 +424,11 @@
 		}
 		
  		foreach ($this->attributes as $a) {
- 			$r .= "\t\t// Variable: {$a->getName()}\r\n"
- 				. "\t\t// {$a->getDescription()}\r\n"
+ 			$r .= "\t\t// Variable: {$a->getName()}\r\n";
+ 			if ("boolean" == $a->getType()) {
+ 				$r .= "\t\t// This is a boolean variable.\r\n";	
+ 			}
+ 			$r .= "\t\t// {$a->getDescription()}\r\n"
 				. "\t\t{$a->getVisibility()} \${$a->getName()};\r\n\r\n";	
  		}
  		
@@ -501,14 +504,20 @@
  		
  		// Add Getters
  		foreach ($this->attributes as $a) {
- 			$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n";
- 				if ($a->getType() == "string" || $a->getType() == "text") {
- 					$r .= "\t\treturn stripslashes(\$this->{$a->getName()});\r\n";
- 				} else {
- 					$r .= "\t\t\treturn \$this->{$a->getName()};\r\n";
- 				}
+ 			if ($a->getType() == "boolean") {
+ 				$r .= "\t\tpublic function is{$a->getFunctionName()}() {\r\n"
+ 					. "\t\t\treturn (0 < \$this->{$a->getName()});  // convert integer to boolean\r\n";
+ 			} else {
+	 			$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n";
+	 				if ($a->getType() == "string" || $a->getType() == "text") {
+	 					$r .= "\t\t\treturn stripslashes(\$this->{$a->getName()});\r\n";
+	 				} else {
+	 					$r .= "\t\t\treturn \$this->{$a->getName()};\r\n";
+	 				}
+	 			}
  			$r .= "\t\t}\r\n\r\n";	
  		}
+
  		
  		foreach ($this->sockets as $s) {
  			if ("1" == $s->getQuantity() ) {
