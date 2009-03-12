@@ -348,10 +348,12 @@ class Tadpole {
 		
 		foreach ($vars as $elmt) {
 			$bIsObject = is_object($flashlight);
-			$privateMethod = "get" . (strtoupper(substr($elmt,0,1)) . substr($elmt,1));
+			$privateMethodGet = "get" . (strtoupper(substr($elmt,0,1)) . substr($elmt,1));
+			$privateMethodIs  = "is"  . (strtoupper(substr($elmt,0,1)) . substr($elmt,1));	// for boolean vars
+			
 			$exists = false;
 			if ($bIsObject) {
-				if (!empty($flashlight->$elmt) || (is_callable(array($flashlight,$privateMethod)))) {
+				if (!empty($flashlight->$elmt) || (is_callable(array($flashlight,$privateMethodGet))) || (is_callable(array($flashlight,$privateMethodIs)))) {
 					$exists = true;
 				}
 			} else {
@@ -368,23 +370,25 @@ class Tadpole {
 					}
 					// Return the current data
 					if ($bIsObject) {
-						if (is_callable(array($flashlight,$privateMethod))) {
+						if (is_callable(array($flashlight,$privateMethodGet))) {
 							if (isset($this->commands['start']) || isset($this->commands['limit'])) {
 								return $flashlight
-									->$privateMethod("*","collection")
+									->$privateMethodGet("*","collection")
 										->getSubset(
 											(isset($this->commands['start'])? $this->commands['start'] : 0),
 											(isset($this->commands['limit'])? $this->commands['limit'] : 0),
 											(isset($this->commands['sortkey'])? $this->commands['sortkey'] : "objId"),
 											(isset($this->commands['order'])  ? $this->commands['order']   : "asc" ));
 							} else {
-								return $flashlight->$privateMethod(
+								return $flashlight->$privateMethodGet(
 									"*",
 									"object",
 									(isset($this->commands['sortkey'])? $this->commands['sortkey'] : "objId"),
 									(isset($this->commands['order'])  ? $this->commands['order']   : "asc" )
 								);
 							}
+						} else if (is_callable(array($flashlight,$privateMethodIs))) {
+							return $flashlight->$privateMethodIs();
 						} else {
 							if (isset($this->commands['start']) || isset($this->commands['limit'])) {
 								return array_slice($flashlight->elmt,
@@ -406,8 +410,8 @@ class Tadpole {
 				} else {
 					// Advance through the data
 					if ($bIsObject) {
-						if (is_callable(array($flashlight,$privateMethod))) {
-							$flashlight =& $flashlight->$privateMethod();
+						if (is_callable(array($flashlight,$privateMethodGet))) {
+							$flashlight =& $flashlight->$privateMethodGet();
 						} else {
 							$flashlight =& $flashlight->$elmt;	
 						}
@@ -420,7 +424,6 @@ class Tadpole {
 				return null;	
 			}
 		}
-		
 	}
 	
 	protected function evaluateCondition(&$identifier,$iter_data = array()) {
