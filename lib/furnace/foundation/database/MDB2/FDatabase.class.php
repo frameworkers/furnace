@@ -52,8 +52,7 @@
 		}	
 		$r = $this->mdb2->query($q);
 		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->message,"\"{$q}\"");	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -71,8 +70,7 @@
 		}	
 		$r = $this->mdb2->queryRow($q);
 		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -90,8 +88,7 @@
 		}	
 		$r = $this->mdb2->queryOne($q);
 		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -109,8 +106,7 @@
 		}	
 		$r = $this->mdb2->queryAll($q);
 		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -132,8 +128,7 @@
 		}	
 		$r = $this->mdb2->exec($q);
 		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -148,10 +143,9 @@
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->lastInsertID($q);
+		$r = $this->mdb2->lastInsertID();
 		if ( MDB2::isError($r) ) {
-			$e = new FDatabaseException($r->message,"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);

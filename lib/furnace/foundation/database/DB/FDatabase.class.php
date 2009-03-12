@@ -51,8 +51,7 @@
 		}	
 		$r = $this->db->query($q);
 		if ( DB::isError($r) ) {
-			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -70,8 +69,7 @@
 		}	
 		$r = $this->db->getRow($q);
 		if ( DB::isError($r) ) {
-			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -89,8 +87,7 @@
 		}	
 		$r = $this->db->getOne($q);
 		if ( DB::isError($r) ) {
-			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -108,8 +105,7 @@
 		}	
 		$r = $this->db->getAll($q);
 		if ( DB::isError($r) ) {
-			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -131,8 +127,7 @@
 		}	
 		$r = $this->db->query($q);
 		if ( DB::isError($r) ) {
-			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
@@ -149,8 +144,7 @@
 		}	
 		$r =& $this->queryOne('select last_insert_id()');
 		if ( DB::isError($r) ) {
-			$e = new FDatabaseException($r->getMessage(),"\"{$q}\"");
-			die($e->__toString());	
+			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");	
 		}
 		if ($GLOBALS['fconfig_debug_level'] == 2) {
 			$bm_end   = microtime(true);
