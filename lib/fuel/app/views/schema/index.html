@@ -1,36 +1,46 @@
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
 	  <li>Database Schema Updater</li>
 	</ul>
 </div>
 <h3>Table Summary:</h3>
-<ul>
-	<li>[tp.tables;block=li] <span>[tp-if:@.found;block=span]Found</span> Required Model Table `[@.name]`
-	<span>[tp-if:@.status=fieldsDiffer;block=span]<a href="[tp..fconfig_url_base]fuel/schema/compareFields/[@.name]">Fields Differ</a>!</span>
-	<span>[tp-if:@.status=ok;block=span]No Changes Detected.</span>
-	<span>[tp-if:@.found=~;block=span]
-		Not found in database. Options are: 
-		<ul>
-		  <li><a href="[tp..fconfig_url_base]fuel/schema/createTable/[@.name]">create</a></li>
-		  <li>Rename existing database table 
-		    <form style="display:inline;" action="[tp..fconfig_url_base]fuel/schema/renameDbTable/" method="POST">
+<div class="modelTable">
+	[tables;block=div]
+	<div class="modelTableIcon">
+		<img src="[_furnace.url_base]fuel/assets/images/[if:@.found;content=[@.status];else=missing].png" alt="[if:@.found;content=[@.status];else=missing]"/>
+	</div>
+	<div class="modelTableDetails">
+		<h3><a href="[_furnace.url_base]fuel/schema/compareFields/[@.name]">[if:@.found;block=a;else="Not Found: [@.name]"][@.name]</a></h3>
+		<span>[assert:@.found;block=span] Status: 
+			<span>[if:@.status=fieldsDiffer;block=span;else=OK (no changes detected)] 
+				<a href="[_furnace.url_base]fuel/schema/compareFields/[@.name]">Fields Differ</a>!
+			</span>
+		</span>
+		<span>[assert:!@.found;block=span] 
+		<em>'[@.name]'</em>&nbsp; has been defined in your model but was not detected in the database. Your options are:
+		<ol>
+		  <li><a href="[_furnace.url_base]fuel/schema/createTable/[@.name]">Add as a new table</a></li>
+		  <li>Rename an existing database table: 
+		    <form style="display:inline;" action="[_furnace.url_base]fuel/schema/renameDbTable/" method="POST">
 		    	<input type="hidden" name="renameTo" value="[@.name]"/>
 			 	<select name="tableName">
-			  		<option value="[tp.existingTableNames;block=option][@]">[@]</option>
+			  		<option value="[existingTableNames;block=option][@]">[@]</option>
 			  	</select>
 			  	<input type="submit" value="Apply"/>
 		  	</form>
 		  	</li>
-		</ul>
-	</span>
-	</li>
-</ul>
+		 </ol>
+		</span>
+	</div>
+	<div class="ff_clr"><!-- clear --></div>
+</div>
+
 <p>&nbsp;</p>
 <ul>
- <li class="ff_notice notice">[tp.notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="[tp..fconfig_url_base]fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
+ <li class="ff_notice notice">[notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [&nbsp;<a href="[_furnace.url_base]fuel/schema/deleteDbTable/[@.name]">delete this table</a>&nbsp;]</li>
 </ul>

@@ -3,21 +3,21 @@ class SchemaController extends Controller {
 	
 	public function index() {
 		
-		if ($GLOBALS['fconfig_debug_level'] > 0 && 
-			$GLOBALS['fconfig_debug_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No debug database specified. Please edit the 'fconfig_debug_dsn' variable in your application config file");
-		} else if ($GLOBALS['fconfig_debug_level'] == 0 &&
-				   $GLOBALS['fconfig_production_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No production database specified. Please edit the 'fconfig_production_dsn' variable in your application config file");	   	
+		if ($GLOBALS['furnace']->config['debug_level'] > 0 && 
+			$GLOBALS['furnace']->config['debug_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No debug database specified. Please edit the 'debug_dsn' variable in your application config file");
+		} else if ($GLOBALS['furnace']->config['debug_level'] == 0 &&
+				   $GLOBALS['furnace']->config['production_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No production database specified. Please edit the 'production_dsn' variable in your application config file");	   	
 		}
 		
 		$this->init();		// Load required files
 		
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
+			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
 		$model = $this->getModel();
 		
@@ -27,28 +27,26 @@ class SchemaController extends Controller {
 		
 		// Analyze differences DATABASE vs MODEL
 		foreach ($model->tables as $mt) {
-			if ($mt->getName() == "FAccount") {continue;}
-			$tables[$mt->getName()] = array("name"=>$mt->getName(),"found"=>false,"status"=>false);
+			$tables[strtolower($mt->getName())] = array("name"=> $mt->getName(),"found"=> false,"status"=> false);
+
 			foreach ($d->getTables() as $dt) {
-				if ($dt->getName() == $mt->getName()) {
-					$tables[$mt->getName()]['found'] = true;
-					$tables[$mt->getName()]['table'] = $mt;
-					$tables[$mt->getName()]['status']= 'ok';
+				if (strtolower($dt->getName()) == strtolower($mt->getName())) {
+					$tables[strtolower($mt->getName())] = array('name'=> $mt->getName(),'found' => true,'table'=>$mt,'status'=>'ok');
 					// Now that we found the matching table, check the fields for differences
 					if (count($mt->getColumns()) != count($dt->getColumns())){
-						$tables[$mt->getName()]['status'] = 'fieldsDiffer';
+						$tables[strtolower($mt->getName())]['status'] = 'fieldsDiffer';
 						break;
 					}
 					foreach ($mt->getColumns() as $mtc) {
 						$found = false;
 						foreach ($dt->getColumns() as $dtc) {
-							if ($mtc->getName() == $dtc->getName()){
+							if (strtolower($mtc->getName()) == strtolower($dtc->getName())){
 								$found=true;	
 								break;
 							}
 						}
 						if (!$found) {
-							$tables[$mt->getName()]['status'] = 'fieldsDiffer';
+							$tables[strtolower($mt->getName())]['status'] = 'fieldsDiffer';
 							break;
 						}
 					}	
@@ -59,12 +57,11 @@ class SchemaController extends Controller {
 		
 		// Analyze differences MODEL vs DATABASE
 		foreach ($d->getTables() as $dt) {
-			if ($dt->getName() == "FAccount") {continue;}
 			
 			$bFound = false;
 			foreach ($model->tables as $mt) {
-				if ($mt->getName() == $dt->getName()) {
-					$tables[$mt->getName()]['found'] = true;
+				if (strtolower($mt->getName()) == strtolower($dt->getName())) {
+					$tables[strtolower($mt->getName())]['found'] = true;
 					$bFound = true;
 					break;
 				}
@@ -168,7 +165,7 @@ class SchemaController extends Controller {
 						$choices = array(array(
 							'type'=>'edit',
 							'text'=>'Apply model definition to database field',
-							'action'=>"fuel/schema/editColumn/",
+							'action'=>_furnace()->config['url_base']."fuel/schema/editColumn/",
 							'tableName' =>$modelTable->getName(),
 							'columnName'=>$mc->getName()
 							));
@@ -185,13 +182,13 @@ class SchemaController extends Controller {
 				$choices = array(array(
 					'type'=>'add',
 					'text'=>'Add as new column',
-					'action'=>"fuel/schema/addColumn/",
+					'action'=>_furnace()->config['url_base']."fuel/schema/addColumn/",
 					'tableName'=>$modelTable->getName(),
 					'columnName'=>$mc->getName()),
 					array(
 					'type'=>'rename',
 					'text'=>'Rename existing column: ',
-					'action'=>"/fuel/schema/renameColumn/",
+					'action'=>_furnace()->config['url_base']."fuel/schema/renameColumn/",
 					'tableName'=>$modelTable->getName(),
 					'renameTo'=>$mc->getName())
 				);
@@ -292,28 +289,25 @@ class SchemaController extends Controller {
 	}
 	
 	private function init() {
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/furnace/foundation/database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
 	}
 	private function getModel() {
 		return new FModel(
-			FYamlParser::parse(
-				file_get_contents($GLOBALS['fconfig_root_directory'] . "/app/model/model.yml")
-			)
-		);
+			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml"));
 	}
 	private function getSchema() {
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
+			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
 		return $d;
 	}

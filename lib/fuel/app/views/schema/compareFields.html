@@ -1,60 +1,133 @@
+<style type="text/css"> 
+	input[type=text] {
+		border:solid 0px #888;
+		width:100%;
+		height:100%;
+		padding:3px;
+		padding-right:0px;
+		padding-left:0px;
+		background-color:#f3f3f3;
+	}
+	table {
+		border:solid 1px #888;
+		font-size:90%;
+	}
+	th {
+		border-bottom:solid 1px #888;
+		padding:3px;
+	}
+	td {
+		border-left:solid 1px #bbb;
+		border-bottom:solid 1px #bbb;
+		background-color:#f3f3f3;
+		padding:3px;
+	}
+	select {
+		border:solid 1px #888;
+	}
+	input[type=submit] {
+		padding:1px;
+	}
+	div.container {
+		width:80%;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:20px;
+		border-left:solid 1px #ccc;
+		border-bottom:solid 1px #ccc;
+		padding:5px;
+		padding-bottom:35px;
+	}
+
+	h2 {
+		border-bottom:solid 2px #ccc;
+		margin:0px;
+		margin-top:15px;
+		margin-left:-5px;
+		padding-left:5px;
+		color:#333;
+	}
+	h3 {
+		border-bottom:solid 1px #468;
+		margin-bottom:2px;
+		margin-top:50px;
+		font-weight:normal;
+		color:#333;
+	}
+	h4 {
+		font-weight:normal;
+		margin-top:16px;
+		margin-bottom:4px;
+	}
+	ul,ol {
+		margin:0px;
+		padding:0px;
+		margin-left:25px;
+		margin-right:15px;
+	}
+	ul li {
+	}
+	td.missing {
+		background-color:#ff6;
+	}
+</style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/schema/">Database Schema Updater</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/schema/">Database Schema Updater</a>&nbsp;/</li>
 	  <li>Compare Fields:</li>
 	</ul>
 </div>
 
 <div>
-	<h3  style="margin-left:15px;">Fields In Table: [tp.table.name]</h3>
+	<h3  style="margin-left:15px;">Fields In Database Table: [table.name]</h3>
 	<div style="margin:15px;margin-left:50px">
 	<table>
 	  <tr>
-	    <th>Field Name</th><th>Type</th><th>Is Null</th><th>Default Value</th><th>State</th><th>Choices</th>
+	    <th>Field Name</th><th>Type</th><th>Is Null</th><th>Default Value</th><th>State</th><th>Options</th>
 	  </tr>
 	  <tr>
-		<td>[tp.fields;block=tr][@.column.name]</td>
-		<td>[@.column.colType]</td>
-		<td>[@.column.isNull]</td>
-		<td>[@.column.defaultValue]</td>
-		<td>[@.state]</td>
-		<td>
-			<ul>
+		<td class="[fields;block=tr][assert:@.choices.#+0;content=missing]">[@.column.name]</td>
+		<td class="[assert:@.choices.#+0;content=missing]">[@.column.colType]</td>
+		<td class="[assert:@.choices.#+0;content=missing]">[@.column.isNull;error=No]</td>
+		<td class="[assert:@.choices.#+0;content=missing]">[@.column.defaultValue]</td>
+		<td class="[assert:@.choices.#+0;content=missing]">[@.state]</td>
+		<td class="[assert:@.choices.#+0;content=missing]">
+			<ol>
 				<li>[@.choices;block=li][@.text]
-				  <form  method="POST" style="display:inline;" action="[tp..fconfig_url_base][@.action]">
+				  <form  method="POST" style="display:inline;" action="[@.action]">
 					<input type="hidden" name="tableName" value="[@.tableName]"/>
-					<input type="[tp-if:@.type=~rename;block=self]hidden" name="columnName" value="[@.columnName]"/>
-					<input type="[tp-if:@.type=rename;block=self]hidden" name="renameTo"  value="[@.renameTo]"/>
-					<select name="columnName">[tp-if:@.type=rename;block=select]
-						<option value="[tp.renameList;block=option][@]">[@]</option>
+					<input type="[if:@.type!=rename;block=self]hidden" name="columnName" value="[@.columnName]"/>
+					<input type="[if:@.type=rename;block=self]hidden" name="renameTo"  value="[@.renameTo]"/>
+					<select name="columnName">[if:@.type=rename;block=select]
+						<option value="[renameList;block=option][@]">[@]</option>
 					</select>
 					<input type="submit" value="Apply"/>
 					</form>
 				</li>
-			</ul>
+			</ol>
 		</td>
 	  </tr>
 	</table>
 	
 	<div>
-	[tp-if:tp.unknownCount=~0;block=div]
+	[if:unknownCount!=0;block=div]
 	<h3>Notices:</h3>
 	<table>
 	  <tr>
 	    <th>Field Name</th><th>Type</th>
 	  </tr>
 	  <tr>
-	    <td>[tp.unknowns;block=tr][@.column.name]</td>
+	    <td>[unknowns;block=tr][@.column.name]</td>
 	    <td>[@.column.colType]</td>
 	    <td>
 			<ul>
 				<li>[@.choices;block=li][@.text]
-				<form  method="POST" style="display:inline;" action="[tp..fconfig_url_base][@.action]">
+				<form  method="POST" style="display:inline;" action="[_furnace.url_base][@.action]">
 					<input type="hidden" name="tableName" value="[@.tableName]"/>
 					<input type="hidden" name="columnName" value="[@.columnName]"/>
 					<input type="submit" value="Delete"/>
@@ -67,7 +140,7 @@
 	</div>
 
 		<!--<form method="POST" action="/fuel/schema/createTable/actions/doCreateTable">
-			<input type="hidden" name="tableName" value="[tp.table.name]"/>
+			<input type="hidden" name="tableName" value="[table.name]"/>
 			<input type="submit" value="Create Table"/>&nbsp;
 			<a href="/fuel/schema"><input type="button" value="Cancel"/>
 		</form>
