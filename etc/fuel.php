@@ -14,7 +14,7 @@
  */
  
  /* INITIALIZE FURNACE */
- include('Furnace.class.php');
+ include('../lib/furnace/Furnace.class.php');
  $furnace = new Furnace(true);
  
  /* PROCESS A REQUEST  */
