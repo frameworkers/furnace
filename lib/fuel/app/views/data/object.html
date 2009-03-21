@@ -1,30 +1,109 @@
 <style type="text/css">
-	th, td {
-		text-align:left;
-		border-right:solid 1px #ccc;
+	input[type=text] {
+		border:solid 0px #888;
+		width:100%;
+		height:100%;
+		padding:3px;
+		padding-right:0px;
+		padding-left:0px;
+		background-color:#f3f3f3;
+	}
+	textarea {
+		width:90%;
+		border-width:1px;
+		padding:5px;
+	}
+	table {
+		border:solid 1px #888;
+		font-size:90%;
+		width:90%;
+	}
+	th {
+		border-bottom:solid 1px #888;
+		padding:3px;
+		width:150px;
+	}
+	td {
+		border-left:solid 1px #bbb;
+		border-bottom:solid 1px #bbb;
+		background-color:#f3f3f3;
+		padding:3px;
+	}
+	select {
+		border:solid 1px #888;
+	}
+	input[type=submit] {
+		padding:1px;
+	}
+	div.container {
+		width:80%;
+		margin-left:auto;
+		margin-right:auto;
+		margin-top:20px;
+		border-left:solid 1px #ccc;
 		border-bottom:solid 1px #ccc;
-		padding:6px;
+		padding:5px;
+		padding-bottom:35px;
+	}
+
+	h2 {
+		border-bottom:solid 2px #ccc;
+		margin:0px;
+		margin-top:15px;
+		margin-left:-5px;
+		padding-left:5px;
+		color:#333;
+	}
+	h3 {
+		border-bottom:solid 1px #468;
+		margin-bottom:2px;
+		margin-top:50px;
+		font-weight:normal;
+		color:#333;
+	}
+	h4 {
+		font-weight:normal;
+		margin-top:16px;
+		margin-bottom:4px;
+	}
+	ul,ol {
+		margin:0px;
+		padding:0px;
+		margin-left:25px;
+		margin-right:15px;
+	}
+	ul li {
+	}
+	td.missing {
+		background-color:#ff6;
 	}
 </style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
-<span style="margin-left:15px;">
-<a href="[tp..fconfig_url_base]">App</a>&nbsp;/
-<a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/
-<a href="[tp..fconfig_url_base]fuel/data/">Application Data</a>&nbsp;/
-<a href="[tp..fconfig_url_base]fuel/data/objects/[tp.objectClass.name]">Object: [tp.objectClass.name]</a>&nbsp;/
-[tp.object.objId]
-</span>
-<h1>Application Data Manager</h1>
-<h3>Object Type: [tp.objectClass.name] // Unique ID: [tp.object.objId]</h3>
-<form action="[tp..fconfig_url_base]fuel/data/objectSave" method="POST">
-<input type="hidden" name="objectClass" value="[tp.objectClass.name]"/>
-<input type="hidden" name="objectId"    value="[tp.object.objId]"/>
+<div class="ff_breadcrumbs">
+	<ul>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/data/">Application Data Manager</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/data/objects/[objectClass.name]">Object: [objectClass.name]</a>&nbsp;/</li>
+	  <li>[object.objId]</li>
+	</ul>
+</div>
+
+<div id="ff_content">
+<h1>Application Data: [objectClass.name] (id: [object.objId])</h1>
+<form action="[_furnace.url_base]fuel/data/objectSave" method="POST">
+<input type="hidden" name="objectClass" value="[objectClass.name]"/>
+<input type="hidden" name="objectId"    value="[object.objId]"/>
 <table>
   <tr>
-    <th>[tp.objectClass.attributes;block=tr][@.name]</th>
-    <td><input type="text" name="attr_[@.name]" value="[tp.object.[@.name]]"/></td>
+    <th>[objectClass.attributes;block=tr][@.name]</th>
+    <td><span>[assert:@.type=text;block=span]<textarea name="attr_[@.name]">[object.[@.name]]</textarea></span>
+    	<span>[assert:@.type=string;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
+    	<span>[assert:@.type=datetime;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
+    	<span>[assert:@.type=date;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
+    </td>
   </tr>
   <tr>
     <td>save changes:</td>
@@ -32,3 +111,4 @@
   </tr>
 </table>
 </form>
+</div>

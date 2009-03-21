@@ -2,21 +2,21 @@
 class DataController extends Controller {
 	
 	public function index() {
-		if ($GLOBALS['fconfig_debug_level'] > 0 && 
-			$GLOBALS['fconfig_debug_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No debug database specified. Please edit the 'fconfig_debug_dsn' variable in your application config file");
-		} else if ($GLOBALS['fconfig_debug_level'] == 0 &&
-				   $GLOBALS['fconfig_production_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No production database specified. Please edit the 'fconfig_production_dsn' variable in your application config file");	   	
+		if ($GLOBALS['furnace']->config['debug_level'] > 0 && 
+			$GLOBALS['furnace']->config['debug_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No debug database specified. Please edit the 'debug_dsn' variable in your application config file");
+		} else if ($GLOBALS['furnace']->config['debug_level'] == 0 &&
+				   $GLOBALS['furnace']->config['production_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No production database specified. Please edit the 'production_dsn' variable in your application config file");	   	
 		}
 		
 		$this->init();		// Load required files
 		
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
+			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
 		$model = $this->getModel();
 		
@@ -28,9 +28,9 @@ class DataController extends Controller {
 		
 		$d = new FDatabaseSchema();
 		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
 		$model = $this->getModel();
 		
@@ -62,7 +62,7 @@ class DataController extends Controller {
 		$headers = array("objId");
 		$object_datas = array();
 		foreach ($objects as $o) {
-			$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['fconfig_url_base']}fuel/data/object/{$name}/{$o->getObjId()}\">{$o->getObjId()}</a>";
+			$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['furnace']->config['url_base']}fuel/data/object/{$name}/{$o->getObjId()}\">{$o->getObjId()}</a>";
 		}
 		foreach ($object->getAttributes() as $attr) {
 			$attr_name    = $attr->getName();
@@ -77,12 +77,12 @@ class DataController extends Controller {
 				$headers[] = "{$sock->getName()} ({$sock->getForeign()})";
 				$sock_fn_name = "get{$sock->getFunctionName()}";
 				foreach ($objects as $o) {
-					$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['fconfig_url_base']}/fuel/data/object/{$sock->getForeign()}/{$o->$sock_fn_name()->getObjId()}\">{$o->$sock_fn_name()->getObjId()}</a>";
+					$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['furnace']->config['url_base']}/fuel/data/object/{$sock->getForeign()}/{$o->$sock_fn_name()->getObjId()}\">{$o->$sock_fn_name()->getObjId()}</a>";
 				}
 			}
 		}
 		foreach ($objects as $o) {
-			$object_datas[$o->getObjId()][] = "<a style=\"color:red;\"href=\"{$GLOBALS['fconfig_url_base']}/fuel/data/delete/{$name}/{$o->getObjId()}\" onclick=\"return confirm('This action can not be undone. Continue?');\">Delete!</a>";
+			$object_datas[$o->getObjId()][] = "<a style=\"color:red;\"href=\"{$GLOBALS['furnace']->config['url_base']}/fuel/data/delete/{$name}/{$o->getObjId()}\" onclick=\"return confirm('This action can not be undone. Continue?');\">Delete!</a>";
 		}
 		
 		$this->set('headers',$headers);
@@ -99,10 +99,10 @@ class DataController extends Controller {
 		$this->init();		// Load required files
 		
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
+			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
 		$model = $this->getModel();
 		
@@ -135,9 +135,9 @@ class DataController extends Controller {
 		
 			$d = new FDatabaseSchema();
 			if ($GLOBALS['fconfig_debug_level'] > 0) {
-				$d->discover($GLOBALS['fconfig_debug_dsn']);
+				$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 			} else {
-				$d->discover($GLOBALS['fconfig_production_dsn']);
+				$d->discover($GLOBALS['furnace']->config['production_dsn']);
 			}
 			$model = $this->getModel();
 			
@@ -175,7 +175,6 @@ class DataController extends Controller {
 					$params[] = $this->form[$sock->getName()."_id"];
 				}
 			}
-			
 			$obj = call_user_func_array(array($objectType,"Create"),$params);
 			foreach ($object->getAttributes() as $attr) {
 				$set = "set{$attr->getName()}";
@@ -219,33 +218,28 @@ class DataController extends Controller {
 	}
 	
 	private function init() {
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/furnace/foundation/database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
 	}
 	private function getModel() {
 		return new FModel(
-			FYamlParser::parse(
-				file_get_contents($GLOBALS['fconfig_root_directory'] . "/app/model/model.yml")
-			)
+			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml")
 		);
 	}
 	private function getSchema() {
 		$d = new FDatabaseSchema();
 		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
 		return $d;
 	}
-	
-	
-	
 }
 ?>
