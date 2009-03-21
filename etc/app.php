@@ -14,8 +14,6 @@
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
- 
- $community_id = 1;
 
  /* INITIALIZE FURNACE */
  include('../lib/furnace/Furnace.class.php');
