@@ -10,11 +10,11 @@
  */
  
  // Include the frameworkers-core files (foundation)
- require_once("core/FBaseObject.class.php");
- require_once("core/FObjectCollection.class.php");
- require_once("core/FAccount.class.php");
- require_once("core/FAccountManager.class.php");
- require_once("core/FSessionManager.class.php");
- require_once("database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
- require_once("exceptions/FException.class.php");
+ require("core/FBaseObject.class.php");
+ require("core/FObjectCollection.class.php");
+ require("core/FAccount.class.php");
+ require("core/FAccountManager.class.php");
+ require("core/FSessionManager.class.php");
+ require("database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
+ require("exceptions/FException.class.php");
 ?>

@@ -19,6 +19,7 @@
   
   //CONSTANT DEFINITIONS
   define("FDATABASE_FETCHMODE_ASSOC",MDB2_FETCHMODE_ASSOC);
+  define("FDATABASE_FETCHMODE_NUMERIC",MDB2_FETCHMODE_NUMERIC);
   
   //DATABASE WRAPPER
   class FDatabase  {
@@ -26,10 +27,10 @@
   	private $mdb2;
   	
   	private function __construct() {
-  		if ($GLOBALS['fconfig_debug_level'] > 0) {
-  			$this->mdb2 = MDB2::singleton($GLOBALS['fconfig_debug_dsn']);
+  		if (_furnace()->config['debug_level'] > 0) {
+  			$this->mdb2 = MDB2::singleton(_furnace()->config['debug_dsn']);
   		} else {
-  			$this->mdb2 = MDB2::singleton($GLOBALS['fconfig_production_dsn']);
+  			$this->mdb2 = MDB2::singleton(_furnace()->config['production_dsn']);
   		}
   		// Turn off case-fixing portability switch
 		$this->mdb2->setOption('portability',MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);
@@ -47,16 +48,16 @@
 	}
 		
 	public function query($q) {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->query($q);
 		if ( MDB2::isError($r) ) {
 			throw new FDatabaseException($r->message,"\"{$q}\"");	
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
+			_furnace()->queries[] = array( 
 				'sql'   => $q,
 				'delay' => $bm_end - $bm_start
 			);	
@@ -64,17 +65,17 @@
 		return $r;		
 	}
 	
-	public function queryRow($q) {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+	public function queryRow($q,$fetchmode = FDATABASE_FETCHMODE_NUMERIC) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryRow($q);
+		$r = $this->mdb2->queryRow($q,null,$fetchmode);
 		if ( MDB2::isError($r) ) {
 			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
+			_furnace()->queries[] = array( 
 				'sql'   => $q,
 				'delay' => $bm_end - $bm_start
 			);	
@@ -83,16 +84,16 @@
 	}
 	
 	public function queryOne($q) {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->queryOne($q);
 		if ( MDB2::isError($r) ) {
 			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
+			_furnace()->queries[] = array( 
 				'sql'   => $q,
 				'delay' => $bm_end - $bm_start
 			);	
@@ -100,17 +101,17 @@
 		return $r;
 	}
 	
-	public function queryAll($q) {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+	public function queryAll($q,$fetchmode = FDATABASE_FETCHMODE_NUMERIC) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->mdb2->queryAll($q);
+		$r = $this->mdb2->queryAll($q,null,$fetchmode);
 		if ( MDB2::isError($r) ) {
 			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
+			_furnace()->queries[] = array( 
 				'sql'   => $q,
 				'delay' => $bm_end - $bm_start
 			);	
@@ -123,16 +124,16 @@
 	}
 	
 	public function exec($q) {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->exec($q);
 		if ( MDB2::isError($r) ) {
 			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
+			_furnace()->queries[] = array( 
 				'sql'   => $q,
 				'delay' => $bm_end - $bm_start
 			);	
@@ -140,16 +141,16 @@
 		return $r;		
 	}
 	public function lastInsertID() {
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
 		$r = $this->mdb2->lastInsertID();
 		if ( MDB2::isError($r) ) {
 			throw new FDatabaseException($r->message,"\"{$q}\"");
 		}
-		if ($GLOBALS['fconfig_debug_level'] == 2) {
+		if (_furnace()->config['debug_level'] == 2) {
 			$bm_end   = microtime(true);
-			$GLOBALS['queries'][] = array( 
+			_furnace()->queries[] = array( 
 				'sql'   => 'LAST INSERT ID',
 				'delay' => $bm_end - $bm_start
 			);	
