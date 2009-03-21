@@ -10,11 +10,10 @@
  */
  
  // Include the frameworkers-core files (facade)
- require_once("tadpole/Tadpole.class.php");
- require_once("FPage.class.php");
- require_once("FPageModule.class.php");
- require_once("FPageLayout.class.php");
- require_once("FController.class.php");
- require_once("Entrance.class.php");
- require_once("FRouter.class.php");
+ require("tadpole/Tadpole-2.0.class.php");
+ require("FPage.class.php");
+ require("FPageModule.class.php");
+ require("FPageLayout.class.php");
+ require("FController.class.php");
+ require("Entrance.class.php");
 ?>

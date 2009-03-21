@@ -2,10 +2,12 @@
 
 class FController extends FPage {
 	
-	protected $form = array();
+	// Variable: form
+	// The contents of any POSTed form data
+	public $form = array();
 	
-	public function __construct () {
-		parent::__construct();
+	public function __construct ($layout = 'default') {
+		parent::__construct($layout);
 		
 		if (isset($_POST) && count($_POST) > 0) {
 			$this->processPostedData();	
@@ -16,37 +18,31 @@ class FController extends FPage {
 		$this->form =& $_POST;
 	}
 	
-	public function doAction($action,$args=null) {
-		if (is_callable(array($this,$action))) {
-			call_user_func_array(array($this,$action),$args);
+	
+	public function redirect($url,$external=false) {
+		if (!$external) {
+			header("Location: ".$GLOBALS['furnace']->config['url_base'] . ltrim($url,'/'));
+			exit();
+		} else {
+			header("Location: {$url}");
+			exit();
 		}
 	}
 	
-	protected function redirect($url) {
-		header("Location: {$url}");
-		exit();
-	}
-	
-	protected function internalRedirect($url) {
-		_start_request($url);
+	public function internalRedirect($url) {
+		_furnace()->process($url);
 		exit();
 	}
 	
 	protected function loadModule($uri) {
-		$path = $GLOBALS['fconfig_root_directory'] . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
+		$path = _furnace()->rootdir . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
-			$this->dieWithExplanation(
+			die(
 				"The page requested a module ({$uri}) that does not exist or is not installed correctly."
 			);
-		}
-	} 
-	
-	private function dieWithExplanation($explanation) {
-		echo "<b>Furnace Error:</b> {$explanation}";
-		die();
+		}	
 	}
-	
 }
 ?>

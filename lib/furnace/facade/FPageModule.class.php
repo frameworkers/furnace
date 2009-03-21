@@ -4,6 +4,7 @@
  * 
  * FPageModule.class.php
  * Created on June 27, 2008
+ * Modified significantly on March 16, 2009
  *
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
@@ -11,28 +12,25 @@
  
  /*
   * Class: FPageModule
-  * An extension of <FPage> that permits independent code modules
-  * to be registered with Tadpole (and thus inserted into a view)
-  * just like an ordinary variable.
   * 
-  * Extends:
-  * 
-  *  <FPage>
   */
-class FPageModule extends FPage {
+class FPageModule  {
 	
-	public function __construct($templatePath) {
-		parent::__construct();
-		parent::setTemplate($templatePath);
+	protected $controller;
+	
+	private $installPath;
+	
+	public function __construct(&$controller,$installPath) {
+		
+		// Initialize the controller
+		$this->controller  = $controller;
+		
+		// Initialize the installation path
+		$this->installPath = $installPath; 
 	}
 
- 	public function render($bEcho = false) {
- 		$this->compile();		// call FPage::compile
- 		if ($bEcho) {
- 			echo $this->getContents();
- 		} else {
- 			return $this->getContents();	
- 		}
+ 	protected function getView($view) {
+ 		return file_get_contents($this->installPath . "/views/{$view}.html");
  	}
 }
 ?>
