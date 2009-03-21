@@ -1,30 +1,30 @@
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/model/editObject/[tp.object.name]">Edit Object: [tp.object.name]</a>&nbsp;/</li>
-	  <li>Edit Attribute: [tp.attr.name] </li>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/model/editObject/[object.name]">Edit Object: [object.name]</a>&nbsp;/</li>
+	  <li>Edit Attribute: [attr.name] </li>
 	</ul>
 </div>
 <div class="ffuel_loginDetails">
-	Logged in as Root. <a href="[tp..fconfig_url_base]fuel/logout"/>Log Out</a>
+	Logged in as Root. <a href="[_furnace.url_base]fuel/logout"/>Log Out</a>
 </div>
 
 <div class="container">
 
-<h2>[tp.object.name] :: [tp.attr.name]</h2>
-<form action="[tp..fconfig_url_base]fuel/model/editAttribute" method="POST" >
-	<input type="hidden" name="objectType" value="[tp.object.name]"/>
-	<input type="hidden" name="attrName"   value="[tp.attr.name]"/>
+<h2>[object.name] :: [attr.name]</h2>
+<form action="[_furnace.url_base]fuel/model/editAttribute" method="POST" >
+	<input type="hidden" name="objectType" value="[object.name]"/>
+	<input type="hidden" name="attrName"   value="[attr.name]"/>
 	<input type="hidden" name="action"     value="rename"/>
 	<table>
 	  <tr>
 	    <th>Name:</th>
-	    <td><input type="text" name="attrNewName" value="[tp.attr.name]"/></td>
+	    <td><input type="text" name="attrNewName" value="[attr.name]"/></td>
 	    <td><input type="submit" value="Rename Attribute"/></td>
 	  </tr>
 	</table>

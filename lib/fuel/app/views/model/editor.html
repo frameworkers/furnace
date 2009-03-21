@@ -7,23 +7,23 @@
 	}
 </style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ffuel_loginDetails">
-	Logged in as Root. <a href="[tp..fconfig_url_base]fuel/logout"/>Log Out</a>
+	Logged in as Root. <a href="[_furnace.url_base]fuel/logout"/>Log Out</a>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
 	  <li>Edit Model File (YAML):</li>
 	</ul>
 </div>
-<form method="POST" action="[tp..fconfig_url_base]fuel/model/saveModel/">
-	<textarea id="ff_modelEditor" name="contents">[tp.modelcontents]</textarea><br/>
+<form method="POST" action="[_furnace.url_base]fuel/model/saveModel/">
+	<textarea id="ff_modelEditor" name="contents">[modelcontents]</textarea><br/>
 	<span style="margin-left:15px;">
 		<input type="submit" value="Save Changes"/>&nbsp;
-		<a style="border:0;" href="[tp..fconfig_url_base]fuel/">
+		<a style="border:0;" href="[_furnace.url_base]fuel/">
 			<input type="button" value="Return Without Saving"/>
 		</a>
 	</span>

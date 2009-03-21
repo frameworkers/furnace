@@ -40,21 +40,21 @@ legend {
 }
 </style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a> &nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a> &nbsp;/</li>
+	  <li><a href="[_furnace.url_base]">App</a> &nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a> &nbsp;/</li>
 	  <li>AppChemistry</li>
 	</ul>
 </div>
 <div class="ffuel_loginDetails">
-	Logged in as Root. <a href="[tp..fconfig_url_base]fuel/logout"/>Log Out</a>
+	Logged in as Root. <a href="[_furnace.url_base]fuel/logout"/>Log Out</a>
 </div>
 <fieldset>
 <legend>Create a new model object</legend>
-<form action="[tp..fconfig_url_base]fuel/model/createObject" method="POST">
+<form action="_furnace.url_base]fuel/model/createObject" method="POST">
 <table>
   <tr><td class="label">Class Name:</td>
   	  <td class="input"><input type="text" name="objectName"/></td>
@@ -81,16 +81,16 @@ legend {
 
 <fieldset>
 <legend>Edit an existing model object</legend>
-<form action="[tp..fconfig_url_base]fuel/model/editObject" method="POST">
+<form action="[_furnace.url_base]fuel/model/editObject" method="POST">
 <table>
   <tr><td class="label">Class Name:</td>
   	  <td class="input">
   	  	<select name="selectedObject">
-  	  		[tp-if:tp.model.objects;block=select;else=`<em>No objects defined</em>`]
-  	  		<option value="[tp.model.objects;block=option][@.name]">[@.name]</option>
+  	  		[if:model.objects;block=select;else=`<em>No objects defined</em>`]
+  	  		<option value="[model.objects;block=option][@.name]">[@.name]</option>
   	  	</select>
   	  </td>
-  	  <td class="button"><input type="submit" name="editObject" value="Edit" [tp-if:tp.model.objects=~;content=`disabled="disabled"`]/></td>
+  	  <td class="button"><input type="submit" name="editObject" value="Edit" [if:!model.objects;content=`disabled="disabled"`]/></td>
   <tr/>
   <tr><td colspan="2" class="hint">
   		Select the object you wish to edit.</td>
@@ -102,16 +102,16 @@ legend {
 
 <fieldset>
 <legend>Delete an existing model object</legend>
-<form action="[tp..fconfig_url_base]fuel/model/deleteObject" method="POST">
+<form action="[_furnace.url_base]fuel/model/deleteObject" method="POST">
 <table>
   <tr><td class="label">Class Name:</td>
   	  <td class="input">
   	  	<select name="selectedObject">
-  	  		[tp-if:tp.model.objects;block=select;else=`<em>No objects defined</em>`]
-  	  		<option value="[tp.model.objects;block=option][@.name]">[@.name]</option>
+  	  		[if:model.objects;block=select;else=`<em>No objects defined</em>`]
+  	  		<option value="[model.objects;block=option][@.name]">[@.name]</option>
   	  	</select>
   	  </td>
-  	  <td class="button"><input type="submit" name="deleteObject" value="Delete" [tp-if:tp.model.objects=~;content=`disabled="disabled"`]/></td>
+  	  <td class="button"><input type="submit" name="deleteObject" value="Delete" [if:!model.objects;content=`disabled="disabled"`]/></td>
   <tr/>
   <tr><td colspan="2" class="hint">
   		Select the object you wish to delete.</td>

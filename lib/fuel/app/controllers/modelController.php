@@ -3,23 +3,22 @@
 class ModelController extends Controller {
 	
 	private $dsn;
-	
-	
+
 	public function __construct() {
 		parent::__construct();
 		
-		if ($GLOBALS['fconfig_debug_level'] > 0 && 
-			$GLOBALS['fconfig_debug_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No debug database specified. Please edit the 'fconfig_debug_dsn' variable in your application config file");
-		} else if ($GLOBALS['fconfig_debug_level'] == 0 &&
-				   $GLOBALS['fconfig_production_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No production database specified. Please edit the 'fconfig_production_dsn' variable in your application config file");	   	
+		if ($GLOBALS['furnace']->config['debug_level'] > 0 && 
+			$GLOBALS['furnace']->config['debug_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No debug database specified. Please edit the 'debug_dsn' variable in your application config file");
+		} else if ($GLOBALS['furnace']->config['debug_level'] == 0 &&
+				   $GLOBALS['furnace']->config['production_dsn'] == 'mysql://user:password@server/dbname') {
+			die("No production database specified. Please edit the 'production_dsn' variable in your application config file");	   	
 		}
 		
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$this->dsn = $GLOBALS['fconfig_debug_dsn'];
+		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
+			$this->dsn = $GLOBALS['furnace']->config['debug_dsn'];
 		} else {
-			$this->dsn = $GLOBALS['fconfig_production_dsn'];
+			$this->dsn = $GLOBALS['furnace']->config['production_dsn'];
 		}
 	}
 	
@@ -31,26 +30,26 @@ class ModelController extends Controller {
 		
 	}
 	public function editor() {
-		if (!file_exists($GLOBALS['fconfig_root_directory'] . 
+		if (!file_exists(_furnace()->rootdir . 
 			"/app/model/model.yml")) {
-			file_put_contents($GLOBALS['fconfig_root_directory'] . 
+			file_put_contents(_furnace()->rootdir . 
 			"/app/model/model.yml",file_get_contents(
-				$GLOBALS['fconfig_root_directory'] .
+				_furnace()->rootdir .
 					"/app/model/model.yml.example"));		
 		}
 		$this->set('modelcontents',
 			file_get_contents(
-				$GLOBALS['fconfig_root_directory'].
+				_furnace()->rootdir .
 				"/app/model/model.yml"));
 	}
 	
 	public function generate() {
 		if (!$this->form) {
-			$this->set('rootdir',$GLOBALS['fconfig_root_directory']);
+			$this->set('rootdir',_furnace()->rootdir);
 			$bRootDirectorySet = 
-				($GLOBALS['fconfig_root_directory'] != '' &&
-				 $GLOBALS['fconfig_root_directory'] != '/path/to/project/root');
-			$bModelExists = file_exists($GLOBALS['fconfig_root_directory'] . '/app/model/model.yml');
+				(_furnace()->rootdir != '' &&
+				 _furnace()->rootdir != '/path/to/project/root');
+			$bModelExists = file_exists(_furnace()->rootdir . '/app/model/model.yml');
 			$this->set('preflt',array(
 				'modelFileExists' =>$bModelExists,
 				'rootDirectorySet'=>$bRootDirectorySet));
@@ -66,7 +65,7 @@ class ModelController extends Controller {
 	
 	public function saveModel() {
 		file_put_contents(
-			$GLOBALS['fconfig_root_directory'].
+			_furnace()->rootdir.
 			"/app/model/model.yml",$this->form['contents']);
 			
 		$this->flash("model changes saved. Don't forget to "
@@ -77,28 +76,28 @@ class ModelController extends Controller {
 	public function generateObjects() {
 		$output = array();
 		// Import required files
-		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
-		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		 require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/building/FModel.class.php");
+		 require_once(_furnace()->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
+		 require_once(_furnace()->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		 require_once(_furnace()->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		 require_once(_furnace()->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		 require_once(_furnace()->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		 require_once(_furnace()->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
 		 
 		// Parse the YAML Model File
-		 $model_data = FYamlParser::Parse($GLOBALS['fconfig_root_directory'] . "/app/model/model.yml");
+		 $model_data = _furnace()->parse_yaml(_furnace()->rootdir . "/app/model/model.yml");
 		 
 		 // Build a representation of the data
 		 $model = new FModel($model_data);
 		 
 		 // Write the object code (individual and compiled)
 		 $output[] =  "<h4>Generating PHP Object Code</h4><ul>";
-		 $outputfile = fopen($GLOBALS['fconfig_root_directory'] . "/app/model/objects/compiled.php","w");
+		 $outputfile = fopen(_furnace()->rootdir . "/app/model/objects/compiled.php","w");
 		 fwrite($outputfile,"<?php\r\n");
 		 foreach ($model->objects as $obj) {
 		 	$output[] = "<li>Writing class file: {$obj->getName()}</li>";
 		 	$phpString = $obj->toPhpString();
 			fwrite($outputfile,$phpString."\r\n\r\n");
-			file_put_contents($GLOBALS['fconfig_root_directory'] . "/app/model/objects/{$obj->getName()}.class.php",
+			file_put_contents(_furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php",
 				"<?php\r\n{$phpString}");
 		 }
 		 fclose($outputfile); 
@@ -106,7 +105,7 @@ class ModelController extends Controller {
 		 $output[] =  "<h4>Generating SQL Schema File</h4><ul>";
 		 
 		 // Write the SQL Schema file
-		 $sqlOutputFile = fopen($GLOBALS['fconfig_root_directory'] . "/app/model/model.sql","w");
+		 $sqlOutputFile = fopen(_furnace()->rootdir . "/app/model/model.sql","w");
 		 foreach ($model->tables as $t) {
 		 	$output[] =  "<li>Writing table definition for: {$t->getName()}</li>";
 			fwrite($sqlOutputFile,$t->toSqlString()."\r\n\r\n");
@@ -194,6 +193,63 @@ END;
 			
 			// Execute SQL commands
 			try {
+				// If the object is derived from FAccount:
+				if ("FAccount" == $objectParent) {
+					
+					// Verify that `app_accounts` and `app_roles` tables exist in the db
+					$results = $this->_db()->query("SHOW TABLES");
+					$foundAppAccounts = false;
+					$foundAppRoles    = false;
+					while ($r = $results->fetchRow()) {
+						if ("app_accounts" == $r[0]) {
+							$foundAppAccounts = true;
+						} else if ("app_roles" == $r[0]) {
+							$foundAppRoles    = true;
+						}
+						if ($foundAppRoles && $foundAppAccounts) {
+							break;
+						}
+					}
+					
+					// If they do not, create them:
+					if (!$foundAppAccounts) {
+						$appAccountsSql = <<<END
+-- 
+-- Table structure for table `app_accounts`
+-- 
+
+CREATE TABLE `app_accounts` (
+  `objId` int(11) unsigned NOT NULL auto_increment COMMENT 'The unique id of this object in the database',
+  `username` varchar(20) NOT NULL COMMENT 'The username associated with this account',
+  `password` varchar(160) NOT NULL COMMENT 'The password for the account',
+  `emailAddress` varchar(80) NOT NULL COMMENT 'The email address associated with this account',
+  `status` varchar(20) NOT NULL COMMENT 'The status of this account',
+  `secretQuestion` varchar(160) NOT NULL COMMENT 'The secret question for access to this account',
+  `secretAnswer` varchar(160) NOT NULL COMMENT 'The secret answer for the secret question',
+  `objectClass` varchar(50) NOT NULL COMMENT 'The class of the primary object associated with this account',
+  `objectId` int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
+  PRIMARY KEY  (`objId`),
+  UNIQUE KEY `username` (`username`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
+END;
+						_db()->exec($appAccountsSql);
+						$this->flash("Created required `app_accounts` table");
+					}
+					if (!$foundAppRoles) {
+						$appRolesSql = <<<END
+-- 
+-- Table structure for table `app_roles`
+-- 
+
+CREATE TABLE `app_roles` (
+  `accountId` int(10) unsigned NOT NULL,
+  PRIMARY KEY  (`accountId`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
+END;
+						_db()->exec($appRolesSql);
+						$this->flash("Created required `app_roles` table");
+					}
+				}
 				_db()->exec($m->tables[$lc_objectType]->toSqlString());
 			} catch (FDatabaseException $e) {
 				die($e->__toString());
@@ -751,32 +807,30 @@ END;
 	}
 	
 	private function writeModelFile($contents) {
-		file_put_contents("{$GLOBALS['fconfig_root_directory']}/app/model/model.yml",$contents);
+		file_put_contents("{_furnace()->rootdir}/app/model/model.yml",$contents);
 	}
 	
 	private function init() {
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/furnace/foundation/database/".$GLOBALS['fconfig_db_engine']."/FDatabase.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($GLOBALS['fconfig_root_directory'] . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/furnace/foundation/database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
+		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
 	}
 	private function getModel() {
 		return new FModel(
-			FYamlParser::parse(
-				file_get_contents($GLOBALS['fconfig_root_directory'] . "/app/model/model.yml")
-			)
+			$GLOBALS['furnace']->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml")
 		);
 	}
 	private function getSchema() {
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['fconfig_debug_dsn']);
+		if (_furnace()->config['debug_level'] > 0) {
+			$d->discover(_furnace()->config['debug_dsn']);
 		} else {
-			$d->discover($GLOBALS['fconfig_production_dsn']);
+			$d->discover(_furnace()->config['production_dsn']);
 		}
 		return $d;
 	}

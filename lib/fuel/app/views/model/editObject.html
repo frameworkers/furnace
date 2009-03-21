@@ -62,28 +62,28 @@
 	}
 </style>
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
-	  <li>Edit Object: [tp.object.name]</li>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
+	  <li>Edit Object: [object.name]</li>
 	</ul>
 </div>
 <div class="ffuel_loginDetails">
-	Logged in as Root. <a href="[tp..fconfig_url_base]fuel/logout"/>Log Out</a>
+	Logged in as Root. <a href="[_furnace.url_base]fuel/logout"/>Log Out</a>
 </div>
 
 <div class="container">
 
-<h2>[tp.object.name]</h2>
+<h2>[object.name]</h2>
 
 <h3 style="margin-top:20px;">Attributes:</h3>
 <h4>Local</h4>
-<form action="[tp..fconfig_url_base]fuel/model/addAttribute" method="POST">
-<input type="hidden" name="objectClass" value="[tp.object.name]"/>
+<form action="[_furnace.url_base]fuel/model/addAttribute" method="POST">
+<input type="hidden" name="objectClass" value="[object.name]"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
     <th>Name</th>
@@ -97,15 +97,15 @@
     <th>Action</th>
   </tr>
   <tr>
-    <td>[tp.object.attributes;block=tr]<a href="[tp..fconfig_url_base]fuel/model/editField/[tp.object.name]/[@.name]">[@.name]</a></td>
+    <td>[object.attributes;block=tr]<a href="[_furnace.url_base]fuel/model/editField/[object.name]/[@.name]">[@.name]</a></td>
     <td>[@.description]</td>
     <td>[@.type]</td>
     <td>[@.size]</td>
     <td>[@.min]</td>
     <td>[@.max]</td>
     <td>[@.defaultValue;map=0|False,1|True]</td>
-    <td style="text-align:center;">[tp-if:@.isUnique;content=`Yes`;else=`No`]</td>
-    <td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteAttribute/[tp.object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+    <td style="text-align:center;">[if:@.isUnique;content=`Yes`;else=`No`]</td>
+    <td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteAttribute/[object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
   	<td style="width:18%;"><input type="text" name="attrName"/></td>
@@ -130,7 +130,7 @@
 </table>
 </form>
 <div>
-[tp-if:tp.object.parentClass=FAccount;block=div]
+[if:object.parentClass="FAccount";block=div]
 <h4>Inherited from FAccount</h4>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
@@ -145,7 +145,7 @@
   </tr>
   <tr>
   	<td style="width:18%;">username</td>
-  	<td style="width:30%;">The unique name for the [tp.object.name]</td>
+  	<td style="width:30%;">The unique name for the [object.name]</td>
   	<td style="width:10%;">string</td>
   	<td style="width:5%;">20</td>
   	<td style="width:5%;"></td>
@@ -165,7 +165,7 @@
   </tr>
   <tr>
   	<td style="width:18%;">emailAddress</td>
-  	<td style="width:30%;">The unique email address for the [tp.object.name]</td>
+  	<td style="width:30%;">The unique email address for the [object.name]</td>
   	<td style="width:10%;">string</td>
   	<td style="width:5%;">80</td>
   	<td style="width:5%;"></td>
@@ -178,8 +178,8 @@
 
 <h3>Relationships:</h3>
 <h4>M-1 (Parents)</h4>
-<form action="[tp..fconfig_url_base]fuel/model/addDependency" method="POST">
-<input type="hidden" name="objectClass" value="[tp.object.name]"/>
+<form action="[_furnace.url_base]fuel/model/addDependency" method="POST">
+<input type="hidden" name="objectClass" value="[object.name]"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
     <th>Local Attribute Name</th>
@@ -189,16 +189,16 @@
     <th>Action</th>
   </tr>
   <tr>
-  	<td>[tp.object.dependencies;block=tr][@.name]</td>
-  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.class]">[@.class]</a></td>
-  	<td>[@.desc]</td>
+  	<td>[object.dependencies;block=tr][@.name]</td>
+  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.class]">[@.class]</a></td>
+  	<td>[@.desc;default='']</td>
   	<td>[@.var]</td>
-  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteDependency/[tp.object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteDependency/[object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
     <td style="width:15%;"><input type="text" name="socketName"/></td>
     <td style="width:20%;"><select name="dependingClass">
-    		<option>[tp.model.objects;block=option][@.name]</option>
+    		<option>[model.objects;block=option][@.name]</option>
     	</select>
     </td>
     <td style="width:30%;"><input type="text" name="description"/></td>
@@ -218,18 +218,18 @@
     <th>Action</th>
   </tr>
   <tr>
-  	<td>[tp.children;block=tr][@.name]</td>
-  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+  	<td>[assert:children;block=tr][children;block=tr][@.name]</td>
+  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
   	<td>[@.quantity]</td>
   	<td>[@.description]</td>
-  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+  	<td style="text-align:center;"><a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
 </table>
 
 <h4>M-M (Peers)</h4>
-<form action="[tp..fconfig_url_base]fuel/model/addMMRelationship" method="POST">
-<input type="hidden" name="objectClass" value="[tp.object.name]"/>
+<form action="[_furnace.url_base]fuel/model/addMMRelationship" method="POST">
+<input type="hidden" name="objectClass" value="[object.name]"/>
 <input type="hidden" name="quantity" value="M"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
@@ -241,17 +241,17 @@
     <th>Action</th>
   </tr>
   <tr>
-  	<td>[tp.relationships;block=tr][@.name]</td>
-  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+  	<td>[relationships;block=tr][@.name]</td>
+  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
   	<td>[@.quantity]</td>
   	<td>[@.description]</td>
-  	<td><a href="[tp..fconfig_url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-  	<td style="text-align:center;"><a href="[tp..fconfig_url_base]fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
   	<td style="width:15%;"><input type="text" name="socketName"/></td>
   	<td style="width:20%;"><select name="dependingClass">
-    		<option>[tp.model.objects;block=option][@.name]</option>
+    		<option>[model.objects;block=option][@.name]</option>
     	</select>
     </td>
     <td style="width:5%;">M</td>
