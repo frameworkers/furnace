@@ -3,8 +3,10 @@ class RolesController extends Controller {
 	
 	public function index() {
 		
-		//$q = "SELECT * FROM `app_accounts`,`app_roles` WHERE `app_accounts`.`objId`=`app_roles`.`accountId` ";
-		//$users_results = _db()->query($q);
+		$q = "SELECT `app_accounts`.`username`,`app_roles`.* "
+			."FROM `app_accounts`,`app_roles` "
+			."WHERE `app_accounts`.`objId`=`app_roles`.`accountId` "; 
+		$users_results = _db()->queryAll($q,FDATABASE_FETCHMODE_ASSOC);
 		
 		$q= "DESCRIBE `app_roles`";
 		$roles_results = _db()->query($q);
@@ -12,14 +14,12 @@ class RolesController extends Controller {
 		$defined_roles = array();
 		
 		while ($role = $roles_results->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
-			if ($role['field'] == "accountId") {continue;}
+			if ($role['Field'] == "accountId") {continue;}
 			$defined_roles[] = $role;
 		}
 		
-		$users = User::Retrieve();
-		
 		$this->set('defined_roles',$defined_roles);
-		$this->set('users',$users);
+		$this->set('users',$users_results);
 	}
 	
 	public function createUser($fn,$ln,$un,$pw,$email) {
@@ -47,7 +47,7 @@ class RolesController extends Controller {
  		} else {
 			die("GET not supported. Try again using POST");
 		}
- 		$this->redirect("/fuel/roles");
+ 		$this->redirect("/fuel/roles/");
  	}
  	
  	public function defineRole() {
@@ -56,7 +56,8 @@ class RolesController extends Controller {
 			$desc    =& $this->form['desc'];
 			$default = ("grant" == $this->form['default']) ? true : false;
 			FAccount::DefineRole($name,$default,$desc);
-			$this->redirect("/");
+			$this->flash("Defined new role '{$name}' with default policy '{$default}'");
+			$this->redirect("/fuel/roles/");
 		} else {
 			die("GET not supported. Try again using POST");
 		}
@@ -64,7 +65,8 @@ class RolesController extends Controller {
  	
  	public function deleteRole($name) {
 		FAccount::DeleteRole($name);
-		$this->redirect("/");
+		$this->flash("Deleted role '{$name}' ");
+		$this->redirect("/fuel/roles/");
  	}
  	
  	public function getPower() {
