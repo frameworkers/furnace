@@ -6,30 +6,37 @@
 		// successfully logged in
 		private $successURI;
 		
-		public function __construct($successURI='/') {
-			$this->successURI = $successURI;
-			parent::__construct(dirname(__FILE__) . "/views/LoginBox.html");
-		}
-		
-		public function render() {
-			if (isset($_POST['username']) && isset($_POST['password'])) {
-				$this->processLogin($_POST);
-			}
+		public function __construct(&$controller,$successURI='/') {
+			// Initialize the object
+			parent::__construct($controller,dirname(__FILE__));
 			
-			// return the rendered module
-			return parent::render();
+			// Set the URI to navigate to on successful login
+			$this->successURI = $successURI;
+			
+			// Process any POSTed data
+			if ($this->controller->form) {
+				$this->processLogin();
+			}
 		}
 		
-		private function processLogin(&$data) {
+		public function getContents() {
+			// return the html to display
+			return $this->getView("LoginBox");
+		}
+		
+		private function processLogin() {
+			// Obtain the data
+			$data =& $this->controller->form;
+			
 			// Make sure required data is present
 			if ($data['username'] == '' || $data['password'] == '') {
-				$this->register('errorNoInfo',true);
+				$this->controller->set('errorNoInfo',true);
 			}
 			// Attempt to log in
 			if(FSessionManager::doLogin()) {
-				header("Location: {$this->successURI}");
+				$this->controller->redirect($this->successURI);
 			} else {
-				$this->register("loginError",true);
+				$this->controller->set("loginError",true);
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 <div class="error">
-	[tp-if:tp.loginError;block=div]
+	[if:loginError;block=div;else='']
 	Incorrect username/password combination provided. Please Try again...
 </div>
 <form method="POST" >
@@ -15,7 +15,6 @@
 	  </tr>
 	  <tr>
 	    <td>&nbsp;</td>
-	    
 	  </tr>
 	</table>
 </form>

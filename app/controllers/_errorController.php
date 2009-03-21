@@ -10,7 +10,9 @@
  */
 class _ErrorController extends Controller {
 	
-	
+	public function http403() {
+		$this->addStylesheet('error');
+	}
 	
 	public function http404($request='') {
 		$this->addStylesheet('error');
