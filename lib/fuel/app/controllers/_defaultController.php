@@ -8,14 +8,14 @@ class _defaultController extends Controller {
 	
 	public function login() {
 		if ($this->form) {
-			if ('' == $GLOBALS['fconfig_root_password']) {
+			if ('' == $GLOBALS['furnace']->config['root_password']) {
 				// ALWAYS FAIL IF THE ROOT PASSWORD HAS NOT BEEN SET 
 				// IN THE PROJECT CONFIGURATION FILE!
 				$this->flash("Invalid login data provided. Please try again...","error");
 				$this->redirect("/fuel/login");
 			}
 			$pw =& $this->form['rootpass'];
-			if (md5($pw) == md5($GLOBALS['fconfig_root_password'])) {
+			if (md5($pw) == md5($GLOBALS['furnace']->config['root_password'])) {
 				$_SESSION['fuel']['loggedin']  = true;
 				$_SESSION['fuel']['timestamp'] = mktime();
 				$this->redirect("/fuel/");

@@ -1,29 +1,29 @@
 <div class="ff_header">
-<img src="[tp..fconfig_url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[tp..fconfig_url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[tp..fconfig_url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
 	  <li>Log In</li>
 	</ul>
 </div>
 <center>
 	<div style="background-color:#ff8;padding:5px;border:solid 1px #fc0;">
-		[tp-if:tp..fconfig_root_password=~;block=div]
+		[if:!_furnace.root_password;block=div]
 		<h3>Web Management Disabled</h3>
 		Web-based management of this application has been disabled because
 		the root password has not been set.
 	</div>
 	<h2>Log In to Edit your Application</h2>
-	<form action="[tp..fconfig_url_base]fuel/_default/doRootLogin" method="POST">
+	<form action="[_furnace.url_base]fuel/_default/doRootLogin" method="POST">
 		<table>
 		  <tr>
 		    <th>Username:</th><td>Root</td>
 		  </tr>
 		  <tr>
-		    <th>Password:</th><td><input type="password" name="rootpass" [tp-if:tp..fconfig_root_password=~;content=`disabled="disabled"`] /></td>
-		    <td>&nbsp;</td><td><input type="submit" [tp-if:tp..fconfig_root_password=~;content=`disabled="disabled"`] value="Submit"/></td>
+		    <th>Password:</th><td><input type="password" name="rootpass" [if:!_furnace.root_password;content=`disabled="disabled"`] /></td>
+		    <td>&nbsp;</td><td><input type="submit" [if:!_furnace.root_password;content=`disabled="disabled"`] value="Submit"/></td>
 		  </tr>
 		</table>
 	</form>
