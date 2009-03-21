@@ -1,0 +1,45 @@
+#
+# FURNACE Application Configuration File
+#
+
+# Application Name:
+# This is the name of your application
+app_name: Untitled Application
+
+
+# Database Engine:
+#   Specifies which datasource to use when connecting. Note that,
+#   at the moment, the only valid values are "MDB2" or the older "DB".
+db_engine: MDB2
+
+# Debug Level:
+#	2: Verbose output, benchmarks, debug info. 
+# 	1: Error messages only, may still contain sensitive information
+#      not suitable for a production environment.
+#   0: No errors or warnings, suitable for a production environment.
+debug_level: 2
+
+# Debug DSN: 
+#   This DSN will be used if debug_level is greater than zero
+debug_dsn: "driver://user:pass@server/dbname"
+
+# Production DSN:
+#   This DSN will be used when debug_level equals zero
+production_dsn: "driver://user:pass@server/dbname"
+
+# Application URL Base:
+#   The base url (default is /) to expect at the beginning of 
+#   each request. This is particularly helpful when your 
+#   webapp does not reside at the site root (ie: in a sub-
+#   directory like: http://example.com/apps/myapp). Always
+#   include a trailing '/'.
+url_base: /
+
+
+# Application Root Password
+#   Setting this password will allow you to manage your application
+#   using the FUEL web-based management interface. If this password
+#   is blank, you will not be able to use FUEL.
+root_password: 
+
+

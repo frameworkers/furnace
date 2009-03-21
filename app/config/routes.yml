@@ -1,5 +1,7 @@
-# Routes.yml
 #
+# FURNACE Application Route Definition File
+#
+
 # Mappings between URLs and Controller/View pairs
 # NOTE: Order is important! The Router runs top to bottom, 
 # stopping after it has found a route that matches.
