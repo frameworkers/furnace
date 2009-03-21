@@ -3,23 +3,23 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <!-- CSS Stylesheet Includes -->
-<link rel="stylesheet" type="text/css" href="[tp..fconfig_url_base]fuel/assets/css/fuel.default.css"/>
-<link rel="stylesheet" type="text/css" href="[tp..fconfig_url_base]fuel/assets/css/[tp.StylesheetsFromView;block=self][@].css"/>
+<link rel="stylesheet" type="text/css" href="[_furnace.url_base]fuel/assets/css/fuel.default.css"/>
+<link rel="stylesheet" type="text/css" href="[_furnace.url_base]fuel/assets/css/[_css_;block=self][@].css"/>
 
 
 <!-- Javascript Includes -->
-<script type="text/javascript" src="[tp..fconfig_url_base]fuel/assets/js/[tp.JavascriptsFromView;block=script][@].js"></script>
+<script type="text/javascript" src="[_furnace.url_base]fuel/assets/js/[_js_;block=script][@].js"></script>
 
 
-<title>[tp.PageTitleFromView]</title>
+<title>[_title_]</title>
 </head>
 <body class="ff">
 <div class="ff_messages">
-	<div class="ff_message [tp.MessagesFromView;block=div][@.cssClass]">
-		<h1>[tp-if:@.title;block=h1][@.title]</h1>
+	<div class="ff_message [_flashes_;block=div][@.cssClass]">
+		<h1>[if:@.title;block=h1][@.title]</h1>
 		[@.message]
 	</div>
 </div>
-[tp.ContentFromView]
+[_content_]
 </body>
 </html>
