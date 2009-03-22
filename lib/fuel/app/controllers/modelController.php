@@ -197,7 +197,7 @@ END;
 				if ("FAccount" == $objectParent) {
 					
 					// Verify that `app_accounts` and `app_roles` tables exist in the db
-					$results = $this->_db()->query("SHOW TABLES");
+					$results = _db()->query("SHOW TABLES");
 					$foundAppAccounts = false;
 					$foundAppRoles    = false;
 					while ($r = $results->fetchRow()) {
@@ -807,7 +807,7 @@ END;
 	}
 	
 	private function writeModelFile($contents) {
-		file_put_contents("{_furnace()->rootdir}/app/model/model.yml",$contents);
+		file_put_contents($GLOBALS['furnace']->rootdir . "/app/model/model.yml",$contents);
 	}
 	
 	private function init() {
