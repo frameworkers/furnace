@@ -77,12 +77,12 @@ class DataController extends Controller {
 				$headers[] = "{$sock->getName()} ({$sock->getForeign()})";
 				$sock_fn_name = "get{$sock->getFunctionName()}";
 				foreach ($objects as $o) {
-					$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['furnace']->config['url_base']}/fuel/data/object/{$sock->getForeign()}/{$o->$sock_fn_name()->getObjId()}\">{$o->$sock_fn_name()->getObjId()}</a>";
+					$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['furnace']->config['url_base']}fuel/data/object/{$sock->getForeign()}/{$o->$sock_fn_name()->getObjId()}\">{$o->$sock_fn_name()->getObjId()}</a>";
 				}
 			}
 		}
 		foreach ($objects as $o) {
-			$object_datas[$o->getObjId()][] = "<a style=\"color:red;\"href=\"{$GLOBALS['furnace']->config['url_base']}/fuel/data/delete/{$name}/{$o->getObjId()}\" onclick=\"return confirm('This action can not be undone. Continue?');\">Delete!</a>";
+			$object_datas[$o->getObjId()][] = "<a style=\"color:red;\"href=\"{$GLOBALS['furnace']->config['url_base']}fuel/data/delete/{$name}/{$o->getObjId()}\" onclick=\"return confirm('This action can not be undone. Continue?');\">Delete!</a>";
 		}
 		
 		$this->set('headers',$headers);
