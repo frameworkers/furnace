@@ -119,21 +119,21 @@ class Furnace {
  			// Include Furnace Foundation classes
  			set_include_path(get_include_path() . PATH_SEPARATOR . 
  				$this->rootdir . '/lib/furnace/foundation');
- 			include('foundation.bootstrap.php');
+ 			include_once('foundation.bootstrap.php');
  			
  			// Include Furnace Facade classes
  			 set_include_path(get_include_path() . PATH_SEPARATOR .
  				$this->rootdir . '/lib/furnace/facade');
- 			include('facade.bootstrap.php'); 
+ 			include_once('facade.bootstrap.php'); 
  			
  			// Include the custom controller base file
- 			include($this->rootdir . '/app/controllers/_base/Controller.class.php');
+ 			include_once($this->rootdir . '/app/controllers/_base/Controller.class.php');
  			
  			// Include compiled model data, if available
- 			@include($this->rootdir . "/app/model/objects/compiled.php");
+ 			@include_once($this->rootdir . "/app/model/objects/compiled.php");
  			
  			// Include the controller file
- 			include($controllerFilePath);
+ 			include_once($controllerFilePath);
  			if ($this->config['debug_level'] > 0) {
  				$this->bm_envsetupend = microtime(true);
  			}
@@ -170,7 +170,11 @@ class Furnace {
  				if ($templateFileExists) {
  					$controller->setTemplate($templateFilePath);
  				} else {
- 					die("No template file {$templateFilePath}");
+ 					if ($this->config['debug_level'] > 0 ) {
+ 						die("No template file {$templateFilePath}");
+ 					} else {
+ 						$this->process("/_error/http404");
+ 					}
  				}
  				
  				// Provide access to Furnace project variables
@@ -202,10 +206,18 @@ class Furnace {
  				// Clean up
  				// TODO: free memory, etc
  			} else {
- 				die("No handler function '{$routeData['view']}' defined in {$controllerFilePath}");	
+ 				if ($this->config['debug_level'] > 0) {
+ 					die("No handler function '{$routeData['view']}' defined in {$controllerFilePath}");	
+ 				} else {
+ 					$this->process("/_error/http404");
+ 				}
  			}
  		} else {
- 			die("No controller file {$routeData['controller']}");	
+ 			if ($this->config['debug_level'] > 0) {
+ 				die("No controller file {$routeData['controller']}");
+ 			} else {
+ 				$this->process("/_error/http404");	
+ 			}
  		}
  	}
  	
