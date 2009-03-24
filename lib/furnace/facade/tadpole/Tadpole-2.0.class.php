@@ -54,8 +54,10 @@ class Tadpole {
 			$valueStart = $tagStart + 1; // skip the [
 
 			
-			// Make sure that a tagStart was found, quit otherwise
-			if (false === $tagStart) { return $contents; /* Nothing further to do. Consider FREEing memory here */}
+			// Make sure that a tagStart was found at an offset < the length of 'contents', quit otherwise
+			if (false === $tagStart || !isset($contents[$offset])) { 
+				return $contents; /* Nothing further to do. Consider FREEing memory here */
+			}
 			
 			
 			// Look for a ']' or a ';' or a '[' signal and store the offset
@@ -176,7 +178,7 @@ class Tadpole {
 				// but should instead be set to the end of the current (nested relative) tag so that searching
 				// can continue.
 				$offset = ($tagEnd + 1);	// Increment the offset
-				continue;				// Move on to the next tag
+				continue;					// Move on to the next tag
 			}
 			
 
