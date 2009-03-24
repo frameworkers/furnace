@@ -778,7 +778,7 @@
  		$r = "\tclass {$this->getName()}Collection extends FObjectCollection {\r\n";
  		
  		// Add Constructor
- 		$r .= "\t\tpublic function __construct(\$lookupTable=\"{$this->getName()}\",\$filter=\"WHERE 1\") {\r\n"
+ 		$r .= "\t\tpublic function __construct(\$lookupTable=\"{$this->getName()}\",\$filter=\"\") {\r\n"
  			. "\t\t\tparent::__construct(\"{$this->getName()}\",\$lookupTable,\$filter);\r\n";
  		
  		$r .= "\t\t}\r\n";

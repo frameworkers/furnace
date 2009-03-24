@@ -49,8 +49,9 @@
  	public function __construct($type,$lookupTable,$filter='') {
  		$this->objectType = $type;
  		$this->setLookupTable($lookupTable);
- 		$theFilter = ("" == $filter) ? "WHERE 1 " : $filter;
- 		$this->filter = $theFilter . " ";
+ 		//$theFilter = ("" == $filter) ? "WHERE 1 " : $filter;
+ 		$this->filter = "{$filter}";
+ 		
  		// Determine the primary limiting criteria for this group based
  		// on the relationType. 1M relations will take advantage of the 
  		// *_id attribute to perform lookups, while MM relations will
@@ -271,7 +272,14 @@
  	
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 		
+ 		$q .= ($this->filter) 
+ 				? " {$this->filter} AND "
+				: " WHERE ";
+				
+ 		$q .= "`{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		
  		_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
  		$result = _db()->queryRow($q);
  		//while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
@@ -285,7 +293,10 @@
  	
  	protected function get_case5(&$u_v,&$k,&$s,&$r) {
  		$cn = "{$this->objectType}Collection";
- 		$newFilter = $this->filter . " AND `{$k}`='{$u_v}' ";
+ 		$newFilter = 
+ 			($this->filter)
+ 				? " {$this->filter} AND `{$k}`='{$u_v}' "
+				: " WHERE `{$k}`='{$u_v}' ";
  		return new $cn($this->lookupTable, $newFilter);
  	}
  	
@@ -293,8 +304,11 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter
- 			."AND `{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . 
+ 			(($this->filter)
+ 				? " {$this->filter} AND "
+				: " WHERE ") .
+ 			"`{$k}`='{$u_v}' ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->queryRow($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -309,7 +323,11 @@
  	
  	protected function get_case7(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . "AND `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");	
+ 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 			(($this->filter)
+ 				? " {$this->filter} AND "
+				: " WHERE ") . 
+			"`{$k}` IN ('".implode("','",$u_v)."') ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");	
  		$result = _db()->query($q);
 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);	
@@ -319,15 +337,18 @@
  	
  	protected function get_case8(&$u_v,&$k,&$s,&$r) {
  		$cn = "{$this->objectType}Collection";
- 		return new $cn($this->lookupTable,$this->filter . " AND `{$k}` IN ('".implode("','",$u_v)."') ");
+ 		return new $cn($this->lookupTable,(($this->filter) ? "{$this->filter} AND" : " WHERE ") . " `{$k}` IN ('".implode("','",$u_v)."') ");
  	}
  	
  	protected function get_case9(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter 
- 			."AND `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . 
+ 			(($this->filter)
+ 				? " {$this->filter} AND "
+				: " WHERE ") .
+ 			" `{$k}` IN ('".implode("','",$u_v)."') " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -341,9 +362,16 @@
  	}
 	
  	protected function get_case10(&$u_v,&$k,&$s,&$r) {
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter;
+ 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 			(($this->filter)
+ 				? "{$this->filter} AND "
+				: " WHERE ");
  		foreach ($u_v as $attr=>$val) {
- 			$q .= "AND `{$attr}`='{$val}' ";
+ 			if( is_array($val)) { 
+ 				$q .= " `{$attr}` " . implode($val," '") . "' ";
+ 			} else {
+ 				$q .= " `{$attr}`='{$val}' ";
+ 			}
  		}
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
@@ -360,10 +388,16 @@
  	
  	protected function get_case11(&$u_v,&$k,&$s,&$r) {
  		$cn = "{$this->objectType}Collection";
- 		$filter = $this->filter;
+ 		$filter_parts = array();
  		foreach ($u_v as $attr=>$val) {
- 			$filter .= "AND `{$attr}`='{$val}' ";
+ 			if( is_array($val)) { 
+ 				$filter_parts[] = " `{$attr}` " . implode($val," '") . "' ";
+ 			} else {
+ 				$filter_parts[] = " `{$attr}`='{$val}' ";
+ 			}
  		}
+ 		$filter = ($this->filter) ? " {$this->filter} AND " : " WHERE ";
+ 		$filter .= implode(" AND ",$filter_parts);
  		return new $cn($this->lookupTable,$filter);
  	}
  	
@@ -371,9 +405,16 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter;
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " .
+ 			(($this->filter)
+ 				? "{$this->filter} AND " 
+ 				: " WHERE ");
  		foreach ($u_v as $attr=>$val) {
- 			$q .= "AND `{$attr}`='{$val}' ";
+ 			if( is_array($val)) { 
+ 				$q .= " `{$attr}` " . implode($val," '") . "' ";
+ 			} else {
+ 				$q .= " `{$attr}`='{$val}' ";
+ 			}
  		}
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
@@ -389,11 +430,21 @@
  	}
  	
  	public function setCustomFilter($filter) {
- 		$this->filter .= " AND ( {$filter} ) ";
+ 		if ($this->filter) {
+ 			$this->filter .= " AND ( {$filter} ) ";
+ 		} else {
+ 			$this->filter = ("WHERE" == strtoupper(substr(ltrim($filter," "),0,5)))
+ 				? $filter
+ 				: "WHERE {$filter} ";
+ 		}
  	}
  	
  	public function advancedGet($filter) {
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " AND (" . $filter . " ) ";
+ 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 			(($this->filter)
+ 				? " {$this->filter} AND "
+				: " WHERE ") . 
+			" (" . $filter . " ) ";
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);
