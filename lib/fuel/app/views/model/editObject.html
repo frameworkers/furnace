@@ -188,7 +188,7 @@
 	  	<td>[assert:optionals;block=tr][optionals;block=tr][@.data.name]</td>
 	  	<td>[@.data.description]</td>
 	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.data.foreign]">[@.data.foreign]</a></td>
-	  	<td>Child</td>
+	  	<td>[if:@.data.quantity=1;content=Parent;else=Child]</td>
 	  	<td style="text-align:center;">Yes</td>
 	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.data.foreign]">[@.data.foreign]</a>.[@.data.actualremotevariablename]</td>
 	  	<td style="text-align:center;"><a href="[if:@.data.quantity=1;block=a][_furnace.url_base]fuel/model/deleteOptional/[object.name]/[@.data.foreign]/[@.data.name]/[@.remote]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
