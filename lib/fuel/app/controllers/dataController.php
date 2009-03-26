@@ -73,7 +73,7 @@ class DataController extends Controller {
 			}
 		}
 		foreach ($object->getSockets() as $sock) {
-			if ($sock->getQuantity() == "1") {
+			if ($sock->getQuantity() == "1" && $sock->getRequired()) {
 				$headers[] = "{$sock->getName()} ({$sock->getForeign()})";
 				$sock_fn_name = "get{$sock->getFunctionName()}";
 				foreach ($objects as $o) {

@@ -247,7 +247,7 @@ class FModel {
 		 				$s->setVisibility(((isset($this->obj_data[$lc_cand_name][$statement]['visibility'])) 
 		  					? $this->obj_data[$lc_cand_name][$statement]['visibility'] 
 		  					: $this->config['AttributeVisibility']));
-		  				$s->setRequired(("yes" == strtolower($this->obj_data[$lc_cand_name][$statement]['required']) ? true : false));
+		  				$s->setRequired((false === $this->obj_data[$lc_cand_name][$statement]['required']) ? false : true);
 		 				
 		 				// Set the reflection details, if required
 		 				if (isset($this->obj_data[$lc_cand_name][$statement]['reflect'])) {
@@ -634,7 +634,7 @@ class FModel {
 						return strtolower(substr($std_attr,0,1).substr($std_attr,1));
 					}
 				}
-			} else if ("{$requestingClass}.{$socketName}" == $subdata['reflect']) {
+			} else if (strtolower("{$requestingClass}.{$socketName}") == strtolower($subdata['reflect'])) {
 				// Reflected socket
 				list($ignore,$remoteSocketName) = split(" ",$label);
 				return ($remoteSocketName);

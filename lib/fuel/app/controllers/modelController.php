@@ -281,28 +281,40 @@ END;
 		$relationships = array();
 		$children      = array();
 		$optionals     = array();
-		foreach ($m->objects[strtolower($name)]->getSockets() as $s) {
-			if ($s->getQuantity() == "M" ) {
-				if ($s->doesReflect() ) {
-					if ($s->isRequired()) {
-						$relationships[] = $s;
-					} else {
-						$remoteVarName = $m->determineActualRemoteVariableName($name,$s->getName(),$s->getForeign());
-						$optionals[] = array("remote"=>$remoteVarName,"data"=>$s);
-					}
-				} else {
-					$children[] = $s;
-				}
-			}  else {
-				if (!$s->isRequired()) {
-					$remoteVarName = $m->determineActualRemoteVariableName($name,$s->getName(),$s->getForeign());
-					$optionals[] = array("remote"=>$remoteVarName,"data"=>$s);	
-				}
+		$sockets = $m->objects[strtolower($name)]->getSockets();
+		foreach ($sockets as $s) {
+			$remoteSocket = self::getRemoteSocket($m,$s);		
+			
+			if ($s->getQuantity() == "M" && $remoteSocket && $remoteSocket->getQuantity() == "M") {
+				$relationships[] = $s;
+			} else if ($s->getQuantity() == "1") {
+				if (!$s->getRequired()) {
+					$optionals[] = array("remote"=>$remoteSocket->getName(),"data"=>$s);	
+				} // otherwise it is a dependency
+			} else {
+				$children[]  = $s;	
 			}
 		}
 		$this->set('relationships',$relationships);
 		$this->set('children',$children);
 		$this->set('optionals',$optionals);
+	}
+	
+	private static function getRemoteSocket($model,$localSocket) {
+		if (! $localSocket->doesReflect()) { 
+			//echo "{$localSocket->getOwner()}::{$localSocket->getName()} IS NON-REFLECTING (= required dependency)<br/>\r\n";
+			return;
+		}
+		$foreignSockets = $model->objects[strtolower($localSocket->getForeign())]->getSockets();
+
+		foreach ( $foreignSockets as $foreign ) {
+			//echo "LOOKING FOR REMOTE MATCH FOR {$localSocket->getOwner()}::{$localSocket->getName()}, Trying {$foreign->getOwner()}::{$foreign->getName()} AND  {$localSocket->getActualRemoteVariableName()} <br/>\r\n";
+			if ($foreign->getName() == $localSocket->getActualRemoteVariableName()) {
+				//echo "FOUND! (=child)<br/>\r\n";
+				return $foreign;
+			}
+		}
+		//echo "NONE FOUND. GIVING UP.<br/>\r\n";	
 	}
 	
 	public function editField($ot='',$attr='') {
