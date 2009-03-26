@@ -279,17 +279,30 @@ END;
 		$this->set('model',$m);
 		$this->set('object',$m->objects[strtolower($name)]);
 		$relationships = array();
+		$children      = array();
+		$optionals     = array();
 		foreach ($m->objects[strtolower($name)]->getSockets() as $s) {
 			if ($s->getQuantity() == "M" ) {
-				if ($s->doesReflect()) {
-					$relationships[] = $s;
+				if ($s->doesReflect() ) {
+					if ($s->isRequired()) {
+						$relationships[] = $s;
+					} else {
+						$remoteVarName = $m->determineActualRemoteVariableName($name,$s->getName(),$s->getForeign());
+						$optionals[] = array("remote"=>$remoteVarName,"data"=>$s);
+					}
 				} else {
 					$children[] = $s;
+				}
+			}  else {
+				if (!$s->isRequired()) {
+					$remoteVarName = $m->determineActualRemoteVariableName($name,$s->getName(),$s->getForeign());
+					$optionals[] = array("remote"=>$remoteVarName,"data"=>$s);	
 				}
 			}
 		}
 		$this->set('relationships',$relationships);
 		$this->set('children',$children);
+		$this->set('optionals',$optionals);
 	}
 	
 	public function editField($ot='',$attr='') {
@@ -326,7 +339,7 @@ END;
 		}
 	}
 
-	public function addAttribute() {
+	public function addGenericAttribute() {
 		if ($this->form) {
 
 			$objectClass = $this->form['objectClass'];
@@ -404,7 +417,7 @@ END;
 	
 	public function editAttribute() {
 		if ($this->form) {
-			
+
 			// INITIAL SETUP
 			$this->init();
 			$m = $this->getModel();
@@ -485,8 +498,28 @@ END;
 		}
 	}
 	
+	public function addModelSpecificAttribute() {
+		if ($this->form) {
+			
+			// Determine how to process this request, based on the multiplicity specified
+			switch ($this->form['attrMultiple']) {
+				case "M1":
+					$this->addDependency();
+					exit();
+				case "MM":
+					$this->addMMRelationship();
+					exit();
+				default:
+					die("<b>FUEL:</b> Unknown value {$this->form['attrMultiple']} provided for `attrMultiple` ");	
+			}
+			
+		}
+	}
+	
+	
 	public function addDependency() {
 		if ($this->form) {
+			
 			$this->init();
 			$m = $this->getModel();
 			if (!isset($m->objects[strtolower($this->form['objectClass'])]) ) {
@@ -498,11 +531,13 @@ END;
 			$localObject =& $m->objects[strtolower($this->form['objectClass'])];
 			
 			// Update the object's dependency data
-			$localObject->addDependency(strtolower($this->form['dependingClass']),
-				(("" == $this->form['matchVariable'])
-					? ""
-					: strtolower("{$this->form['dependingClass']}.{$this->form['matchVariable']}")),
-				FModel::standardizeAttributeName($this->form['socketName']));
+			if (!isset($this->form['attrOptional'])) {
+				$localObject->addDependency(strtolower($this->form['dependingClass']),
+					(("" == $this->form['matchVariable'])
+						? ""
+						: strtolower("{$this->form['dependingClass']}.{$this->form['matchVariable']}")),
+					FModel::standardizeAttributeName($this->form['socketName']));
+			}
 		
 			// Create a socket to service this dependency. This allows a child
 			// object to call upon its parent
@@ -511,9 +546,14 @@ END;
 			$s->setForeign($this->form['dependingClass']);
 			$s->setDescription($this->form['description']);
 			$s->setQuantity("1");
-			$s->setReflection(false);
+			if (isset($this->form['attrOptional'])) {
+				$s->setReflection(true,FModel::standardizeAttributeName($this->form['matchVariable']));
+			} else {
+				$s->setReflection(false);
+			}
 			$s->setLookupTable(FModel::standardizeName($this->form['objectClass']));
 			$s->setVisibility($m->config['AttributeVisibility']);
+			$s->setRequired((!isset($this->form['attrOptional']) ? true : false));
 			$localObject->addSocket($s);
 			$columnDescription = $s->getDescription();
 			
@@ -528,9 +568,13 @@ END;
 						. */FModel::standardizeAttributeName($this->form['socketName'])
 					);
 				$s->setForeign($this->form['objectClass']);
-				$s->setDescription("Auto-generated reflection of {$this->form['objectClass']}::{$this->form['socketName']} ");
+				$s->setDescription("Auto-generated reflection " /*{$this->form['objectClass']}::{$this->form['socketName']} "*/);
 				$s->setQuantity("M");
-				$s->setReflection(false);
+				if (isset($this->form['attrOptional'])){
+					$s->setReflection(true,FModel::standardizeAttributeName($this->form['socketName']));	
+				} else {
+					$s->setReflection(false);
+				}
 				$s->setLookupTable(FModel::standardizeName($this->form['objectClass']));
 				$s->setVisibility($m->config['AttributeVisibility']);
 				$foreignObject->addSocket($s);
@@ -561,11 +605,17 @@ END;
 			// Regenerate PHP code
 			$this->generateObjects();
 			
-
-			$this->flash("Added dependency on '{$this->form['dependingClass']}' to '{$this->form['objectClass']}' ");
+			if (isset($this->form['attrOptional'])) {
+				$this->flash("Added relationship between '{$this->form['dependingClass']} and '{$this->form['objectClass']}' ");
+			} else {
+				$this->flash("Added dependency on '{$this->form['dependingClass']}' to '{$this->form['objectClass']}' ");
+			}
 			$this->redirect("/fuel/model/editObject/{$this->form['objectClass']}");
 		}
 	}
+	
+	
+	
 	
 	public function editDependency() {
 		
@@ -622,6 +672,75 @@ END;
 		
 		// Regenerate PHP code
 		$this->generateObjects();
+			
+
+		$this->flash("Deleted dependency on '{$foreignClass}' by '{$objectClass}' ");
+		$this->redirect("/fuel/model/editObject/{$objectClass}");
+	}
+	
+	public function deleteOptional($objectClass,$foreignClass,$localAttribute,$foreignAttribute='') {
+		$this->init();
+		$m = $this->getModel();
+		if (!isset($m->objects[strtolower($objectClass)])) {
+			die("Object '{$objectClass}' is not defined in the model.");
+		}
+		if (!isset($m->objects[strtolower($foreignClass)])) {
+			die("Object '{$foreignClass}' is not defined in the model.");
+		}
+		$localObject   =& $m->objects[strtolower($objectClass)];
+		$foreignObject =& $m->objects[strtolower($foreignClass)];
+		$localSockets  = $localObject->getSockets();
+		$localSocketQuantity   = false;	// required for later SQL work
+		$foreignSocketQuantity = false;
+		$actualRemoteVariableName = FModel::standardizeAttributeName($localAttribute);
+		for ($i = 0; $i < count($localSockets); $i++) {
+			if ($localSockets[$i]->getQuantity() == "1" 
+				&& strtolower($localSockets[$i]->getForeign()) == strtolower($foreignClass)
+				&& strtolower($localSockets[$i]->getName()) == strtolower($localAttribute)) {
+					
+				// Delete this socket
+				//echo "DELETING LOCAL SOCKET '{$localSockets[$i]->getName()}' {$localSockets[$i]->getQuantity()}<br/>\r\n";
+				$localSocketQuantity = $localSockets[$i]->getQuantity();
+				$localObject->deleteSocket($localSockets[$i]->getName());
+				
+				// Delete the foreign object's socket, if one exists
+				if ("" != $foreignAttribute) {
+					// Trim out '.' if it exists
+					$fa = substr($foreignAttribute,min(strlen($foreignAttribute),strpos($foreignAttribute,".")));
+					$foreignSockets =& $foreignObject->getSockets();
+					for ($j = 0; $j < count($foreignSockets); $j++) {
+						if (strtolower($foreignSockets[$j]->getName()) == strtolower($fa)) {
+							//echo "DELETING FOREIGN SOCKET '{$foreignSockets[$j]->getName()}' {$foreignSockets[$j]->getQuantity()}<br/>\r\n";
+							$foreignSocketQuantity = $foreignSockets[$j]->getQuantity();
+							$foreignObject->deleteSocket($foreignSockets[$j]->getName());
+						}
+					}
+				}	
+				break;
+			}
+		}
+		
+		// Write the changes to the model file
+		$this->writeModelFile($m->export());
+		
+		// Execute SQL commands
+		// For optional sockets, only execute the SQL if the FOREIGN OBJECT is the 'parent'. IE, 
+		// in the M:1 relationship, only delete if we are processing the M object -- the 1 object
+		// will not have a corresponding database column. 
+		if ($localSocketQuantity) {
+			try {
+				$q = "ALTER TABLE `{$localObject->getName()}` DROP COLUMN `"
+					. FModel::standardizeAttributeName($actualRemoteVariableName)
+					. "_id` ";
+				//echo "EXECUTING: {$q}<br/>\r\n";
+				_db()->exec($q);
+			} catch (FDatabaseException $e) {
+				die($e->__toString());	
+			}
+		}
+		
+		// Regenerate PHP code
+		//$this->generateObjects();
 			
 
 		$this->flash("Deleted dependency on '{$foreignClass}' by '{$objectClass}' ");

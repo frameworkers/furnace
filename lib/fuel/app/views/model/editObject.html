@@ -80,9 +80,8 @@
 
 <h2>[object.name]</h2>
 
-<h3 style="margin-top:20px;">Attributes:</h3>
-<h4>Local</h4>
-<form action="[_furnace.url_base]fuel/model/addAttribute" method="POST">
+<h3 style="margin-top:20px;">Generic Attributes:</h3>
+<form action="[_furnace.url_base]fuel/model/addGenericAttribute" method="POST">
 <input type="hidden" name="objectClass" value="[object.name]"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
@@ -95,6 +94,39 @@
     <th>Default</th>
     <th>Unique?</th>
     <th>Action</th>
+  </tr>
+  <tr>
+  	<td style="width:18%;">[assert:object.parentClass="FAccount";block=tr]username</td>
+  	<td style="width:30%;">The unique name for the [object.name]</td>
+  	<td style="width:10%;">string</td>
+  	<td style="width:5%;">20</td>
+  	<td style="width:5%;"></td>
+  	<td style="width:5%;"></td>
+  	<td style="width:10%;"></td>
+  	<td style="width:10%;text-align:center;">Yes</td>
+  	<td>&nbsp;</td>
+  </tr>
+  <tr>
+  	<td style="width:18%;">[assert:object.parentClass="FAccount";block=tr]password</td>
+  	<td style="width:30%;">An MD5 encrypted password field </td>
+  	<td style="width:10%;">string</td>
+  	<td style="width:5%;">255</td>
+  	<td style="width:5%;"></td>
+  	<td style="width:5%;"></td>
+  	<td style="width:10%;"></td>
+  	<td style="width:10%;text-align:center;">No</td>
+  	<td>&nbsp;</td>
+  </tr>
+  <tr>
+  	<td style="width:18%;">[assert:object.parentClass="FAccount";block=tr]emailAddress</td>
+  	<td style="width:30%;">The unique email address for the [object.name]</td>
+  	<td style="width:10%;">string</td>
+  	<td style="width:5%;">80</td>
+  	<td style="width:5%;"></td>
+  	<td style="width:5%;"></td>
+  	<td style="width:10%;"></td>
+  	<td style="width:10%;text-align:center;">Yes</td>
+  	<td>&nbsp;</td>
   </tr>
   <tr>
     <td>[object.attributes;block=tr]<a href="[_furnace.url_base]fuel/model/editField/[object.name]/[@.name]">[@.name]</a></td>
@@ -111,13 +143,13 @@
   	<td style="width:18%;"><input type="text" name="attrName"/></td>
   	<td style="width:30%;"><input type="text" name="attrDescription"/></td>
   	<td style="width:10%;"><select name="attrType">
-  		<option value="integer">integer</option>
-  		<option value="float">float</option>
-  		<option	value="string">string</option>
-  		<option value="text">text</option>
-  		<option value="datetime">datetime</option>
-  		<option value="date">date</option>
-  		<option value="boolean">boolean</option>
+	  		<option value="integer">integer</option>
+	  		<option value="float">float</option>
+	  		<option	value="string">string</option>
+	  		<option value="text">text</option>
+	  		<option value="datetime">datetime</option>
+	  		<option value="date">date</option>
+	  		<option value="boolean">boolean</option>
   	</select></td>
   	<td style="width:5%;"><input type="text" name="attrSize"/></td>
   	<td style="width:5%;"><input type="text" name="attrMin"/></td>
@@ -129,52 +161,77 @@
   </tr>
 </table>
 </form>
-<div>
-[if:object.parentClass="FAccount";block=div]
-<h4>Inherited from FAccount</h4>
-<table style="width:100%;" cellspacing="0" cellpadding="0">
-  <tr>
-    <th>Name</th>
-    <th>Description</th>
-    <th>Type</th>
-    <th>Size</th>
-    <th>Min</th>
-    <th>Max</th>
-    <th>Default</th>
-    <th>Action</th>
-  </tr>
-  <tr>
-  	<td style="width:18%;">username</td>
-  	<td style="width:30%;">The unique name for the [object.name]</td>
-  	<td style="width:10%;">string</td>
-  	<td style="width:5%;">20</td>
-  	<td style="width:5%;"></td>
-  	<td style="width:5%;"></td>
-  	<td style="width:10%;"></td>
-  	<td style="width:10%;"></td>
-  </tr>
-  <tr>
-  	<td style="width:18%;">password</td>
-  	<td style="width:30%;">An MD5 encrypted password field </td>
-  	<td style="width:10%;">string</td>
-  	<td style="width:5%;">255</td>
-  	<td style="width:5%;"></td>
-  	<td style="width:5%;"></td>
-  	<td style="width:10%;"></td>
-  	<td style="width:10%;"></td>
-  </tr>
-  <tr>
-  	<td style="width:18%;">emailAddress</td>
-  	<td style="width:30%;">The unique email address for the [object.name]</td>
-  	<td style="width:10%;">string</td>
-  	<td style="width:5%;">80</td>
-  	<td style="width:5%;"></td>
-  	<td style="width:5%;"></td>
-  	<td style="width:10%;"></td>
-  	<td style="width:10%;"></td>
-  </tr>
-</table>
-</div>
+
+<h3 style="margin-top:20px;">Model Specific Attributes:</h3>
+<form action="[_furnace.url_base]fuel/model/addModelSpecificAttribute" method="POST">
+	<input type="hidden" name="objectClass" value="[object.name]"/>
+	<table style="width:100%;" cellspacing="0" cellpadding="0">
+	  <tr>
+	    <th>Name</th>
+	    <th>Description</th>
+	    <th>Type</th>
+	    <th>Relation</th>
+	    <th>Optional?</th>
+	    <th>Foreign Attribute Name</th>
+	    <th>Action</th>
+	  </tr>
+	  <tr>
+	  	<td>[object.dependencies;block=tr][@.name]</td>
+	  	<td>[@.desc;default='']</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.class]">[@.class]</a></td>
+	  	<td>Parent</td>
+	  	<td style="text-align:center;">No</td>
+	  	<td>[@.var]</td>
+	  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteDependency/[object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+	  </tr>
+	  <tr>
+	  	<td>[assert:optionals;block=tr][optionals;block=tr][@.data.name]</td>
+	  	<td>[@.data.description]</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.data.foreign]">[@.data.foreign]</a></td>
+	  	<td>Child</td>
+	  	<td style="text-align:center;">Yes</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.data.foreign]">[@.data.foreign]</a>.[@.data.actualremotevariablename]</td>
+	  	<td style="text-align:center;"><a href="[if:@.data.quantity=1;block=a][_furnace.url_base]fuel/model/deleteOptional/[object.name]/[@.data.foreign]/[@.data.name]/[@.remote]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+	  </tr>
+	  <tr>
+	  	<td>[assert:children;block=tr][children;block=tr][@.name]</td>
+	  	<td>[@.description]</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+	  	<td>Child</td>
+	  	<td style="text-align:center;">No</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+	  	<td style="text-align:center;"><!-- <a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>--></td>
+	  </tr>
+	  <tr>
+	  	<td>[relationships;block=tr][@.name]</td>
+	  	<td>[@.description]</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+	  	<td>Peer (M:M)</td>
+	  	<td style="text-align:center">n/a</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+	  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+	  </tr>
+	  <tr>
+	  	<td style="width:18%;"><input type="text" name="socketName"/></td>
+	  	<td style="width:30%;"><input type="text" name="description"/></td>
+	  	<td style="width:18%;"><select name="dependingClass">
+  				<option value="[model.objects;block=option][@.name]">[@.name]</option>
+	  	</select></td>
+	  	<td style="width:10%;text-align:center;">
+	  		<select name="attrMultiple"/>
+	  			<option value="M1">Parent</option>
+	  			<option value="MM">Peer</option>
+	  		</select>
+	  	</td>
+	  	<td style="text-align:center;"><input type="checkbox" name="attrOptional"/></td>
+		<td style="width:25%;"><input type="text" name="matchVariable"/></td>
+	  	<td style="width:10%;text-align:center;"><input type="submit" value="Create"/></td>
+	  </tr>
+	</table>
+</form>
+
+<!--  
+
 
 <h3>Relationships:</h3>
 <h4>M-1 (Parents)</h4>
@@ -223,7 +280,7 @@
   	<td>[@.quantity]</td>
   	<td>[@.description]</td>
   	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-  	<td style="text-align:center;"><a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[tp.object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+  	<td style="text-align:center;"><a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
 </table>
 
@@ -263,4 +320,5 @@
   </tr>
 </table>
 </form>
+-->
 </div><!-- end container -->
