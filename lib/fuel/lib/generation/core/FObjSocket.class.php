@@ -53,6 +53,12 @@
  	// Specify the visibility {public,protected,private} of the socket
  	private $visibility;
  	
+ 	// Variable: required
+	// Valid in the case of M:1 only, this boolean variable specifies whether
+	// the relationship must be present in order to instantiate an object,
+	// or if it may be non-existant for some instances
+	private $required;
+ 	
  	// Variable: customRemoteVariableName
 	// The name to use when referring to the class on the far end of the socket.
 	// This value is valid only when dealing with 1M sockets
@@ -69,7 +75,8 @@
  		$this->name = $name;
  		$this->owner = $owner;
  		$this->customRemoteVariableName = $customRemoteVariableName;
- 		$this->reflect = false;
+ 		$this->reflect  = false;
+ 		$this->required = true;
  	}
  	
  	/*
@@ -200,6 +207,21 @@
  		return $this->visibility;	
  	}
  	
+ 	
+ 	/*
+ 	 * Function: isRequired
+ 	 * 
+ 	 * Returns:
+ 	 * 
+ 	 *  (boolean) - whether or not the socket is 'required'
+ 	 */
+	public function isRequired() {
+		return $this->required;
+	}
+	public function getRequired() {
+		return $this->required;
+	}
+	
  	/*
   	 * Function: setForeign
   	 * 
@@ -286,5 +308,18 @@
  	public function setVisibility($value) {
  		$this->visibility = $value;	
  	}
+ 
+ 	/*
+ 	 * Function: setRequired
+ 	 * 
+ 	 * Parameters:
+ 	 * 
+ 	 *  value - A boolean value (true/false) indicating whether the socket is required
+ 	 * 
+ 	 */
+	public function setRequired($value) {
+		$this->required = $value;
+	}
+ 
  }
 ?>

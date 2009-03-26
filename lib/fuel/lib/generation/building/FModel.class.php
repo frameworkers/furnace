@@ -149,6 +149,7 @@ class FModel {
 			 			$s->setReflection(false);
 			 			$s->setLookupTable(FModel::standardizeName($name));
 			 			$s->setVisibility($this->config['AttributeVisibility']);
+			 			$s->setRequired(true);
 			 			$candidate->addSocket($s);
 			 			// Create a column in the object table to store the relation
 						$colname = $s->getName()."_id";
@@ -185,6 +186,7 @@ class FModel {
 				 			$s->setReflection(false);
 				 			$s->setLookupTable(FModel::standardizeName($name));
 				 			$s->setVisibility($this->config['AttributeVisibility']);
+				 			$s->setRequired(true);
 				 			$candidate->addSocket($s);
 				 			// Create a column in the object table to store the relation
 							$colname = $s->getName()."_id";
@@ -245,6 +247,7 @@ class FModel {
 		 				$s->setVisibility(((isset($this->obj_data[$lc_cand_name][$statement]['visibility'])) 
 		  					? $this->obj_data[$lc_cand_name][$statement]['visibility'] 
 		  					: $this->config['AttributeVisibility']));
+		  				$s->setRequired(("yes" == strtolower($this->obj_data[$lc_cand_name][$statement]['required']) ? true : false));
 		 				
 		 				// Set the reflection details, if required
 		 				if (isset($this->obj_data[$lc_cand_name][$statement]['reflect'])) {
@@ -252,7 +255,8 @@ class FModel {
 		 					$s->setReflection(true);
 		 					$s->setReflectVariable(strtolower($reflectVar));	
 		 				}
-		 				// Set the lookup table, if required
+		 				
+		 				// Set the lookup table for MM relationships
 		 				if ($s->getQuantity() == "M") {
 		 					// Only M relationships could possibly require a lookup table... but not
 		 					// all M relationships do -- only M:M relationships (and not M:1).
@@ -284,6 +288,11 @@ class FModel {
 											break;
 										}
 									}
+	 							} else {
+	 								// This is the reflection of a non-required (optional) socket. The 
+									// lookup table should be set to the name of the class at the other end
+									// of the socket.
+									$s->setLookupTable($s->getForeign());
 	 							}
 		 					}
 		 					
@@ -442,7 +451,7 @@ class FModel {
 				}
 				$socketsByClass = array();
 				foreach ($o->getSockets() as $s) {
-					if ($s->getQuantity() == "1") {
+					if ($s->getQuantity() == "1" && $s->isRequired()) {
 						$socketsByClass[$s->getForeign()][] = $s;
 					}
 				}
@@ -452,6 +461,7 @@ class FModel {
 						$matchVariable = $o->lookupDependency($foreignClass,$s->getName());
 						$r .= "    attr {$s->getName()}:\r\n"
 							. "      desc: {$s->getDescription()}\r\n"
+							. "      required: yes\r\n"
 							. "      matches: {$matchVariable}\r\n";
 					}
 				}
@@ -479,6 +489,16 @@ class FModel {
 							. "    desc: {$s->getDescription()}\r\n"
 							. "    foreign: {$s->getForeign()}\r\n"
 							. "    quantity: {$s->getQuantity()}\r\n";
+						if ($s->doesReflect()) {
+							$r .= "    reflect: {$s->getForeign()}.{$s->getReflectVariable()}\r\n";
+						}
+					} else if ($s->getQuantity() == "1" && !$s->isRequired()) {
+						// handle optional M:1 relationships here
+						$r .= "  attr {$s->getName()}:\r\n"
+							. "    desc: {$s->getDescription()}\r\n"
+							. "    foreign: {$s->getForeign()}\r\n"
+							. "    quantity: {$s->getQuantity()}\r\n"
+							. "    required: no\r\n";
 						if ($s->doesReflect()) {
 							$r .= "    reflect: {$s->getForeign()}.{$s->getReflectVariable()}\r\n";
 						}
@@ -595,7 +615,7 @@ class FModel {
   	 *  matches socketName.
   	 * 
   	 */
-  	private function determineActualRemoteVariableName($requestingClass,$socketName,$remoteClass) {
+  	public function determineActualRemoteVariableName($requestingClass,$socketName,$remoteClass) {
   		/* return attr name where: remoteClass has a dependency on requestingClass which matches socketName */
 		/* or */
 		/* return attr name where: reflected attribute is $requestingClass.$socketName */
@@ -604,6 +624,7 @@ class FModel {
 		
 		foreach ($data as $label => $subdata) {
 			if ("depends {$requestingClass}" == $label){
+				// Dependency
 				foreach ($subdata as $attrLabel => $attrData) {
 					list($ignore,$attrName) = explode(" ",$attrLabel);
 					list($ignore,$match) = explode(".",$attrData['matches']);
@@ -614,9 +635,10 @@ class FModel {
 					}
 				}
 			} else if ("{$requestingClass}.{$socketName}" == $subdata['reflect']) {
+				// Reflected socket
 				list($ignore,$remoteSocketName) = split(" ",$label);
 				return ($remoteSocketName);
-			}
+			} 
 		}	
   	}
 }

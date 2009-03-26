@@ -552,6 +552,7 @@
 				$r .= "\t\tpublic function set{$s->getFunctionName()}Id(\$id) {\r\n"
 					. "\t\t\t\$q = \"UPDATE `{$this->getName()}` SET `{$s->getName()}_id`='{\$id}' WHERE `objId`='{\$this->objId}'\";\r\n"
 					. "\t\t\t_db()->exec(\$q);\r\n"
+					. "\t\t\t\$this->{$s->getName()} = \$id;\r\n"
 					. "\t\t}\r\n\r\n";
 			}
 		}
@@ -740,7 +741,7 @@
 				$r .= "\t\t\t\$q= \"SELECT `objId` FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
 				$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
 				$r .= "\t\t\twhile (\$data = \$r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {\r\n"
-					. "\t\t\t\t{$info['class']}::Delete(\$data['objid']);\r\n"
+					. "\t\t\t\t{$info['class']}::Delete(\$data['objId']);\r\n"
 					. "\t\t\t}\r\n\r\n";
 			}
 		}
