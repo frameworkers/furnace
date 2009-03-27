@@ -461,6 +461,25 @@ class Tadpole {
 						$value = implode($commands['glue'],$value);
 					} 
 					break;
+				case "padding":
+					list($type,$char,$width) = explode(",",$commands['padding']);
+					if (isset($value[$width-1])) { break; }	// value already too long, no need to pad
+					if (" " == $char) {$char = "&nbsp;";}
+					$cur_len = strlen($value);
+					switch ($type) {
+						case "left":
+							$value = str_pad($value,$width,$char,STR_PAD_LEFT);
+							break;
+						case "right":
+							$value = str_pad($value,$width,$char,STR_PAD_RIGHT);
+							break;
+						case "both":
+							$value = str_pad($value,$width,$char,STR_PAD_BOTH);
+							break;	
+						default:
+							break;
+					}
+					break;
 			}
 		}
 		return $value;
