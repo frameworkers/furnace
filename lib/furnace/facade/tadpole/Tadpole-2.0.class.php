@@ -411,6 +411,10 @@ class Tadpole {
 					} 
 					break;
 				case "map":
+					// Process the map in case it contains tags
+					if (false !== strpos($commands['map'],'[')) {
+						$commands['map'] = $this->compile($commands['map'],$iter_data);
+					}
 					$entries = explode(',',$commands['map']);
 					$kvpairs = array();
 					foreach ($entries as $entry) {
