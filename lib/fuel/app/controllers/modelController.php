@@ -91,16 +91,13 @@ class ModelController extends Controller {
 		 
 		 // Write the object code (individual and compiled)
 		 $output[] =  "<h4>Generating PHP Object Code</h4><ul>";
-		 $outputfile = fopen(_furnace()->rootdir . "/app/model/objects/compiled.php","w");
-		 fwrite($outputfile,"<?php\r\n");
 		 foreach ($model->objects as $obj) {
 		 	$output[] = "<li>Writing class file: {$obj->getName()}</li>";
-		 	$phpString = $obj->toPhpString();
-			fwrite($outputfile,$phpString."\r\n\r\n");
-			file_put_contents(_furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php",
-				"<?php\r\n{$phpString}");
+		 	$model->generatePhpFile($obj->getName(),_furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php");
 		 }
-		 fclose($outputfile); 
+		 $output[] =  "<li> == creating composite file (compiled.php) == </li>";
+		 file_put_contents(_furnace()->rootdir 
+		 	. "/app/model/objects/compiled.php","<?php\r\n{$model->compilePhp()}\r\n?>");
 		 $output[] =  "</ul>";
 		 $output[] =  "<h4>Generating SQL Schema File</h4><ul>";
 		 
@@ -159,7 +156,6 @@ END;
 			$this->init();
 			$objectType   = FModel::standardizeName($this->form['objectName']);
 			$objectParent = FModel::standardizeName($this->form['objectParent']);
-			$lc_objectType= strtolower($objectType);
 
 			// Validate the provided input
 			if ("" == $objectType || 
@@ -170,13 +166,15 @@ END;
 			}
 			// Actually create the object
 			$m = $this->getModel();
-			$m->objects[$lc_objectType] = new FObj($objectType,false,$objectParent);
+			$newObject = new FObj($objectType,$m->getModelData());
+			$newObject->setParentClass($objectParent);
+			$m->objects[$objectType] = $newObject;
 			
 			// Add the required SQL table
-			$m->tables[$lc_objectType] = new FSqlTable($objectType);
+			$m->tables[$objectType] = new FSqlTable($objectType);
 			
 			// If the object extends FAccount, add the 'faccount_id' column
-			if ("FAccount" == $m->objects[$lc_objectType]->getParentClass()) {
+			if ("FAccount" == $objectParent) {
 				$extra = array("min"=>0);
 				$col   = new FSqlColumn(
 					"faccount_id",
@@ -185,7 +183,7 @@ END;
 					false,
 					"Link to account details for this {$objectType}");
 				
-				$m->tables[$lc_objectType]->addColumn($col,$extra);
+				$m->tables[$objectType]->addColumn($col,$extra);
 			}
 			
 			// Write the changes to the model file
@@ -250,7 +248,7 @@ END;
 						$this->flash("Created required `app_roles` table");
 					}
 				}
-				_db()->exec($m->tables[$lc_objectType]->toSqlString());
+				_db()->exec($m->tables[$objectType]->toSqlString());
 			} catch (FDatabaseException $e) {
 				die($e->__toString());
 			}
@@ -265,77 +263,43 @@ END;
 	}
 	
 	public function editObject($objectType='') {
+		$this->init();
+		
 		if ($this->form) {
 			$name = $this->form['selectedObject'];
 		} else {
-			$name = $objectType;
+			$name = FModel::standardizeName($objectType);
 		}
 		
-		$this->init();
 		$m = $this->getModel();
-		if (!isset($m->objects[strtolower($name)])) {
+		if (!isset($m->objects[$name])) {
 			die("Object '{$name}' is not defined in the model.");
 		}
+		$object = $m->objects[$name];
+		
 		$this->set('model',$m);
-		$this->set('object',$m->objects[strtolower($name)]);
-		$relationships = array();
-		$children      = array();
-		$optionals     = array();
-		$sockets = $m->objects[strtolower($name)]->getSockets();
-		foreach ($sockets as $s) {
-			$remoteSocket = self::getRemoteSocket($m,$s);		
-			
-			if ($s->getQuantity() == "M" && $remoteSocket && $remoteSocket->getQuantity() == "M") {
-				$relationships[] = $s;
-			} else if ($s->getQuantity() == "1") {
-				if (!$s->getRequired()) {
-					$optionals[] = array("remote"=>$remoteSocket->getName(),"data"=>$s);	
-				} // otherwise it is a dependency
-			} else {
-				$children[]  = $s;	
-			}
-		}
-		$this->set('relationships',$relationships);
-		$this->set('children',$children);
-		$this->set('optionals',$optionals);
-	}
-	
-	private static function getRemoteSocket($model,$localSocket) {
-		if (! $localSocket->doesReflect()) { 
-			//echo "{$localSocket->getOwner()}::{$localSocket->getName()} IS NON-REFLECTING (= required dependency)<br/>\r\n";
-			return;
-		}
-		$foreignSockets = $model->objects[strtolower($localSocket->getForeign())]->getSockets();
-
-		foreach ( $foreignSockets as $foreign ) {
-			//echo "LOOKING FOR REMOTE MATCH FOR {$localSocket->getOwner()}::{$localSocket->getName()}, Trying {$foreign->getOwner()}::{$foreign->getName()} AND  {$localSocket->getActualRemoteVariableName()} <br/>\r\n";
-			if ($foreign->getName() == $localSocket->getActualRemoteVariableName()) {
-				//echo "FOUND! (=child)<br/>\r\n";
-				return $foreign;
-			}
-		}
-		//echo "NONE FOUND. GIVING UP.<br/>\r\n";	
+		$this->set('object',$object);
 	}
 	
 	public function editField($ot='',$attr='') {
+		$this->init();
 		if ($this->form) {
 			
 		} else {
-			$objectType = $ot;
-			$attrName   = $attr;
+			$objectType = FModel::standardizeName($ot);
+			$attrName   = FModel::standardizeAttributeName($attr);
 			
 			if ($objectType == '' || $attr='') {
 				die("Not enough information provided.");
 			}
 			
-			$this->init();
 			$m = $this->getModel();
-			if (!isset($m->objects[strtolower($objectType)])) {
+			if (!isset($m->objects[$objectType])) {
 				die("Object '{$objectType}' is not defined in the model.");
 			}
 			
 			$attribute = false;
-			foreach ($m->objects[strtolower($objectType)]->getAttributes() as $a) {
+			foreach ($m->objects[$objectType]->getAttributes() as $a) {
 				if ($a->getName() == $attrName) {
 					$attribute = $a;
 				}
@@ -346,26 +310,28 @@ END;
 			}
 			
 			$this->set('model',$m);
-			$this->set('object',$m->objects[strtolower($objectType)]);
+			$this->set('object',$m->objects[$objectType]);
 			$this->set('attr',$attribute);
 		}
 	}
 
 	public function addGenericAttribute() {
 		if ($this->form) {
-
-			$objectClass = $this->form['objectClass'];
 			
 			$this->init();
 			
-			$attr = new FObjAttr(FModel::standardizeAttributeName($this->form['attrName']));
-			$attr->setDescription($this->form['attrDescription']);
-			$attr->setType($this->form['attrType']);
-			$attr->setSize($this->form['attrSize']);
-			$attr->setMin($this->form['attrMin']);
-			$attr->setMax($this->form['attrMax']);
-			$attr->setDefaultValue($this->form['attrDefault']);
-			$attr->setIsUnique(isset($this->form['attrUnique']));
+			$objectClass = $this->form['objectClass'];
+			
+			$data = array("desc" => $this->form['attrDescription'],
+				"type" => $this->form['attrType'],
+				"size" => $this->form['attrSize'],
+				"min"  => $this->form['attrMin'],
+				"max"  => $this->form['attrMax'],
+				"default" => $this->form['attrDefault'],
+				"unique"  => (isset($this->form['attrUnique']) ? true : false)
+			);
+			$attr = new FObjAttr(FModel::standardizeAttributeName($this->form['attrName']),$data);
+
 			
 			// Prepare extra information about the attribute
 			$columnExtraData = array(
@@ -397,13 +363,13 @@ END;
 			
 			
 			$m = $this->getModel();
-			if (!isset($m->objects[strtolower($objectClass)])) {
+			if (!isset($m->objects[$objectClass])) {
 				die("Object '{$objectClass}' is not defined in the model.");
 			}
 			
 			// Add the attribute and the column to the model
-			$m->objects[strtolower($objectClass)]->addAttribute($attr);
-			$m->tables[strtolower($objectClass)]->addColumn($column);
+			$m->objects[$objectClass]->addAttribute($attr);
+			$m->tables[$objectClass]->addColumn($column);
 			
 			// Write the changes to the model file
 			$this->writeModelFile($m->export());
@@ -432,13 +398,15 @@ END;
 
 			// INITIAL SETUP
 			$this->init();
+			$objectType = FModel::standardizeName($this->form['objectType']);
+			
 			$m = $this->getModel();
-			if (!isset($m->objects[strtolower($this->form['objectType'])]) ) {
+			if (!isset($m->objects[$objectType]) ) {
 				die("Object '{$objectType}' is not defined in the model.");
 			}
 			
 			$attribute = false;
-			$attributes =& $m->objects[strtolower($this->form['objectType'])]->getAttributes();
+			$attributes =& $m->objects[$objectType]->getAttributes();
 			for ($i =0; $i < count($attributes); $i++) {
 				if ($attributes[$i]->getName() == $this->form['attrName']) {
 					$attribute =& $attributes[$i];
@@ -451,7 +419,7 @@ END;
 			}
 			
 			
-			$column =& $m->tables[strtolower($this->form['objectType'])]->getColumn($this->form['attrName']);
+			$column =& $m->tables[$objectType]->getColumn($this->form['attrName']);
 			
 			
 			if ($this->form['action'] == "rename") {
@@ -462,7 +430,7 @@ END;
 				$column->setName($newName);
 
 				try {
-					$query = "ALTER TABLE `{$this->form['objectType']}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
+					$query = "ALTER TABLE `{$objectType}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
 					_db()->exec($query);
 				} catch (FDatabaseException $e) {
 					die($e->__toString());	
@@ -474,25 +442,25 @@ END;
 			// Write changes to the model file
 			$this->writeModelFile($m->export());
 			$this->generateObjects();
-			$this->redirect("/fuel/model/editObject/{$this->form['objectType']}");
+			$this->redirect("/fuel/model/editObject/{$objectType}");
 		}
 	}
 	
 	public function deleteAttribute($objectClass,$attributeName) {
 		$this->init();
 		$m = $this->getModel();
-		if (!isset($m->objects[strtolower($objectClass)])) {
+		if (!isset($m->objects[$objectClass])) {
 			die("Object '{$objectClass}' is not defined in the model.");
 		}
-		$object = $m->objects[strtolower($objectClass)];
+		$object = $m->objects[$objectClass];
 		if ($object->deleteAttribute($attributeName)) {
 			// Write the changes to the model file
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
 			try {
-				_db()->exec("ALTER TABLE `{$objectClass}` DROP COLUMN `{$attributeName}`");
-				_db()->exec("ALTER TABLE `{$objectClass}` DROP INDEX `{$attributeName}` ");
+				_db()->exec("ALTER TABLE `{$objectClass}` DROP COLUMN `{$attributeName}` ");
+				_db()->exec("ALTER TABLE `{$objectClass}` DROP INDEX  `{$attributeName}` ");
 			} catch (FDatabaseException $e) {
 				// silently ignore
 			}
@@ -516,10 +484,10 @@ END;
 			// Determine how to process this request, based on the multiplicity specified
 			switch ($this->form['attrMultiple']) {
 				case "M1":
-					$this->addDependency();
+					$this->addParent();
 					exit();
 				case "MM":
-					$this->addMMRelationship();
+					$this->addPeer();
 					exit();
 				default:
 					die("<b>FUEL:</b> Unknown value {$this->form['attrMultiple']} provided for `attrMultiple` ");	
@@ -529,75 +497,53 @@ END;
 	}
 	
 	
-	public function addDependency() {
+	public function addParent() {
 		if ($this->form) {
 			
 			$this->init();
 			$m = $this->getModel();
-			if (!isset($m->objects[strtolower($this->form['objectClass'])]) ) {
+			if (!isset($m->objects[$this->form['objectClass']]) ) {
 				die("Object '{$objectClass}' is not defined in the model.");
 			}
-			if (!isset($m->objects[strtolower($this->form['dependingClass'])]) ) {
+			if (!isset($m->objects[$this->form['dependingClass'] ]) ) {
 				die("Object '{$dependingClass}' is not defined in the model.");
 			}
-			$localObject =& $m->objects[strtolower($this->form['objectClass'])];
-			
-			// Update the object's dependency data
-			if (!isset($this->form['attrOptional'])) {
-				$localObject->addDependency(strtolower($this->form['dependingClass']),
-					(("" == $this->form['matchVariable'])
-						? ""
-						: strtolower("{$this->form['dependingClass']}.{$this->form['matchVariable']}")),
-					FModel::standardizeAttributeName($this->form['socketName']));
-			}
+			$localObject =& $m->objects[$this->form['objectClass'] ];
 		
 			// Create a socket to service this dependency. This allows a child
 			// object to call upon its parent
-			$s = new FObjSocket(FModel::standardizeAttributeName($this->form['socketName']),
-				$this->form['objectClass']);
-			$s->setForeign($this->form['dependingClass']);
-			$s->setDescription($this->form['description']);
-			$s->setQuantity("1");
-			if (isset($this->form['attrOptional'])) {
-				$s->setReflection(true,FModel::standardizeAttributeName($this->form['matchVariable']));
-			} else {
-				$s->setReflection(false);
-			}
-			$s->setLookupTable(FModel::standardizeName($this->form['objectClass']));
-			$s->setVisibility($m->config['AttributeVisibility']);
-			$s->setRequired((!isset($this->form['attrOptional']) ? true : false));
-			$localObject->addSocket($s);
+			$data = array(
+				"desc"     => $this->form['description'],
+				"reflects" => $this->form['matchVariable'],
+				"required" => (isset($this->form['attrOptional']) ? false : true)
+			); 
+			$s = new FObjSocket(
+				$this->form['socketName'],
+				$this->form['objectClass'],
+				$this->form['dependingClass'],$data);
+			$localObject->addParent($s);
+			
 			$columnDescription = $s->getDescription();
 			
-			if ("" != $this->form['matchVariable']) {
-				$foreignObject = $m->objects[strtolower($this->form['dependingClass'])];
-
-				// Create a socket for the foreign object.
-				$s = new FObjSocket(FModel::standardizeAttributeName($this->form['matchVariable']),
-					$this->form['dependingClass'],
-					/*$localObject->getName()
-						. "."
-						. */FModel::standardizeAttributeName($this->form['socketName'])
-					);
-				$s->setForeign($this->form['objectClass']);
-				$s->setDescription("Auto-generated reflection " /*{$this->form['objectClass']}::{$this->form['socketName']} "*/);
-				$s->setQuantity("M");
-				if (isset($this->form['attrOptional'])){
-					$s->setReflection(true,FModel::standardizeAttributeName($this->form['socketName']));	
-				} else {
-					$s->setReflection(false);
-				}
-				$s->setLookupTable(FModel::standardizeName($this->form['objectClass']));
-				$s->setVisibility($m->config['AttributeVisibility']);
-				$foreignObject->addSocket($s);
-			}
-			
+			// Create the reflecting socket
+			$foreignObject = $m->objects[$this->form['dependingClass'] ];
+			$data = array(
+				"desc"     => 'Auto generated reflection.',
+				"reflects" => $this->form['socketName']
+			);
+			$s = new FObjSocket(FModel::standardizeAttributeName(
+				$this->form['matchVariable']),
+				$this->form['dependingClass'],
+				$this->form['objectClass'],$data);
+			$foreignObject->addChild($s);
+	
+				
 			// SQL modifications here...
 			$columnExtraData = array('min' => 0);
 				
 			$column = new FSqlColumn(
 				FModel::standardizeAttributeName($this->form['socketName'])."_id",	/* name */
-				FSqlColumn::convertToSqlType("integer",$columnExtraData), 			/* type */
+				'INT(11) UNSIGNED', 								/* type */
 				false,												/* null */
 				false,												/* autoinc */
 				$columnDescription);								/* description */
@@ -626,9 +572,6 @@ END;
 		}
 	}
 	
-	
-	
-	
 	public function editDependency() {
 		
 	}
@@ -636,190 +579,93 @@ END;
 	public function deleteDependency($objectClass,$foreignClass,$localAttribute,$foreignAttribute='') {
 		$this->init();
 		$m = $this->getModel();
-		if (!isset($m->objects[strtolower($objectClass)])) {
+		if (!isset($m->objects[$objectClass])) {
 			die("Object '{$objectClass}' is not defined in the model.");
 		}
-		if (!isset($m->objects[strtolower($foreignClass)])) {
+		if (!isset($m->objects[$foreignClass])) {
 			die("Object '{$foreignClass}' is not defined in the model.");
 		}
-		$localObject   =& $m->objects[strtolower($objectClass)];
-		$foreignObject =& $m->objects[strtolower($foreignClass)];
-		$localSockets  = $localObject->getSockets();
-		$actualRemoteVariableName = FModel::standardizeAttributeName($localAttribute);
-		for ($i = 0; $i < count($localSockets); $i++) {
-			if ($localSockets[$i]->getQuantity() == "1" 
-				&& strtolower($localSockets[$i]->getForeign()) == strtolower($foreignClass)
-				&& strtolower($localSockets[$i]->getName()) == strtolower($localAttribute)) {
-					
-				// Delete this socket
-				$localObject->deleteSocket($localSockets[$i]->getName());
-				
-				// Delete the foreign object's socket, if one exists
-				if ("" != $foreignAttribute) {
-					// Trim out '.' if it exists
-					$fa = substr($foreignAttribute,min(strlen($foreignAttribute),strpos($foreignAttribute,".")+1));
-					$foreignSockets =& $foreignObject->getSockets();
-					for ($j = 0; $j < count($foreignSockets); $j++) {
-						if (strtolower($foreignSockets[$j]->getName()) == strtolower($fa)) {
-							$foreignObject->deleteSocket($foreignSockets[$j]->getName());
-						}
-					}
-				}	
-				break;
-			}
+		$localObject   =& $m->objects[$objectClass];
+		$foreignObject =& $m->objects[$foreignClass];
+		$parent   = $localObject->getParent($localAttribute);
+		if (!$parent) {
+			die("Object '{$objectClass}' has no parent relationship with '{$foreignClass}' named '{$localAttribute}'");
 		}
-		
-		// Write the changes to the model file
-		$this->writeModelFile($m->export());
-		
-		// Execute SQL commands
-		try {
-			$q = "ALTER TABLE `{$localObject->getName()}` DROP COLUMN `"
-				. FModel::standardizeAttributeName($actualRemoteVariableName)
-				. "_id` ";
-			_db()->exec($q);
-		} catch (FDatabaseException $e) {
-			die($e->__toString());	
-		}
-		
-		// Regenerate PHP code
-		$this->generateObjects();
-			
+		$reflects = $parent->doesReflect();
 
-		$this->flash("Deleted dependency on '{$foreignClass}' by '{$objectClass}' ");
-		$this->redirect("/fuel/model/editObject/{$objectClass}");
-	}
-	
-	public function deleteOptional($objectClass,$foreignClass,$localAttribute,$foreignAttribute='') {
-		$this->init();
-		$m = $this->getModel();
-		if (!isset($m->objects[strtolower($objectClass)])) {
-			die("Object '{$objectClass}' is not defined in the model.");
-		}
-		if (!isset($m->objects[strtolower($foreignClass)])) {
-			die("Object '{$foreignClass}' is not defined in the model.");
-		}
-		$localObject   =& $m->objects[strtolower($objectClass)];
-		$foreignObject =& $m->objects[strtolower($foreignClass)];
-		$localSockets  = $localObject->getSockets();
-		$localSocketQuantity   = false;	// required for later SQL work
-		$foreignSocketQuantity = false;
-		$actualRemoteVariableName = FModel::standardizeAttributeName($localAttribute);
-		for ($i = 0; $i < count($localSockets); $i++) {
-			if ($localSockets[$i]->getQuantity() == "1" 
-				&& strtolower($localSockets[$i]->getForeign()) == strtolower($foreignClass)
-				&& strtolower($localSockets[$i]->getName()) == strtolower($localAttribute)) {
-					
-				// Delete this socket
-				//echo "DELETING LOCAL SOCKET '{$localSockets[$i]->getName()}' {$localSockets[$i]->getQuantity()}<br/>\r\n";
-				$localSocketQuantity = $localSockets[$i]->getQuantity();
-				$localObject->deleteSocket($localSockets[$i]->getName());
+		// Try to delete the local socket
+		if ($localObject->deleteParent($localAttribute) && $reflects) {
+			
+			// If that worked, try to delete the remote socket
+			if ($foreignObject->deleteChild($foreignAttribute)) {
 				
-				// Delete the foreign object's socket, if one exists
-				if ("" != $foreignAttribute) {
-					// Trim out '.' if it exists
-					$fa = substr($foreignAttribute,min(strlen($foreignAttribute),strpos($foreignAttribute,".")));
-					$foreignSockets =& $foreignObject->getSockets();
-					for ($j = 0; $j < count($foreignSockets); $j++) {
-						if (strtolower($foreignSockets[$j]->getName()) == strtolower($fa)) {
-							//echo "DELETING FOREIGN SOCKET '{$foreignSockets[$j]->getName()}' {$foreignSockets[$j]->getQuantity()}<br/>\r\n";
-							$foreignSocketQuantity = $foreignSockets[$j]->getQuantity();
-							$foreignObject->deleteSocket($foreignSockets[$j]->getName());
-						}
-					}
-				}	
-				break;
-			}
-		}
-		
-		// Write the changes to the model file
-		$this->writeModelFile($m->export());
-		
-		// Execute SQL commands
-		// For optional sockets, only execute the SQL if the FOREIGN OBJECT is the 'parent'. IE, 
-		// in the M:1 relationship, only delete if we are processing the M object -- the 1 object
-		// will not have a corresponding database column. 
-		if ($localSocketQuantity) {
+			} 
+			
+			// Write the changes to the model file
+			$this->writeModelFile($m->export());
+			
+			// Execute SQL commands
 			try {
 				$q = "ALTER TABLE `{$localObject->getName()}` DROP COLUMN `"
-					. FModel::standardizeAttributeName($actualRemoteVariableName)
+					. FModel::standardizeAttributeName($localAttribute)
 					. "_id` ";
-				//echo "EXECUTING: {$q}<br/>\r\n";
 				_db()->exec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
-		}
 		
-		// Regenerate PHP code
-		//$this->generateObjects();
+			// Regenerate PHP code
+			$this->generateObjects();
 			
-
-		$this->flash("Deleted dependency on '{$foreignClass}' by '{$objectClass}' ");
+			$this->flash("Deleted dependency on '{$foreignClass}' by '{$objectClass}' ");
+		} else {
+			$this->flash("Could not delete dependency on '{$foreignClass}' by '{$objectClass}' ","error");
+		}
 		$this->redirect("/fuel/model/editObject/{$objectClass}");
 	}
 	
-	public function addMMRelationship() {
+	
+	public function addPeer() {
 		if ($this->form) {
 			$this->init();
 			$m = $this->getModel();
-			if (!isset($m->objects[strtolower($this->form['objectClass'])]) ) {
+			if (!isset($m->objects[$this->form['objectClass'] ])) {
 				die("Object '{$objectClass}' is not defined in the model.");
 			}
-			if (!isset($m->objects[strtolower($this->form['dependingClass'])]) ) {
+			if (!isset($m->objects[$this->form['dependingClass'] ])) {
 				die("Object '{$objectClass}' is not defined in the model.");
 			}
-			$localObject =& $m->objects[strtolower($this->form['objectClass'])];
+			$localObject   =& $m->objects[$this->form['objectClass'] ];
+			$foreignObject =& $m->objects[$this->form['dependingClass'] ];
 			
 			// Create a socket to service this dependency. 
-			$s = new FObjSocket(FModel::standardizeAttributeName($this->form['socketName']),
-				$this->form['objectClass'],
-				FModel::standardizeAttributeName($this->form['matchVariable']));
-			$s->setForeign($this->form['dependingClass']);
-			$s->setDescription($this->form['description']);
-			$s->setQuantity("M");
-			$s->setReflection(true,FModel::standardizeAttributeName($this->form['matchVariable']));
-			
-			
-			// Determine Lookup table name for the socket
-			$ordered_names = array(
-				$this->form['objectClass'],
-				$this->form['dependingClass']
+			$data = array(
+				"desc"     => $this->form['description'],
+				"reflects" => $this->form['matchVariable']
 			);
-			sort($ordered_names);
-			
-			if ($ordered_names[0] == $this->form['objectClass']) {
-				$lookupTable = FModel::standardizeName($this->form['objectClass'])
-					. "_" . FModel::standardizeName($this->form['dependingClass'])
-					. "_" . FModel::standardizeAttributeName($this->form['socketName']);
-			} else {
-				$lookupTable = FModel::standardizeName($this->form['dependingClass'])
-					. "_" . FModel::standardizeName($this->form['objectClass'])
-					. "_" . FModel::standardizeAttributeName($this->form['matchVariable']);
-			}
-			
-			$s->setLookupTable($lookupTable);
-			$s->setVisibility($m->config['AttributeVisibility']);
-			$localObject->addSocket($s);
-			
-			if ("" != $this->form['matchVariable']) {
-				$foreignObject = $m->objects[strtolower($this->form['dependingClass'])];
+			$s = new FObjSocket(
+				$this->form['socketName'],
+				$this->form['objectClass'],
+				$this->form['dependingClass'],$data);
+			$localObject->addPeer($s);		
 
-				// Create a socket for the foreign object.
-				$s = new FObjSocket(FModel::standardizeAttributeName($this->form['matchVariable']),
+			// Create a socket for the foreign object, only if the 
+			// local object and foreign object are different types
+			if ($localObject->getName() != $foreignObject->getName()) {
+				$data = array(
+					"desc"     => "Auto generated reflection.",
+					"reflects" => $this->form['socketName']
+				);
+				$s = new FObjSocket(
+					$this->form['matchVariable'],
 					$this->form['dependingClass'],
-					FModel::standardizeAttributeName($this->form['socketName']));
-				$s->setForeign($this->form['objectClass']);
-				$s->setDescription("Auto-generated reflection of {$this->form['objectClass']}::{$this->form['socketName']} ");
-				$s->setQuantity("M");
-				$s->setReflection(true,FModel::standardizeAttributeName($this->form['socketName']));
-				$s->setLookupTable($lookupTable);
-				$s->setVisibility($m->config['AttributeVisibility']);
-				$foreignObject->addSocket($s);
+					$this->form['objectClass'],$data);
+				$foreignObject->addPeer($s);
 			}
+			
 			
 			// SQL modifications here...
-			$lt = new FSqlTable($lookupTable,true);
+			$lt = new FSqlTable($localObject->getPeer($this->form['socketName'])->getLookupTable(),true);
 			$lc_pk1name = FModel::standardizeAttributeName($localObject->getName());
 			$lc_pk2name = FModel::standardizeAttributeName($this->form['dependingClass']);
 			
@@ -835,7 +681,7 @@ END;
 			$lt->addColumn($c1);
 			$lt->addColumn($c2);
 			
-			$this->tables[strtolower($lt->getName())] = $lt;
+			$m->tables[$lt->getName()] = $lt;
 			
 			// Execute SQL Commands
 			try {
@@ -862,108 +708,149 @@ END;
 	public function deleteMMRelationship($objectClass,$foreignClass,$localAttribute,$foreignAttribute='') {
 		$this->init();
 		$m = $this->getModel();
-		if (!isset($m->objects[strtolower($objectClass)])) {
+		if (!isset($m->objects[$objectClass])) {
 			die("Object '{$objectClass}' is not defined in the model.");
 		}
-		if (!isset($m->objects[strtolower($foreignClass)])) {
+		if (!isset($m->objects[$foreignClass])) {
 			die("Object '{$foreignClass}' is not defined in the model.");
 		}
-		$localObject   =& $m->objects[strtolower($objectClass)];
-		$foreignObject =& $m->objects[strtolower($foreignClass)];
-		$localSockets  = $localObject->getSockets();
-		for ($i = 0; $i < count($localSockets); $i++) {
-			if ($localSockets[$i]->getQuantity() == "M" 
-				&& strtolower($localSockets[$i]->getForeign()) == strtolower($foreignClass)
-				&& strtolower($localSockets[$i]->getName()) == strtolower($localAttribute)) {
-
-				// Delete the SQL table
-				// make it impossible to delete a remote dependency from this location.
-				// Only delete an sql table if the socket has reflection (is MM)
-				if ($localSockets[$i]->doesReflect()) {
-					try {
-						$q = "DROP TABLE `{$localSockets[$i]->getLookupTable()}`";
-						_db()->exec($q);
-					} catch (FDatabaseException $e) {
-						die($e->__toString());	
-					}
-				}
+		$localObject   =& $m->objects[$objectClass];
+		$foreignObject =& $m->objects[$foreignClass];
+		
+		$localPeer   = $localObject->getPeer($localAttribute);
+		$reflects    = $localPeer->doesReflect();
+		$lookupTable = $localPeer->getLookupTable();
+		
+		// Try to delete the local socket
+		if ($localObject->deletePeer($localAttribute)) {
+			// If that worked, try to delete the reflected socket
+			if ($foreignObject->deletePeer($foreignAttribute) && $reflects) {
 				
-				// Delete the local object's socket
-				$localObject->deleteSocket($localSockets[$i]->getName());
-				
-				// Delete the foreign object's socket, if one exists, and only if it is 
-				if ("" != $foreignAttribute) {
-					$foreignSockets =& $foreignObject->getSockets();
-					for ($j = 0; $j < count($foreignSockets); $j++) {
-						if (strtolower($foreignSockets[$j]->getName()) == strtolower($foreignAttribute)) {
-							
-							if ("M" == $foreignSockets[$j]->getQuantity()) {
-								// ONLY delete the foreign socket if it is a MM relationship. Anything else
-								// could potentially allow a user to unintentionally destroy a dependency relationship.
-								// Dependencies should only be deleted in the 'dependencies' section
-								if (!$foreignObject->deleteSocket($foreignSockets[$j]->getName())) {
-									die("delete foreign socket failed.");
-								}
-							}
-						}
-					}
-				}	
-				break;
 			}
+			// Delete the SQL table
+			try {
+				$q = "DROP TABLE `{$lookupTable}`";
+				_db()->exec($q);
+			} catch (FDatabaseException $e) {
+				die($e->__toString());	
+			}
+			
+			// Write the changes to the model file
+			$this->writeModelFile($m->export());
+			
+			// Regenerate PHP code
+			$this->generateObjects();
+	
+			$this->flash("Deleted M-M relationship '{$localAttribute}' between '{$objectClass}', '{$foreignClass}' ");
+		} else {
+			$this->flash("Unable to delete M-M relationship '{$localAttribute}' between '{$objectClass}' and '{$foreignClass}' ","error");
 		}
-
 		
-		// Write the changes to the model file
-		$this->writeModelFile($m->export());
-		
-		// Regenerate PHP code
-		$this->generateObjects();
-
-		$this->flash("Deleted M-M relationship '{$localAttribute}' between '{$objectClass}', '{$foreignClass}' ");
 		$this->redirect("/fuel/model/editObject/{$objectClass}");
 	}
 	
 	public function deleteObject() {
 		if ($this->form) {
+			$logMessage = '<ul>';
 			$name = $this->form['selectedObject'];
 			
 			$this->init();
 			$m = $this->getModel();
-			if (!isset($m->objects[strtolower($name)])) {
+			if (!isset($m->objects[$name])) {
 				die("Object '{$name}' is not defined in the model.");
 			}
 			
+			$object =& $m->objects[$name];
 			
+			// Delete any children
+			foreach ($object->getChildren() as $child) {
+				// Delete from the database
+				try {
+					$q = "ALTER TABLE `{$child->getForeign()}` DROP COLUMN `"
+						. $child->getReflectVariable()
+						. "_id` ";
+					_db()->exec($q);
+				} catch (FDatabaseException $e) {
+					die($e->__toString());	
+				}
+				
+				// Delete socket AND reflection from the model
+				$localObj    = $child->getOwner();
+				$foreignObj  = $child->getForeign();
+				$foreignAttr = $child->getReflectVariable();
+				
+				$logMessage .= "<li>deleting {$child->getOwner()}::{$child->getName()}</li>";
+				$object->deleteChild($child->getName());
+				$logMessage .= "<li>deleting {$m->objects[$foreignObj]->getName()}::{$foreignAttr}</li>";
+				$m->objects[$foreignObj]->deleteParent($foreignAttr);
+			}
+
+			// Delete any parents
+			foreach ($object->getParents() as $parent) {
+				
+				// Delete from the database
+				try {
+					$q = "ALTER TABLE `{$object->getName()}` DROP COLUMN `"
+						. $parent->getName()
+						. "_id` ";
+					_db()->exec($q);
+				} catch (FDatabaseException $e) {
+					die($e->__toString());	
+				}
+				
+				// Delete socket AND reflection from the model
+				$localObj    = $parent->getOwner();
+				$foreignObj  = $parent->getForeign();
+				$foreignAttr = $parent->getReflectVariable();
+				
+				$logMessage .=  "<li>deleting {$parent->getOwner()}::{$parent->getName()}</li>";
+				$object->deleteParent($parent->getName());
+				$logMessage .=  "<li>deleting {$m->objects[$foreignObj]->getName()}::{$foreignAttr}</li>";
+				$m->objects[$foreignObj]->deleteChild($foreignAttr);
+				
+			}
+
+			// Delete any peers
+			foreach ($object->getPeers() as $peer) {
+				
+				// Delete from the database
+				try {
+					$q = "DROP TABLE `{$peer->getLookupTable()}`";
+					_db()->exec($q);
+				} catch (FDatabaseException $e) {
+					die($e->__toString());	
+				}
+				
+				// Delete socket AND reflection from the model
+				$localObj    = $peer->getOwner();
+				$foreignObj  = $peer->getForeign();
+				$foreignAttr = $peer->getReflectVariable();
+				
+				$logMessage .= "<li>deleting {$peer->getOwner()}::{$peer->getName()}</li>";
+				$object->deletePeer($peer->getName());
+				if ($localObj != $foreignObj) {
+					$logMessage .= "<li>deleting {$m->objects[$foreignObj]->getName()}::{$foreignAttr}</li>";
+					$m->objects[$foreignObj]->deletePeer($foreignAttr);
+				}
+			}
+			
+			// Drop the object table
+			$logMessage .= "<li>DELETING OBJECT: '{$name}' from the model</li></ul>";
+			$q = "DROP TABLE `{$object->getName()}` ";
+			_db()->exec($q);
+			
+			// Delete the object from the model
+			unset($m->objects[$name]);
+			
+			// Write the changes to the model file
+			$this->writeModelFile($m->export());
+			
+			// Regenerate PHP code
+			$this->generateObjects();
+
+			$this->flash("Deleted object `{$name}` from the model.<br/><h4>Log:</h4>{$logMessage}");
+			$this->redirect("/fuel/model/");
 		}
-	}
-	
-	private function writeModelFile($contents) {
-		file_put_contents($GLOBALS['furnace']->rootdir . "/app/model/model.yml",$contents);
-	}
-	
-	private function init() {
-		require_once($GLOBALS['furnace']->rootdir . "/lib/furnace/foundation/database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
-	}
-	private function getModel() {
-		return new FModel(
-			$GLOBALS['furnace']->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml")
-		);
-	}
-	private function getSchema() {
-		$d = new FDatabaseSchema();
-		if (_furnace()->config['debug_level'] > 0) {
-			$d->discover(_furnace()->config['debug_dsn']);
-		} else {
-			$d->discover(_furnace()->config['production_dsn']);
-		}
-		return $d;
-	}
+	}	
 }
 ?>

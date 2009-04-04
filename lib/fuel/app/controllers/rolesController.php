@@ -17,7 +17,7 @@ class RolesController extends Controller {
 			if ($role['Field'] == "accountId") {continue;}
 			$defined_roles[] = $role;
 		}
-		
+
 		$this->set('defined_roles',$defined_roles);
 		$this->set('users',$users_results);
 	}
@@ -52,6 +52,8 @@ class RolesController extends Controller {
  	
  	public function defineRole() {
 		if ($this->form) {
+			var_dump($this->form);
+			die();
 			$name    =& $this->form['name'];
 			$desc    =& $this->form['desc'];
 			$default = ("grant" == $this->form['default']) ? true : false;

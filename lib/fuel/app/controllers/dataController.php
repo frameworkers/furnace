@@ -34,14 +34,10 @@ class DataController extends Controller {
 		}
 		$model = $this->getModel();
 		
-		$object = false;
-		foreach ($model->objects as $o) {
-			if ($o->getName() == $name) {
-				$object = $o;
-			}
-		}
+		$object = $model->objects[FModel::standardizeName($name)];
+		
 		if (!$object) {
-			$this->flash("Object type '{$name}' not found in the database.","error");
+			$this->flash("Object type '{$name}' not found.","error");
 			$this->redirect("/fuel/data/");
 		}
 		
@@ -72,6 +68,15 @@ class DataController extends Controller {
 				$object_datas[$o->getObjId()][] = $o->$attr_fn_name();
 			}
 		}
+		foreach ($object->getParents() as $parent) {
+			if ($parent->isRequired()) {
+				$functionName = "get{$parent->getFunctionName()}";
+				foreach ($objects as $o) {
+					$object_datas[$o->getObjId()][] = "<a href=\"{$GLOBALS['furnace']->config['url_base']}fuel/data/object/{$parent->getForeign()}/{$o->$functionName()->getObjId()}\">{$o->$functionName()->getObjId()}</a>";
+				}
+			}
+		}
+		/*
 		foreach ($object->getSockets() as $sock) {
 			if ($sock->getQuantity() == "1" && $sock->getRequired()) {
 				$headers[] = "{$sock->getName()} ({$sock->getForeign()})";
@@ -81,6 +86,7 @@ class DataController extends Controller {
 				}
 			}
 		}
+		*/
 		foreach ($objects as $o) {
 			$object_datas[$o->getObjId()][] = "<a style=\"color:red;\"href=\"{$GLOBALS['furnace']->config['url_base']}fuel/data/delete/{$name}/{$o->getObjId()}\" onclick=\"return confirm('This action can not be undone. Continue?');\">Delete!</a>";
 		}
@@ -104,14 +110,11 @@ class DataController extends Controller {
 		} else {
 			$d->discover($GLOBALS['furnace']->config['production_dsn']);
 		}
-		$model = $this->getModel();
 		
-		$object = false;
-		foreach ($model->objects as $o) {
-			if ($o->getName() == $class) {
-				$object = $o;
-			}
-		}
+		$model = $this->getModel();
+		$class  = FModel::standardizeName($class);
+		$object = $model->objects[$class];
+		
 		if (!$object) {
 			$this->flash("Object type '{$class}' not found in the database.","error");
 			$this->redirect("/fuel/data/");
@@ -121,11 +124,10 @@ class DataController extends Controller {
 		$coll_class = "{$class}Collection";
 		$objectCollection = new $coll_class();
 		$the_object = $objectCollection->get($id);
+		
 		$this->set('objectClass',$object);
 		$this->set('object',$the_object);
-		
-		$headers = array();
-		$data    = array();
+
 	}
 	
 	public function create() {
@@ -142,12 +144,8 @@ class DataController extends Controller {
 			$model = $this->getModel();
 			
 			$objectType = $this->form['fobjectType'];
-			$object = false;
-			foreach ($model->objects as $o) {
-				if ($o->getName() == $objectType) {
-					$object = $o;
-				}
-			}
+
+			$object =& $model->objects[$objectType];
 			if (!$object) {
 				$this->flash("Object type '{$objectType}' not found in the database.","error");
 				$this->redirect("/fuel/data/");
@@ -170,15 +168,21 @@ class DataController extends Controller {
 			/**
 			 * SOCKETS
 			 */
-			foreach ($object->getSockets() as $sock) {
-				if ($sock->getQuantity() == "1") {
-					$params[] = $this->form[$sock->getName()."_id"];
+			foreach ($object->getParents() as $parent) {
+				if ($parent->isRequired()) {
+					$params[] = $this->form[$parent->getName()."_id"];
 				}
 			}
 			$obj = call_user_func_array(array($objectType,"Create"),$params);
 			foreach ($object->getAttributes() as $attr) {
 				$set = "set{$attr->getName()}";
 				$obj->$set($this->form[$attr->getName()],false);
+			}
+			foreach ($object->getParents() as $parents) {
+				if (! $parent->isRequired()) {
+					$set = "set{$parent->getName()}Id";
+					$obj->$set($this->form[$parent->getName()."_id"]);
+				}
 			}
 			$obj->save();
 			
@@ -209,6 +213,10 @@ class DataController extends Controller {
 					$func = "set".FModel::standardizeAttributeName($attrName);
 					$object->$func($value,false);
 				}
+				if ("parent" == $prefix) {
+					$func = "set".FModel::standardizeName($attrName)."Id";
+					$object->$func($value,false);
+				}
 			}
 			$object->save();
 			
@@ -216,30 +224,6 @@ class DataController extends Controller {
 			$this->redirect("/fuel/data/object/{$objectClass}/{$objectId}");
 		}
 	}
-	
-	private function init() {
-		require_once($GLOBALS['furnace']->rootdir . "/lib/furnace/foundation/database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
-	}
-	private function getModel() {
-		return new FModel(
-			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml")
-		);
-	}
-	private function getSchema() {
-		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
-		} else {
-			$d->discover($GLOBALS['furnace']->config['production_dsn']);
-		}
-		return $d;
-	}
+
 }
 ?>

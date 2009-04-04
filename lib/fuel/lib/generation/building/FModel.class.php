@@ -1,519 +1,706 @@
 <?php
-/*
- * frameworkers-foundation
- * 
- * FModel.class.php
- * Created on May 17, 2008
- *
- * Copyright 2008 Frameworkers.org. 
- * http://www.frameworkers.org
- */
- 
- /*
-  * Class: FModel
-  * 
-  * A Foundation Framework Model
-  */
+	
 class FModel {
 	
-	// Variable: data
- 	// The modified raw YAML data;
- 	public $data;
- 	
- 	// Array: objects
- 	// An array of <FObj> objects defined in this model.
- 	public $objects;
- 	
- 	// Array: obj_data
- 	// A temporary array to hold raw parsed YAML object definitions.
- 	public $obj_data;
- 	
- 	// Array: tables
- 	// An array of <FSqlTable> objects required by the model.
- 	public $tables;
- 	
- 	// Array: config
- 	// An array of configuration key-value pairs (defaults specified)
- 	public $config = array (
- 		"AttributeVisibility" => "private"
- 	);
- 		
- 	// Variable: use_accounts
-	// Whether or not this model requires the built-in user account features
-	public $use_accounts;
+	public $objects   = array();
 	
-	// Variable: checkLookupTables
-	// Whether or not to verify that all lookup tables are valid
-	public $checkLookupTables;
+	public $tables    = array();
+	
+	public $modelData = array();
+	
+	public $use_accounts = false;
 
- 	/*
- 	 * Function: __construct
+	public function __construct($modelData) {
+		
+		$this->modelData = $modelData;
+	
+		// Generate representation of each object and object table
+		foreach ($this->modelData as $model_object_name => $model_object_data) {
+			// Build objects
+			$this->objects[self::standardizeName($model_object_name)] = 
+				new FObj( $model_object_name, $this->modelData );
+				
+			// Build database tables
+			$this->tables[self::standardizeName($model_object_name)] =
+				self::generateObjectTable($this->objects[self::standardizeName($model_object_name)]);
+		}
+		
+		// Generate lookup tables required by inter-object relationships
+		$this->generateLookupTables();
+		
+		// Determine whether or not this model requires the app_accounts and app_roles tables
+		foreach ($this->objects as $object) {
+			if ("FAccount" == $object->getParentClass() ) {
+				$this->use_accounts = true;
+				break;
+			}
+		}
+	}
+	
+	public function export($format = "yml") {
+		return self::exportAsYML();
+	}
+	
+	public function exportAsYML() {
+		$r = "# Auto-generated model file\r\n\r\n";
+		foreach ($this->objects as $object) {	
+			// begin object definition
+			$r .= "{$object->getName()}:\r\n";
+			// handle non-default inheritance
+			if ($object->getParentClass() != "FBaseObject") {
+				$r .= "  extends: {$object->getParentClass()}\r\n";
+			}
+			// export attributes
+			$r .= "  attributes:\r\n";
+			foreach ($object->getAttributes() as $attr) {
+				$r .= "    {$attr->getName()}:\r\n"
+					. "      desc: {$attr->getDescription()}\r\n"
+					. "      type: {$attr->getType()}\r\n"
+					. "      size: {$attr->getSize()}\r\n"
+					. "      min:  {$attr->getMin()}\r\n"
+					. "      max:  {$attr->getMax()}\r\n"
+					. "      default: {$attr->getDefaultValue()}\r\n";	
+					if ($attr->isUnique()) {
+						$r .= "      unique: yes\r\n";
+					}
+			}
+			
+			// sort parents by object type
+			$parentsByType = array();
+			foreach ($object->getParents() as $parent) {
+				$parentsByType[$parent->getForeign()][] = $parent;
+			}
+			// export parents
+			$r .= "  parents:\r\n";
+			foreach ($parentsByType as $objectName => $parents) {
+				$r .= "    {$objectName}:\r\n";
+				foreach ($parents as $parent) {
+					$r .= "      {$parent->getName()}:\r\n";
+					$r .= "        desc: {$parent->getDescription()}\r\n";
+					if ($parent->doesReflect() ) {
+						$r .= "        reflects: {$parent->getForeign()}.{$parent->getReflectVariable()}\r\n";
+					}
+					$r .= "        required: " . (($parent->isRequired()) ? "yes" : "no" ) . "\r\n";
+				}
+			}
+			
+			// sort peers by object type
+			$peersByType = array();
+			foreach ($object->getPeers() as $peer) {
+				$peersByType[$peer->getForeign()][] = $peer;
+			}
+			// export peers
+			$r .= "  peers:\r\n";
+			foreach ($peersByType as $objectName => $peers) {
+				$r .= "    {$objectName}:\r\n";
+				foreach ($peers as $peer) {
+					$r .= "      {$peer->getName()}:\r\n";
+					$r .= "        desc: {$peer->getDescription()}\r\n";
+					if ($peer->doesReflect()) {
+						$r .= "        reflects: {$peer->getForeign()}.{$peer->getReflectVariable()}\r\n";
+					}
+				}
+			}
+			
+			// sort children by object type
+			$childrenByType = array();
+			foreach ($object->getChildren() as $child) {
+				$childrenByType[$child->getForeign()][] = $child;
+			}
+			// export children
+			$r .= "  children:\r\n";
+			foreach ($childrenByType as $objectName => $children) {
+				$r .= "    {$objectName}:\r\n";
+				foreach ($children as $child) {
+					$r .= "      {$child->getName()}:\r\n";
+					$r .= "        desc: {$child->getDescription()}\r\n";
+					if ($child->doesReflect() ) {
+						$r .= "        reflects: {$child->getForeign()}.{$child->getReflectVariable()}\r\n";
+					}
+				}
+			}
+			// add a space between objects
+			$r .= "\r\n";	
+		}
+		// return the complete yml model definition
+		return $r;
+	}
+	
+	public function compilePhp() {
+		$compiled = "\r\n";
+		foreach ($this->objects as $object) {
+			$compiled .= self::generateObjectClass($object);
+			$compiled .= self::generateObjectCollectionClass($object);
+		}
+		return $compiled;
+	}
+	
+	public function compileSql() {
+		$sql = '';
+		foreach ($this->tables as $table) {
+			$sql .= "--\r\n-- Table Definition for: {$table->getName()}\r\n--\r\n";
+			$sql .= $table->toSqlString();
+			$sql .= "\r\n\r\n";
+		}
+		return $sql;
+	}
+	
+	public function generatePhpFile($objectName,$path) {
+		$object =& $this->objects[self::standardizeName($objectName)];
+		if (!$object) { die("Object {$objectName} not found in model."); }
+		// Generate the file contents
+		$contents = "<?php\r\n"  
+			. self::generateObjectClass($object) 
+			. self::generateObjectCollectionClass($object)
+			. "\r\n?>";
+		// Write the contents to the file
+		file_put_contents($path,$contents);
+	}
+	
+	/*
+ 	 * Function: generateObjectClass
  	 * 
- 	 * Creates a new <FModel> object from the provided YAML data. 
+ 	 * This helper function generates the Php object class
+ 	 * for the given object.
+ 	 * 
+ 	 * Parameters:
+ 	 * 
+ 	 *  (FObj) - the <FObj> instance to use as a data source
+ 	 * 
+ 	 * Returns:
+ 	 *  
+ 	 *  (string) - The generated php class
  	 */
-    public function __construct(&$arr) {
-    	$this->data     = array();
- 		$this->obj_data = array();
- 		$this->objects  = array();
- 		$this->tables   = array();
- 		
- 		$this->use_accounts = false;		// By default `app_accounts` and `app_roles` are omitted.
-		$this->checkLookupTables = false;	// By default, no need to double-check
- 		
- 		$keys = array_keys($arr);
- 		$vals = array_values($arr);
- 		
- 		// Extract Configuration variables
- 		foreach ($keys as $configLabel) {
- 			list($type,$name) = explode(" ",$configLabel);
- 			if ( strtolower($type) == "config") {
- 				// Save this configuration variable in config
- 				$this->config[$name] = $arr[$configLabel];
- 			}	
+	private function generateObjectClass(&$object) {
+		$r .= "\tclass {$object->getName()} extends {$object->getParentClass()} {\r\n";
+		
+		// add inherited attributes
+		if ("FAccount" == $object->getParentClass()) {
+			$r .= "\t\t/**\r\n"
+				. "\t\t * INHERITED ATTRIBUTES (from FAccount)\r\n"
+				. "\t\t * \r\n"
+				. "\t\t *  - username \r\n"
+				. "\t\t *  - password \r\n"
+				. "\t\t *  - emailAddress \r\n"
+				. "\t\t */\r\n\r\n";
+		}
+		// add attributes
+		foreach ($object->getAttributes() as $a) {
+ 			$r .= "\t\t// Variable: {$a->getName()}\r\n";
+ 			$r .= "\t\t// {$a->getDescription()}\r\n"
+				. "\t\t{$a->getVisibility()} \${$a->getName()};\r\n\r\n";	
  		}
  		
- 		// Extract Objects
-		foreach ($keys as $objLabel /* object SomeObject: */) {
-			list($type,$name) = explode(" ",$objLabel);
-			
-			$lc_name  = strtolower($name);				// lower case name
-			$std_name = FModel::standardizeName($name);	// standardized name
-			
-			if ( strtolower($type) == "object") {
-				// Save this object's raw data in obj_data.
-				$this->obj_data[$lc_name] = $arr[$objLabel];
-				
-				// Create an FObj to represent the object.
-				$this->objects[$lc_name] = new FObj($std_name);
-				
-				// Create an FSqlTable object to represent the
-				// object in the database
-				$this->tables[$lc_name] = new FSqlTable($std_name);
-			}	
+		// add parents
+ 		foreach ($object->getParents() as $s) {
+ 			$r .= "\t\t// Variable: {$s->getName()}\r\n"
+ 				. "\t\t// [[{$s->getForeign()}". (($s->getQuantity() == "M") ? "Collection":"")."]] {$s->getDescription()}\r\n"
+ 				. "\t\t{$s->getVisibility()} \${$s->getName()};\r\n\r\n";	
+ 		}
+ 		
+ 		// add peers
+ 		foreach ($object->getPeers() as $s) {
+ 			$r .= "\t\t// Variable: {$s->getName()}\r\n"
+ 				. "\t\t// [[{$s->getForeign()}". (($s->getQuantity() == "M") ? "Collection":"")."]] {$s->getDescription()}\r\n"
+ 				. "\t\t{$s->getVisibility()} \${$s->getName()};\r\n\r\n";	
+ 		}
+ 		
+ 		// add children
+ 		foreach ($object->getChildren() as $s) {
+ 			$r .= "\t\t// Variable: {$s->getName()}\r\n"
+ 				. "\t\t// [[{$s->getForeign()}". (($s->getQuantity() == "M") ? "Collection":"")."]] {$s->getDescription()}\r\n"
+ 				. "\t\t{$s->getVisibility()} \${$s->getName()};\r\n\r\n";	
+ 		}
+ 		
+ 		// constructor
+		$r .= "\t\tpublic function __construct(\$data) {\r\n";
+		$r .= "\t\t\tif (!isset(\$data['objId']) || \$data['objId'] <= 0) {\r\n"
+ 			. "\t\t\t\tthrow new FException(\"Invalid <code>objId</code> value in object constructor.\");\r\n"
+ 			. "\t\t\t}\r\n\r\n";
+		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\t\tif (!isset(\$data['faccount_id']) || \$data['faccount_id'] <= 0) {\r\n"
+ 				. "\t\t\t\tthrow new FException(\"Invalid <code>faccount_id</code> value in object constructor.\");\r\n"
+ 				. "\t\t\t}\r\n\r\n";
+			$r .= "\t\t\t// Initialize inherited attributes:\r\n"
+				. "\t\t\t\$faccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
+				. "\t\t\t\$this->username = \$faccount->getUsername();\r\n"
+				. "\t\t\t\$this->password = \$faccount->getPassword();\r\n"
+				. "\t\t\t\$this->emailAddress = \$faccount->getEmailAddress();\r\n"
+				. "\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
+				. "\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
+				. "\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n";
 		}
-		
-		/* At this point, $objects contains an array of skeletal FObj
-		 * objects (one for each "object ClassName" YAML statement)
-		 * indexed by the object's name. $obj_data contains the raw 
-		 * array data for each of the objects, also indexed by name.
-		 */
-
-					
-		// Check for non-default inheritance (FAccount)
-		foreach ($this->objects as $candidate) {
-			// Set the parentClass attribute of the candidate object
-			$lc_cand_name = strtolower($candidate->getName());
-			if (isset($this->obj_data[$lc_cand_name]['extends'])) {
-				$candidate->setParentClass(FModel::standardizeName($this->obj_data[$lc_cand_name]['extends']));
-			}
-			// Special processing for those objects which extend the built-in FAccount class
-		 	if ("FAccount" == $candidate->getParentClass() ) {
- 				// Create a column in the object table to store the relation to the `app_accounts` table
-				$colname = "faccount_id";
-	 			$c = new FSqlColumn("faccount_id","INT(11) UNSIGNED",false,false,"link to FAccount data for this {$candidate->getName()}");
-	 			$this->tables[$lc_cand_name]->addColumn($c);
-	 			
-	 			// Alert the model that the additional tables: 'app_accounts' and 'app_roles' need to be generated
-				$this->use_accounts = true;
+		$r .= "\t\t\t// Initialize local attributes and sockets:\r\n"
+			. "\t\t\t\$this->objId = \$data['objId'];\r\n";
+		foreach ($object->getParents() as $s) {
+ 			$r .= "\t\t\t\$this->{$s->getName()} = \$data['{$s->getName()}_id'];\r\n";
+ 		}
+ 		foreach ($object->getPeers() as $s) {
+ 			
+ 			if ($s->getOwner() == $s->getForeign()) {
+ 				$type = $s->getOwner();
+ 				$lookup = $s->getLookupTable();
+ 				// Set the filter for M:M between two objects of the same type
+ 				$filter = "WHERE `objId` IN ( SELECT (`"
+					. strtolower($type[0]).substr($type,1) . "1_id` FROM `{$lookup}` WHERE `" . strtolower($type[0]).substr($type,1) . "2_id`='{\$data['objId']}') "
+					. "OR ("
+					. strtolower($type[0]).substr($type,1) . "2_id` FROM `{$lookup}` WHERE `" . strtolower($type[0]).substr($type,1) . "1_id`='{\$data['objId']}') "
+					. ") ";
+ 			} else {
+ 				// Set the filter for M:M between two different object types
+ 				$filter = "WHERE `objId` IN ( SELECT `"
+					. strtolower(substr($s->getForeign(),0,1)).substr($s->getForeign(),1)
+ 					. "_id` FROM `{$s->getLookupTable()}` WHERE `"
+					. strtolower(substr($s->getOwner(),0,1)).substr($s->getOwner(),1)
+					. "_id` = '{\$data['objId']}' )";
  			}
+			
+			$r .= "\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
+			$r .= "\t\t\t\$this->{$s->getName()}->setOwnerId(\$data['objId']);\r\n";
+ 		}
+ 		foreach ($object->getChildren() as $s) {
+ 			$filter = "WHERE `{$s->getReflectVariable()}_id`='{\$data['objId']}' ";
+ 			$r .= "\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
+ 			$r .= "\t\t\t\$this->{$s->getName()}->setOwnerId(\$data['objId']);\r\n";
+ 		}
+ 		foreach ($object->getAttributes() as $a) {
+ 			$r .= "\t\t\t\$this->{$a->getName()} = \$data['{$a->getName()}'];\r\n";
+ 		}
+		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\r\n"
+				. "\t\t\t// Preload FAccount details (and set if necessary)\r\n"
+				. "\t\t\t\$this->fAccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
+				. "\t\t\tif ('' == \$this->fAccount->getObjectClass()) {\r\n"
+				. "\t\t\t\t\$this->fAccount->setObjectClass(\"{$object->getName()}\");\r\n"
+				. "\t\t\t\t\$this->fAccount->setObjectId(\$data['objId']);\r\n"
+				. "\t\t\t}\r\n";
+ 		}
+ 		$r .= "\t\t} // end constructor\r\n\r\n";
+ 		
+ 		// Getters
+		foreach ($object->getAttributes() as $a) {
+	 		$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n";
+ 			if ($a->getType() == "string" || $a->getType() == "text") {
+ 				$r .= "\t\t\treturn stripslashes(\$this->{$a->getName()});\r\n";
+ 			} else {
+ 				$r .= "\t\t\treturn \$this->{$a->getName()};\r\n";
+ 			}
+ 			$r .= "\t\t}\r\n\r\n";
+ 		}
+		foreach ($object->getParents() as $s) {
+			$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n"
+				. "\t\t\tif (is_object(\$this->{$s->getName()}) ) {\r\n"
+				. "\t\t\t\treturn \$this->{$s->getName()};\r\n"
+				. "\t\t\t} else {\r\n"
+				. "\t\t\t\t\$this->{$s->getName()} = {$s->getForeign()}::Retrieve(\$this->{$s->getName()});\r\n"
+				. "\t\t\t\treturn \$this->{$s->getName()};\r\n"
+				. "\t\t\t}\r\n"
+				. "\t\t}\r\n\r\n";	
+ 		}
+ 		foreach ($object->getPeers() as $s) {
+			$r .= "\t\tpublic function get{$s->getFunctionName()}(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n"
+				. "\t\t\treturn \$this->{$s->getName()}->get(\$uniqueValues,\$returnType,\$key,\$sortOrder);\r\n"
+				. "\t\t}\r\n\r\n";
+ 		}
+ 		foreach ($object->getChildren() as $s) {
+ 			$r .= "\t\tpublic function get{$s->getFunctionName()}(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n"
+				. "\t\t\treturn \$this->{$s->getName()}->get(\$uniqueValues,\$returnType,\$key,\$sortOrder);\r\n"
+				. "\t\t}\r\n\r\n";
+ 		}
+ 		
+ 		// Setters
+		foreach ($object->getAttributes() as $a) {
+			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true) {\r\n"
+ 				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
+ 				. "\t\t\tif (\$bSaveImmediately) {\r\n"
+ 				. "\t\t\t\t\$this->save('{$a->getName()}');\r\n"
+ 				. "\t\t\t}\r\n"
+ 				. "\t\t}\r\n\r\n";	
 		}
-		 
-		 // Discover Inter-Object Dependencies
-		 foreach ($this->objects as $candidate) {
-		 	$lc_cand_name = strtolower($candidate->getName()); 
-		 	
-		 	if (!$this->obj_data[$lc_cand_name]) {
-		 		continue; 	// no dependencies defined for this object
-		 	}
-		 	$ckeys = array_keys($this->obj_data[$lc_cand_name]);
-		 	$cvals = array_values($this->obj_data[$lc_cand_name]);
-		 	
-		 	foreach ($ckeys as $dependStatement /* depends OtherObject: */) {
-		 		list($type,$name) = explode(" ",$dependStatement);
-		 		
-		 		if (strtolower($type) == "depends") {
-					$dependencyData = $this->obj_data[$lc_cand_name][$dependStatement];
-					if (null == $dependencyData) {
-						// There was no 'matches' data so just create the dependency with the
-						// attribute name equal to the foreign object name
-						$candidate->addDependency(
-							strtolower($name),
-							'',
-							FModel::standardizeAttributeName($name)
-						);
-						// Create a socket to service this dependency. This allows a child
-			 			// object to call upon its parent.
-			 			$s = new FObjSocket(FModel::standardizeAttributeName($name),$candidate->getName());
-			 			$s->setForeign(FModel::standardizeName($name));
-			 			$s->setQuantity("1");
-			 			$s->setReflection(false);
-			 			$s->setLookupTable(FModel::standardizeName($name));
-			 			$s->setVisibility($this->config['AttributeVisibility']);
-			 			$s->setRequired(true);
-			 			$candidate->addSocket($s);
-			 			// Create a column in the object table to store the relation
-						$colname = $s->getName()."_id";
-			 			$c = new FSqlColumn($s->getName()."_id","INT(11) UNSIGNED",false,false,"foreign key to {$s->getLookupTable()} table");
-			 			$this->tables[$lc_cand_name]->addColumn($c);
-			 			// Add delete information about this socket
-						if ("FAccount" == $name) {
-							// This case is processed specially. Do nothing here.
-						} else {
-				 			$this->objects[strtolower($name)]->addDeleteInfo($this->createDeleteInfo(
-				 				$candidate->getName(),							/* foreign class */
-				 				"depends",										/* relation type */
-				 				$s->getName(),									/* php variable name */
-				 				$candidate->getName(),							/* sql lookup table name */
-				 				$colname));										/* sql column name */
-						}
-					} else {
-						foreach ($dependencyData as $nameLine=>$matchData) {
-							list($ignore,$socketName) = explode(" ",$nameLine);
-							$candidate->addDependency(
-								strtolower($name),
-								(isset($matchData['matches']) 
-									? strtolower($matchData['matches'])
-									: ''),
-								FModel::standardizeAttributeName($socketName),
-								$matchData['desc']
-							);
-							// Create a socket to service this dependency. This allows a child
-				 			// object to call upon its parent.
-				 			$s = new FObjSocket(FModel::standardizeAttributeName($socketName),$candidate->getName());
-				 			$s->setForeign(FModel::standardizeName($name));
-			 				$s->setDescription($matchData['desc']);
-				 			$s->setQuantity("1");
-				 			$s->setReflection(false);
-				 			$s->setLookupTable(FModel::standardizeName($name));
-				 			$s->setVisibility($this->config['AttributeVisibility']);
-				 			$s->setRequired(true);
-				 			$candidate->addSocket($s);
-				 			// Create a column in the object table to store the relation
-							$colname = $s->getName()."_id";
-				 			$c = new FSqlColumn($colname,"INT(11) UNSIGNED",false,false,"foreign key");
-				 			$this->tables[$lc_cand_name]->addColumn($c);
-				 			// Add dependency and delete information about this socket
-							if ("FAccount" == $name) {
-								// this case is processed specially. Do nothing here.
-							} else {
-					 			$this->objects[strtolower($name)]->addDeleteInfo($this->createDeleteInfo(
-					 				$candidate->getName(),							/* foreign class */
-					 				"depends",										/* relation type */
-					 				$s->getName(),									/* php variable name */
-					 				$candidate->getName(),							/* sql lookup table name */
-					 				$colname));										/* sql column name */
-							}
-						}
-					}
-		 		} 
-		 	}	
-		 }
+		// setters to allow for 'parent' reassignment
+		foreach ($object->getParents() as $s) {
+			$r .= "\t\tpublic function set{$s->getFunctionName()}Id(\$id) {\r\n"
+				. "\t\t\t\$q = \"UPDATE `{$object->getName()}` SET `{$s->getName()}_id`='{\$id}' WHERE `objId`='{\$this->objId}'\";\r\n"
+				. "\t\t\t_db()->exec(\$q);\r\n"
+				. "\t\t\t\$this->{$s->getName()} = \$id;\r\n"
+				. "\t\t}\r\n\r\n";
+		}
+		// adders and removers (for peer relationships)
+		foreach ($object->getPeers() as $s) {
+			$r .= "\t\tpublic function add{$s->getFunctionName()}(\$ids) {\r\n";
+			$owner   = FModel::standardizeAttributeName($s->getOwner());
+			$foreign = FModel::standardizeAttributeName($s->getForeign());
+			if ($s->getOwner() == $s->getForeign()) {
+				$r .= "\t\t\t\$q = \"INSERT INTO `{$s->getLookupTable()}` (`{$owner}1_id`,`{$owner}2_id`) VALUES \";\r\n";
+			} else {
+				$r .= "\t\t\t\$q = \"INSERT INTO `{$s->getLookupTable()}` (`{$owner}_id`,`{$foreign}_id`) VALUES  \";\r\n";
+			}
+			$r .= "\t\t\tif (is_array(\$ids)) {\r\n"
+				. "\t\t\t\t\$subq = array();\r\n"
+				. "\t\t\t\tforeach (\$ids as \$id) { \$subq[] = \"({\$this->getObjId()},{\$id})\";}\r\n"
+				. "\t\t\t\t\$q .= implode(\",\",\$subq);\r\n"
+				. "\t\t\t} else {\r\n"
+				. "\t\t\t\t\$q .= \"({\$this->getObjId()},{\$ids})\";\r\n"
+				. "\t\t\t}\r\n"
+				. "\t\t\t_db()->exec(\$q);\r\n"
+				. "\t\t}\r\n"
+				. "\t\t\r\n"
+				. "\t\tpublic function remove{$s->getFunctionName()}(\$ids) {\r\n";
+			if ($s->getOwner() == $s->getForeign()) {
+				$r .= "\t\t\t\$q = \"DELETE FROM `{$s->getLookupTable()}` WHERE ((`{$owner}1_id`={\$this->getObjId()} AND `{$owner}2_id` IN (\".implode(',',\$ids).\")) OR (`{$owner}2_id`={\$this->getObjId()} AND `{$owner}1_id` IN (\".implode(',',\$ids).\"))  \";\r\n";
+			} else {
+				$r .= "\t\t\t\$q = \"DELETE FROM `{$s->getLookupTable()}` WHERE `{$owner}_id`={\$this->getObjId()} AND `{$foreign}_id` IN (\".implode(',',\$ids).\") \";\r\n";
+			}
+			$r .= "\t\t\t_db()->exec(\$q);\r\n"
+				. "\t\t}\r\n\r\n";
+			
+		}
 		
-		/* At this point, all inter-object dependencies have been captured,
-		 * along with their foreign matchVariable names. This is almost 
-		 * enough to build a complete database from the model, but first, 
-		 * we must understand which "foreign" relationships will require 
-		 * cross reference lookup tables.
-		 */
-		 
-		 // Discover Sockets
-		 foreach ($this->objects as $candidate) {
-		 	$lc_cand_name = strtolower($candidate->getName());
-			
-		 	if (!$this->obj_data[$lc_cand_name]) {
-		 		continue; 	// no attrs || dependencies defined for this object
-		 	}
-		 	$ckeys = array_keys($this->obj_data[$lc_cand_name]);
-		 	$cvals = array_values($this->obj_data[$lc_cand_name]);
-		 	
-		 	foreach ($ckeys as $statement) {
-		 		list($type,$name) = explode(" ",$statement);
-		 		if (strtolower($type) == "attr") {
-		 			if (isset($this->obj_data[$lc_cand_name][$statement]['foreign'])) {
-		 				$foreignClass = FModel::standardizeName($this->obj_data[$lc_cand_name][$statement]['foreign']);
-		 				$s = new FObjSocket(
-		 					FModel::standardizeAttributeName($name),
-		 					$candidate->getName(),
-		 					$this->determineActualRemoteVariableName(
-				 				$candidate->getName(),						/* the class */
-				 				FModel::standardizeAttributeName($name),	/* the socket name */
-				 				FModel::standardizeName($foreignClass)		/* the foreign class */
-								/* return attr name where: foreign class has a dependency on class which matches socketname */
-				 			)
-				 		);
-		 				$s->setForeign($foreignClass);
-		 				$s->setDescription($this->obj_data[$lc_cand_name][$statement]['desc']);
-		 				$s->setQuantity($this->obj_data[$lc_cand_name][$statement]['quantity']);
-		 				$s->setVisibility(((isset($this->obj_data[$lc_cand_name][$statement]['visibility'])) 
-		  					? $this->obj_data[$lc_cand_name][$statement]['visibility'] 
-		  					: $this->config['AttributeVisibility']));
-		  				$s->setRequired((false === $this->obj_data[$lc_cand_name][$statement]['required']) ? false : true);
-		 				
-		 				// Set the reflection details, if required
-		 				if (isset($this->obj_data[$lc_cand_name][$statement]['reflect'])) {
-		 					list($ignore,$reflectVar) = explode(".",$this->obj_data[$lc_cand_name][$statement]['reflect']);
-		 					$s->setReflection(true);
-		 					$s->setReflectVariable(strtolower($reflectVar));	
-		 				}
-		 				
-		 				// Set the lookup table for MM relationships
-		 				if ($s->getQuantity() == "M") {
-		 					// Only M relationships could possibly require a lookup table... but not
-		 					// all M relationships do -- only M:M relationships (and not M:1).
-		 					// To determine whether a relationship is M:M, it is sufficient to determine
-		 					// that it is not M:1 by verifying that no dependency on this object exists in 
-		 					// the foreign object. If such a dependency were found, it would mean the foreign
-		 					// object is related to exactly 1 of this object type, thus making the relationship
-		 					// M:1.
-		 					foreach ($this->objects[strtolower($foreignClass)]->getDependencies() as $dep){
-		 						if ($dep['class'] == $lc_cand_name &&
-		 							$dep['var'] == ("{$lc_cand_name}.".strtolower($name))){
-		 							
-		 							// Dependency detected. No need for a lookup table
-		 							$s->setLookupTable($foreignClass);	
-		 							break;	
-		 						}
-		 					}
-		 					
-		 					if ("" == $s->getLookupTable()) {
-	 							// No dependency detected (from above).
-	 							if ($s->doesReflect()){
-	 								// Check whether the object on the other end of the socket has already defined
-									// a lookup table for this relationship. If it has, use it:
-									$fs = $this->objects[strtolower($foreignClass)]->getSockets();
-									foreach ($fs as $ffs) {
-										if (strtolower($ffs->getName()) == $s->getReflectVariable()) {
-											// Found reflected socket, set the lookup table
-											$s->setLookupTable($ffs->getLookupTable());
-											break;
-										}
-									}
-	 							} else {
-	 								// This is the reflection of a non-required (optional) socket. The 
-									// lookup table should be set to the name of the class at the other end
-									// of the socket.
-									$s->setLookupTable($s->getForeign());
-	 							}
-		 					}
-		 					
-		 					if ("" == $s->getLookupTable() && $s->doesReflect()) {
-		 						// No dependency detected (from above,above) and 
-								// No pre-defined lookup table for this relationship (from above)
+		// Save
+ 		$r .= "\t\tpublic function save(\$attribute = '') {\r\n"
+ 			. "\t\t\tif('' == \$attribute) {\r\n";
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\t\t\tparent::faccount_save();\r\n";
+ 		}
+ 		if (count($object->getAttributes()) > 0) {
+ 			$r .= "\t\t\t\t\$q = \"UPDATE `{$object->getName()}` SET \" \r\n";
+ 				$temp = array();
+ 				foreach ($object->getAttributes() as $a) {
+ 				 	if ($a->getType() == "text" || $a->getType() == "string") {
+ 						$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='\".addslashes(\$this->{$a->getName()}).\"'";
+ 					} else {
+ 						$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='{\$this->{$a->getName()}}'";
+ 					}
+ 				}
+ 			$r .= implode(", \"\r\n",$temp)
+ 				. " \";\r\n"
+ 				. "\t\t\t\t\$q .= \"WHERE `objId`='{\$this->objId}'\";\r\n";
+			}
+ 			$r .= "\t\t\t} else {\r\n"
+ 			. "\t\t\t\t\$q = \"UPDATE `{$object->getName()}` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `objId`='{\$this->objId}' \";\r\n" 
+ 			. "\t\t\t}\r\n"
+ 			. "\t\t\t_db()->exec(\$q);\r\n"
+ 			. "\t\t}\r\n\r\n";
+ 			
+ 		// Create
+ 		$ua = array();
+ 		$sqlua = array(); 
+ 		$sqluv = array();
+ 		$dataua = array();
+ 		foreach ($object->getParents() as $dep) {
+ 			if ($dep->isRequired()) {
+ 				$ua[] = "\${$dep->getName()}_id";
+ 				$sqlua[] = "`{$dep->getName()}_id`";
+ 				$sqluv[] = "'{\${$dep->getName()}_id}'";
+ 				$dataua[]= "{$dep->getName()}_id";
+ 			}
+ 		}
+ 		foreach ($object->getAttributes() as $attr) {
+ 			if ($attr->isUnique()) {
+ 				$ua[] = "\${$attr->getName()}";
+ 				$sqlua[] = "`{$attr->getName()}`";
+ 				$sqluv[] = "'{\${$attr->getName()}}'";
+ 				$dataua[] = "{$attr->getName()}";
+ 			}
+ 		}
+ 		$parentParams = '';
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			// Include 'faccount_id' as a unique attribute
+			//$ua[]    = "\$faccount_id";
+			$sqlua[] = "`faccount_id`";
+			$sqluv[] = "'{\$faccount_id}'";
+			$dataua[]= "faccount_id"; 
+ 		 	
+			// Allow for specification of inherited FAccount parameters
+ 			$parentParams = '$username,$password,$emailAddress';
+ 			if (count($ua) > 0) {
+ 				$parentParams .= ",";
+ 			}
+ 		}
+ 		
+ 		$r .= "\t\tpublic static function Create(".$parentParams.implode(",",$ua).") {\r\n";	
+ 		if ("FAccount" == $object->getParentClass()) {	
+ 			// Create an FAccount object
+			$r .= "\r\n"
+				. "\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
+				. "\t\t\t\$faccount_id = FAccountManager::Create(\$username,\$password,\$emailAddress);\r\n\r\n";
+ 		}
+ 		// Create the object in the database
+		$r .= "\t\t\t// Create a new {$object->getName()} object in the database\r\n";
+ 		$r .= "\t\t\t\$q = \"INSERT INTO `{$object->getName()}` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
+ 		$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n";
+ 		$r .= "\t\t\t\$objectId = _db()->lastInsertID(\"{$object->getName()}\",\"objId\");\r\n";
+ 	 		
+ 		// If the object extends FAccount, create a new account object first, and store the core
+		// attributes in the list of unique attributes for the class.
+ 	 	if ("FAccount" == $object->getParentClass()) {
+			// Set the reverse link (object,id)
+			$r .= "\t\t\t\$q = \"UPDATE `app_accounts` SET `objectClass`='{$object->getName()}', "
+				. "`objectId`='{\$objectId}' WHERE `objId`='{\$faccount_id}'\";\r\n"
+				. "\t\t\t\$r = _db()->exec(\$q);\r\n";
+ 	 	}
+ 		$r .= "\r\n"
+			. "\t\t\t// Build the data array to pass to the constructor\r\n";
+ 		$r .= "\t\t\t\$data = array(\"objId\"=>\$objectId";
+ 		foreach ($dataua as $a) {
+ 			$r .= ",\r\n\t\t\t\t\"{$a}\"=>\${$a}";
+ 		}
+ 		$r .= "\r\n\t\t\t);\r\n";
+ 		$r .= "\r\n"
+			. "\t\t\t// Return the populated array\r\n"
+			. "\t\t\treturn new {$object->getName()}(\$data);\r\n";
+ 		$r .= "\t\t}\r\n";
+ 		
+ 		// Retrieve
+ 		$r .= "\t\tpublic static function Retrieve(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n";
+		$r .= "\t\t\t\$collection = new {$object->getName()}Collection();\r\n";
+ 		$r .= "\t\t\treturn \$collection->get(\$uniqueValues,\$returnType,\$key,\$sortOrder);\r\n";
+ 		$r .= "\t\t}\r\n";
+ 		
+ 		// Add RetrieveByAccountId Function if object depends on FAccount
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\tpublic static function RetrieveByAccountId(\$accountId) {\r\n"
+ 				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
+ 				. "\t\t\t\$q = \"SELECT * FROM `{$object->getName()}` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
+ 				. "\t\t\t\$r = _db()->queryRow(\$q);\r\n"
+ 				. "\t\t\treturn new {$object->getName()}(\$r);\r\n"
+ 				. "\t\t}\r\n";
+ 				
+ 			$r .= "\t\tpublic static function ObjIdFromAccountId(\$accountId) {\r\n"
+ 				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
+ 				. "\t\t\t\$q = \"SELECT `objId` FROM `{$object->getName()}` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
+ 				. "\t\t\t\$r = _db()->queryOne(\$q);\r\n"
+ 				. "\t\t\treturn \$r;\r\n"
+ 				. "\t\t}\r\n";
+ 		} 
+ 		
+ 		// Delete 
+		$r .= "\t\tpublic static function Delete(\$objId) {\r\n";
+		
+		if ("FAccount" == $object->getParentClass()) {
+			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
+			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `{$object->getName()}` WHERE `objId` = '{\$objId}'\"; \r\n";
+			$r .= "\t\t\t\$acct_id = _db()->queryOne(\$q);\r\n";
+			$r .= "\t\t\tFAccountManager::DeleteByAccountId(\$acct_id);\r\n\r\n";
+		}
+		
+		$delete_info = $this->determineDeleteInformationFor($object);
+		foreach ($delete_info as $info ) {
+			if ("parent" == $info['type']) {
+				if ("yes" == $info['required']) {
+					// Delete objects that depend on this object
+					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
+					$r .= "\t\t\t\$q= \"SELECT `objId` FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+					$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
+					$r .= "\t\t\twhile (\$data = \$r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {\r\n"
+						. "\t\t\t\t{$info['class']}::Delete(\$data['objId']);\r\n"
+						. "\t\t\t}\r\n\r\n";
+				} else {
+					// Clear references to this object for objects with a non-required parent relationship to this object
+					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that have an optional parent relationship to this object\r\n";
+					$r .= "\t\t\t\$q= \"UPDATE `{$info['sqltable']}` SET `{$info['sqlcol']}`='0' WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+					$r .= "\t\t\t_db()->exec(\$q);\r\n";
+				}
+			} else if ("lookup" == $info['type']) {
+				// Clear entries in all lookup tables with references to this object
+				$r .= "\r\n\t\t\t// Delete entries in {$info['sqltable']} containing this object\r\n";
+				if ($object->getName() == $info['class']) {
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
+				} else {
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+				}
+				$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";	
+			}
+		}
+		$r .= "\r\n\t\t\t// Delete the object itself\r\n"
+			. "\t\t\t\$q = \"DELETE FROM `{$object->getName()}` WHERE `objId`='{\$objId}'\";\r\n"
+			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
+		$r .= "\t\t}\r\n";
 
- 								// Create a new lookup table based on a ALPHABETIC naming scheme
-								$ordered_names = array(
-									$candidate->getName(),
-									$foreignClass
-								);
-								sort($ordered_names);
-								
-								if ($ordered_names[0] == $candidate->getName()) {
-									$lt_name = FModel::standardizeName($candidate->getName())
-										. "_" . FModel::standardizeName($foreignClass)
-										. "_" . FModel::standardizeAttributeName($s->getName());
-								} else {
-									$lt_name = FModel::standardizeName($foreignClass)
-										. "_" . FModel::standardizeName($candidate->getName())
-										. "_" . FModel::standardizeAttributeName(
-											$this->determineActualRemoteVariableName($candidate->getName(),$s->getName(),$foreignClass));
-								}
-			
- 								//$lt_name = "{$candidate->getName()}_{$foreignClass}_{$s->getName()}";
- 								$lt = new FSqlTable($lt_name,true);
- 								$lc_pk1name = strtolower(substr($candidate->getName(),0,1)).substr($candidate->getName(),1);
- 								$lc_pk2name = strtolower(substr($foreignClass,0,1)).substr($foreignClass,1);
- 								if ($lc_pk1name == $lc_pk2name) {
- 									$lc_pk1name .= "1";
- 									$lc_pk2name .= "2";
- 								}
- 								$c1 = new FSqlColumn("{$lc_pk1name}_id","INT(11) UNSIGNED");
- 								$c2 = new FSqlColumn("{$lc_pk2name}_id","INT(11) UNSIGNED");
- 								// Add Columns
- 								$lt->addColumn($c1);
- 								$lt->addColumn($c2);
- 								// Add Primary Keys 
- 								$lt->addPrimaryKey($c1);
- 								$lt->addPrimaryKey($c2);
- 								
- 								$this->tables[strtolower($lt->getName())] = $lt;
- 								$s->setLookupTable($lt_name);
- 								
- 								
- 								// Add delete information about this socket
-								if ("FAccount" == $name) {
-									die("improper use of 'FAccount' class");
-								} else {
-						 			$candidate->addDeleteInfo($this->createDeleteInfo(
-						 				$foreignClass,					/* foreign class */
-						 				"lookup",						/* relation type */
-						 				$s->getName(),					/* php variable name */
-						 				$lt->getName(),					/* sql lookup table name */
-						 				"{$lc_pk1name}_id",				/* sql column name */
-						 				"{$lc_pk2name}_id"));			/* sql column name */
-								}
-	 						}
-		 				} else {
-		 					// In the case that a relationship is anything other than M:M, the lookup 
-		 					// table is simply the foreign class name.
-		 					$lt = "{$foreignClass}";	
-		 					$s->setLookupTable($lt);
-		 				}
-		 				if ($s->getLookupTable() == "") {
-		 					// This should theoretically be reached only in the event that a 'reflect' statement on a M:M socket
-							// references a relationship that has not been completely built yet. In that case, do nothing, but 
-							// perform a final check for empty lookuptable references after all objects have been built.
-							$this->checkLookupTables = true;
-		 				}
-		 				// Add the socket to the object's sockets array.
-		 				$candidate->addSocket($s);
-		 				
-		 			}/* end if isset 'foreign' */ else {
-		 				// Create and flesh out a normal (local) attribute
-		 				$a = new FObjAttr(FModel::standardizeAttributeName($name));
-		 				$attr_candidate = $this->obj_data[$lc_cand_name][$statement];
-		 				  $a->setType(((isset($attr_candidate['type'])) ? $attr_candidate['type'] : ""));
-		  				$a->setDescription(((isset($attr_candidate['desc'])) ? $attr_candidate['desc'] : ""));
-		  				$a->setSize(((isset($attr_candidate['size'])) ? $attr_candidate['size'] : ""));
-		  				$a->setMin(((isset($attr_candidate['min'])) ? $attr_candidate['min'] : ""));
-		  				$a->setMax(((isset($attr_candidate['max'])) ? $attr_candidate['max'] : ""));
-		  				$a->setDefaultValue(((isset($attr_candidate['default'])) ? $attr_candidate['default'] : ""));
-		  				$a->setIsUnique(((isset($attr_candidate['unique'])) ? true : false));
-		  				$a->setVisibility(((isset($attr_candidate['visibility'])) 
-		  					? $attr_candidate['visibility'] 
-		  					: $this->config['AttributeVisibility']));
-		  				
-		  				// Add the attribute to the object's attributes array.	
-		  				$candidate->addAttribute($a);
-		  				// Add the attribute to the table definition
-		  				$col = new FSqlColumn($a->getName(),
-		  					FSqlColumn::convertToSqlType($attr_candidate['type'],$attr_candidate),
-		  					false,
-		  					false,
-		  					$a->getDescription());
-		  				// Handle uniqueness
-		  				if (isset($attr_candidate['unique'])) {
-		  					$col->setKey("UNIQUE");
-		  				}
-		  				// Handle default value
-						if (false === $a->getDefaultValue()) {
-							$col->setDefaultValue('0');	
-						} else if (true === $a->getDefaultValue()) {
-							$col->setDefaultValue('1');
+ 		
+ 		
+ 		
+		$r .="\t} // end {$object->getName()}\r\n\r\n";
+		// return the class string
+		return $r;
+	}
+	
+	private function generateObjectCollectionClass(&$object) {
+		$r = "\tclass {$object->getName()}Collection extends FObjectCollection {\r\n";
+ 		
+ 		// Add Constructor
+ 		$r .= "\t\tpublic function __construct(\$lookupTable=\"{$object->getName()}\",\$filter=\"\") {\r\n"
+ 			. "\t\t\tparent::__construct(\"{$object->getName()}\",\$lookupTable,\$filter);\r\n";
+ 		
+ 		$r .= "\t\t}\r\n";
+ 		
+ 		// Add DestroyObject
+ 		$r .= "\t\tpublic function destroyObject(\$objectId) {\r\n"
+ 			. "\t\t\t//TODO: Implement this\r\n"
+ 			. "\t\t}\r\n\r\n";
+ 		
+ 		$r .= "\t} // end {$object->getName()}Collection\r\n\r\n";
+ 		// return the class string
+ 		return $r;
+	}
+	
+	private function determineDeleteInformationFor(&$object) {
+		$delete_info = array();
+		foreach ($object->getChildren() as $child) {
+			$remoteSocket = $this->getRemoteSocketFor($child);
+			$delete_info[] = array(
+				'type'      => 'parent',
+				'required'  => (($remoteSocket->isRequired()) ? "yes" : "no"),
+				'class'     => $remoteSocket->getOwner(),
+				'sqltable'  => $remoteSocket->getOwner(),
+				'sqlcol'    => strtolower(substr($remoteSocket->getName(),0,1))
+					. substr($remoteSocket->getName(),1)
+					. "_id"
+			);
+		}
+		foreach ($object->getPeers() as $peer) {
+			$remoteSocket = $this->getRemoteSocketFor($peer);
+			$peerInfo = array(
+				'type'      => 'lookup',
+				'class'     => $remoteSocket->getOwner(),
+				'sqltable'  => $remoteSocket->getLookupTable());
+			if ($remoteSocket->getOwner() == $peer->getOwner()) {
+				$peerInfo['sqlcol']  = strtolower(substr($remoteSocket->getOwner(),0,1))
+					.substr($remoteSocket->getOwner(),1)
+					."1_id";
+				$peerInfo['sqlcol2']  = strtolower(substr($remoteSocket->getOwner(),0,1))
+					.substr($remoteSocket->getOwner(),1)
+					."2_id";
+			} else {
+				$peerInfo['sqlcol']  = strtolower(substr($peer->getOwner(),0,1))
+					.substr($peer->getOwner(),1)
+					."_id";
+			}
+			$delete_info[] = $peerInfo;
+		}
+		return $delete_info;
+	}
+	
+	private function getRemoteSocketFor(&$socket) {
+		$foreignObject = $this->objects[$socket->getForeign()];
+		foreach ($foreignObject->getParents() as $remote) {
+			if ($remote->getName() == $socket->getReflectVariable()) {
+				return $remote;
+			} 
+		}
+		foreach ($foreignObject->getPeers() as $remote) {
+			if ($remote->getName() == $socket->getReflectVariable()) {
+				return $remote;
+			} 
+		}
+		foreach ($foreignObject->getChildren() as $remote) {
+			if ($remote->getName() == $socket->getReflectVariable()) {
+				return $remote;
+			} 
+		}
+		return false;
+	}
+	
+	private function generateObjectTable(&$object) {
+		$table = new FSqlTable($object->getName(),false);
+		// Special processing for those objects which extend the built-in FAccount class
+	 	if ("FAccount" == $object->getParentClass() ) {
+			// Create a column in the object table to store the relation to the `app_accounts` table
+			$colname = "faccount_id";
+ 			$c = new FSqlColumn("faccount_id","INT(11) UNSIGNED",false,false,"link to FAccount data for this {$object->getName()}");
+ 			$table->addColumn($c);	
+		}
+		foreach ($object->getParents() as $parent) {
+			$name = $parent->getName();
+			$name = strtolower($name[0]).substr($name,1)."_id";
+			$table->addColumn(
+				new FSqlColumn(
+					$name,
+					FSqlColumn::convertToSqlType(
+						"integer",array("min"=>0)),
+				false,
+				false,
+				"objId of " . (($parent->isRequired())? "" : "(optional) ") . "{$parent->getName()} ")
+			); 
+		}
+		foreach ($object->getAttributes() as $attr) {
+			$col = new FSqlColumn(
+				$attr->getName(),
+				FSqlColumn::convertToSqlType($attr->getType(),
+					array("min" => "{$attr->getMin()}",
+						  "max" => "{$attr->getMax()}",
+						  "size"=> "{$attr->getSize()}")),
+				false,
+				false,
+				$attr->getDescription()
+			);
+			$col->setDefaultValue($attr->getDefaultValue());
+			if ($attr->isUnique()) {
+				$col->setKey("UNIQUE");
+			}
+			$table->addColumn($col);
+		}
+		// return the generated table
+		return $table;
+	}
+	
+	private function generateLookupTables() {
+		// Iterate through all objects
+		foreach ($this->objects as $object) {
+			// If the object has any peer relationships...
+			if (count($object->getPeers()) > 0) {
+				// Iterate through the peer relationships
+				foreach ($object->getPeers() as $peer) {
+					// If the lookup table does not already exist...
+					if (!isset($this->tables[$peer->getLookupTable()])) {
+						$table = new FSqlTable($peer->getLookupTable(),true);
+						// If the two object types are the same...
+						if ($peer->getOwner() == $peer->getForeign()) {
+							$colName = $peer->getForeign();
+							$colName = strtolower($colName[0]).substr($colName,1);
+							$col1 = new FSqlColumn(
+								$colName."1_id",
+								"INT(11) UNSIGNED",
+								false,
+								false,
+								"");
+							$col2 = new FSqlColumn(
+								$colName."2_id",
+								"INT(11) UNSIGNED",
+								false,
+								false,
+								"");
 						} else {
-							$col->setDefaultValue($a->getDefaultValue());	
+							$ownerObjectName   = $peer->getOwner();
+							$foreignObjectName = $peer->getForeign();
+							$col1 = new FSqlColumn(
+								strtolower($ownerObjectName[0]).substr($ownerObjectName,1)."_id",
+								"INT(11) UNSIGNED",
+								false,
+								false,
+								"");
+							$col2 = new FSqlColumn(
+								strtolower($foreignObjectName[0]).substr($foreignObjectName,1)."_id",
+								"INT(11) UNSIGNED",
+								false,
+								false,
+								"");
 						}
-		  				$this->tables[$lc_cand_name]->addColumn($col);
-		  				
-		 			}
-		 		}/* end if 'attr' */	
-		 	}/* end foreach ckeys as statement */	
-		 }/* end foreach objects */
-		 
-		 /* At this point, objects have been identified, all dependencies captured, all foreign relationships 
-		  * have been modeled using FObjSocket objects, and all local attributes modeled using FObjAttr objects.
-		  * All required lookup tables have been determined, and, essentially, the hard work is done. 
-		  */ 
-		 
-		 /* If the 'checkLookupTables' flag has been set, run through all the objects to verify that their
-		  * 'lookupTable' values are valid (not empty).
-		  */
-		  if ($this->checkLookupTables) {
-		  	foreach ($this->objects as $o) {
-		  		foreach ($o->getSockets() as $s) {
-		  			if ("" == $s->getLookupTable()) {
-		  				die("Could not determine lookup table to use for {$o->getName()}.{$s->getName()}");	
-		  			}
-		  		}
-		  	}
-		  }
-    }
-    
-    public function export($format="YML") {
-    	switch (strtoupper($format)) {
-    		case "YML":
-    			return $this->exportYML();
-    			break;
-    		case "XML":
-    			return $this->exportXML();
-    			break;
-    		default:
-    			die("Unsupported export format '{$format}' requested.");
-    	}
-    }
-    
-    private function exportYML() {
-    	$r = "# Auto-generated application model file. \r\n\r\n";
-    	foreach ($this->objects as $o) {
-    		$r .= "# {$o->getName()}\r\n"
-				. "object {$o->getName()}:\r\n";
-				if ("FAccount" == $o->getParentClass() ) {
-					$r .= "  extends: FAccount\r\n";
-				}
-				$socketsByClass = array();
-				foreach ($o->getSockets() as $s) {
-					if ($s->getQuantity() == "1" && $s->isRequired()) {
-						$socketsByClass[$s->getForeign()][] = $s;
+						// add the columns to the table
+						$col1->setKey("PRIMARY");
+						$col2->setKey("PRIMARY");
+						$table->addColumn($col1);
+						$table->addColumn($col2);
+						// add the table to the list of tables
+						$this->tables[$peer->getLookupTable()] = $table;
 					}
 				}
-				foreach ($socketsByClass as $foreignClass => $socketData) {
-					$r .= "  depends {$foreignClass}:\r\n";
-					foreach ($socketData as $s) {
-						$matchVariable = $o->lookupDependency($foreignClass,$s->getName());
-						$r .= "    attr {$s->getName()}:\r\n"
-							. "      desc: {$s->getDescription()}\r\n"
-							. "      required: yes\r\n"
-							. "      matches: {$matchVariable}\r\n";
-					}
-				}
-				
-				foreach ($o->getAttributes() as $a) {
-					$r .= "  attr {$a->getName()}:\r\n"
-						. "    desc: {$a->getDescription()}\r\n"
-						. "    type: {$a->getType()}\r\n"
-						. "    size: {$a->getSize()}\r\n"
-						. "    min:  {$a->getMin()}\r\n"
-						. "    max:  {$a->getMax()}\r\n";
-						if (false === $a->getDefaultValue()) {
-							$r .= "    default: false\r\n";
-						} else if (true === $a->getDefaultValue()) {
-							$r .= "    default: true\r\n";	
-						} else {
-							$r .= "    default: {$a->getDefaultValue()}\r\n";
-						}
-						$r .= "    unique: " . (($a->isUnique() ? "yes" : "")) ."\r\n";
-				}
-				
-				foreach ($o->getSockets() as $s) {
-					if ($s->getQuantity() == "M") {
-						$r .= "  attr {$s->getName()}:\r\n"
-							. "    desc: {$s->getDescription()}\r\n"
-							. "    foreign: {$s->getForeign()}\r\n"
-							. "    quantity: {$s->getQuantity()}\r\n";
-						if ($s->doesReflect()) {
-							$r .= "    reflect: {$s->getForeign()}.{$s->getReflectVariable()}\r\n";
-						}
-					} else if ($s->getQuantity() == "1" && !$s->isRequired()) {
-						// handle optional M:1 relationships here
-						$r .= "  attr {$s->getName()}:\r\n"
-							. "    desc: {$s->getDescription()}\r\n"
-							. "    foreign: {$s->getForeign()}\r\n"
-							. "    quantity: {$s->getQuantity()}\r\n"
-							. "    required: no\r\n";
-						if ($s->doesReflect()) {
-							$r .= "    reflect: {$s->getForeign()}.{$s->getReflectVariable()}\r\n";
-						}
-					}
-				}
-			$r .= "\r\n\r\n";
-    	}
-    	return $r;
-    }
-    
-    private function exportXML() {
-    	die("XML export format not available yet.");
-    }
-    
- 	/*
+			}
+		}
+	}
+	
+	
+	/*
  	 * Function: standardizeName
  	 * 
  	 * This function is private. It takes a string and 
@@ -565,81 +752,15 @@ class FModel {
   		// into:  longVariableName
   		$s = str_replace(" ","",ucwords(str_replace("-"," ",str_replace("_"," ",$name))));
   		return strtolower(substr($s,0,1)) . substr($s,1);
-  	} 	
+  	} 
 
-  	/*
-  	 * Function: createDeleteInfo
-  	 * 
-  	 * This function converts the passed parameters into an associate array. The array
-  	 * 
-  	 * Parameters:
-  	 * 
-  	 *  class - The name of the class which contains the socket
-  	 *  type -  The relationship type. One of (depends | lookup)
-  	 *  phpvar - the name of the attribute that represents the socket
-  	 *  sqltable - The SQL Table to use in lookups
-  	 *  sqlcol - The sql column to use in lookups
-  	 *  sqlcol2 - (optional) The second primary key name (in the case of 'lookup')
-  	 * 
-  	 * Returns:
-  	 * 
-  	 *  (array) An array composed of the passed in parameters
-  	 */
-  	public function createDeleteInfo($class,$type,$phpvar,$sqltable,$sqlcol,$sqlcol2='') {
-  		return array(
-  			"class"=> $class,
-  			"type" => $type,
-  			"phpvar" => $phpvar,
-  			"sqltable" => $sqltable,
-  			"sqlcol" => $sqlcol,
-  			"sqlcol2"=> $sqlcol2);
-  	}
+	public function getModelData() {
+		return $this->modelData;
+	}
 
-  	/*
-  	 * Function: determineActualRemoteVariableName
-  	 * 
-  	 * This function determines the name of the remote attribute in a socket pair. If the 
-  	 * remoteClass has a dependency on the requestingClass, and that dependency matches 
-  	 * socketName, this function will return the name of the remote attribute representing
-  	 * the dependency.  
-  	 * 
-  	 * Parameters:
-  	 * 
-  	 *  requestingClass - The name of the class requesting the name resolution (local class)
-  	 *  socketName - ?
-  	 *  remoteClass - The name of the class with a dependency on the requestingClass 
-  	 * 
-  	 * Returns: 
-  	 * 
-  	 *  (string) - The attribute name where: remoteClass has a dependency on requestingClass which
-  	 *  matches socketName.
-  	 * 
-  	 */
-  	public function determineActualRemoteVariableName($requestingClass,$socketName,$remoteClass) {
-  		/* return attr name where: remoteClass has a dependency on requestingClass which matches socketName */
-		/* or */
-		/* return attr name where: reflected attribute is $requestingClass.$socketName */
-		
-		$data =& $this->obj_data[strtolower($remoteClass)];
-		
-		foreach ($data as $label => $subdata) {
-			if ("depends {$requestingClass}" == $label){
-				// Dependency
-				foreach ($subdata as $attrLabel => $attrData) {
-					list($ignore,$attrName) = explode(" ",$attrLabel);
-					list($ignore,$match) = explode(".",$attrData['matches']);
-					$lc_match = strtolower($match);
-					if ($lc_match == strtolower($socketName)) {
-						$std_attr = FModel::standardizeName($attrName);
-						return strtolower(substr($std_attr,0,1).substr($std_attr,1));
-					}
-				}
-			} else if (strtolower("{$requestingClass}.{$socketName}") == strtolower($subdata['reflect'])) {
-				// Reflected socket
-				list($ignore,$remoteSocketName) = split(" ",$label);
-				return ($remoteSocketName);
-			} 
-		}	
-  	}
 }
+	
+	
+	
+	
 ?>

@@ -103,7 +103,12 @@
     	<span>[assert:@.type=string;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
     	<span>[assert:@.type=datetime;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
     	<span>[assert:@.type=date;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
+    	<span>[assert:@.type=integer;block=span]<input type="text" name="attr_[@.name]" value="[object.[@.name]]"/></span>
     </td>
+  </tr>
+  <tr>
+    <th>[objectClass.parents;block=tr][[@.foreign]] [@.name]</th>
+   	<td><span><input type="text" name="parent_[@.name]" value="[object.[@.name].objId;error='']"/></span></td>
   </tr>
   <tr>
     <td>save changes:</td>

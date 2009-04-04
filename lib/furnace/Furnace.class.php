@@ -11,6 +11,10 @@ class Furnace {
 	// computed from the value of {rootdir}
  	public $fueldir;
  	
+ 	// Variable: useFuel
+	// Whether or not the current request should be treated as a FUEL request
+	public $useFuel = false;
+ 	
  	// Array: config
  	// Project configuration variables as read from {$rootdir}/app/config/app.yml
  	public $config;
@@ -58,6 +62,7 @@ class Furnace {
  		$this->rootdir = dirname(dirname(dirname(__FILE__)));
  		
  		if ($useFuel) {
+ 			$this->useFuel = true;
  			// Compute the fuel root directory
 			$this->fueldir = $this->rootdir . '/lib/fuel';
 
@@ -127,7 +132,11 @@ class Furnace {
  			include_once('facade.bootstrap.php'); 
  			
  			// Include the custom controller base file
- 			include_once($this->rootdir . '/app/controllers/_base/Controller.class.php');
+			if ($this->useFuel) {
+				include_once($this->fueldir . '/app/controllers/_base/Controller.class.php');
+			} else {
+ 				include_once($this->rootdir . '/app/controllers/_base/Controller.class.php');
+			}
  			
  			// Include compiled model data, if available
  			@include_once($this->rootdir . "/app/model/objects/compiled.php");

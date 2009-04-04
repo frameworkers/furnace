@@ -45,7 +45,11 @@ class SchemaController extends Controller {
 								break;
 							}
 						}
-						if (!$found) {
+						if (!$found || ( 
+							($dtc->getColType()      != $mtc->getColType()) ||
+						    ($dtc->isNull()          != $mtc->isNull())     ||
+						    ($dtc->getDefaultValue() != $mtc->getDefaultValue())
+						)) {
 							$tables[strtolower($mt->getName())]['status'] = 'fieldsDiffer';
 							break;
 						}
@@ -119,8 +123,8 @@ class SchemaController extends Controller {
 		if ($schema->getTable($tableName)) {
 			$this->set('errorTableExists');
 		} else {
-			$this->set("table",$model->tables[strtolower($tableName)]);
-			$this->set("sql",$model->tables[strtolower($tableName)]->toSqlString());
+			$this->set("table",$model->tables[$tableName]);
+			$this->set("sql",$model->tables[$tableName]->toSqlString());
 		}
 	}
 	
@@ -131,8 +135,8 @@ class SchemaController extends Controller {
 		} else {
 			$this->init();
 			$model = $this->getModel();
-			if (isset($model->tables[strtolower($data['tableName'])])) {
-				$table  = $model->tables[strtolower($data['tableName'])];
+			if (isset($model->tables[$data['tableName'] ])) {
+				$table  = $model->tables[$data['tableName'] ];
 				$schema = $this->getSchema();
 				$schema->executeStatement($table->toSqlString());
 				$this->flash("Created Table '{$data['tableName']}'");
@@ -148,7 +152,7 @@ class SchemaController extends Controller {
 		$model = $this->getModel();
 		$schema= $this->getSchema();
 		
-		$modelTable = $model->tables[strtolower($tableName)];
+		$modelTable = $model->tables[$tableName];
 		$dbTable    = $schema->getTable($tableName);
 		
 		
@@ -158,7 +162,7 @@ class SchemaController extends Controller {
 			foreach ($dbTable->getColumns() as $dbc) {
 				if ($dbc->getName() == $mc->getName()) {
 					if (($dbc->getColType() != $mc->getColType()) 
-						|| ($dbc->isNull && !$mc->isNull)
+						|| ($dbc->isNull() != $mc->isNull())
 						|| ($dbc->getDefaultValue() != $mc->getDefaultValue())
 					) {
 						$state = "Changes Detected.";
@@ -239,7 +243,7 @@ class SchemaController extends Controller {
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();
-		$query = "ALTER TABLE `{$data['tableName']}` MODIFY COLUMN {$model->tables[strtolower($data['tableName'])]->getColumn($data['columnName'])->toSqlString()}";
+		$query = "ALTER TABLE `{$data['tableName']}` MODIFY COLUMN {$model->tables[$data['tableName'] ]->getColumn($data['columnName'])->toSqlString()}";
 		$schema->executeStatement($query);
 		$this->flash("Column Definition Successfully Changed");
 		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
@@ -253,7 +257,7 @@ class SchemaController extends Controller {
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();
-		$query = "ALTER TABLE `{$data['tableName']}` CHANGE COLUMN `{$data['columnName']}` {$model->tables[strtolower($data['tableName'])]->getColumn($data['renameTo'])->toSqlString()}";
+		$query = "ALTER TABLE `{$data['tableName']}` CHANGE COLUMN `{$data['columnName']}` {$model->tables[$data['tableName'] ]->getColumn($data['renameTo'])->toSqlString()}";
 		$schema->executeStatement($query);
 		$this->flash("Column Successfully Renamed");
 		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
@@ -267,7 +271,7 @@ class SchemaController extends Controller {
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();
-		$query = "ALTER TABLE `{$data['tableName']}` ADD COLUMN {$model->tables[strtolower($data['tableName'])]->getColumn($data['columnName'])->toSqlString()}";
+		$query = "ALTER TABLE `{$data['tableName']}` ADD COLUMN {$model->tables[$data['tableName'] ]->getColumn($data['columnName'])->toSqlString()}";
 		$schema->executeStatement($query);
 		$this->flash("Column Added Successfully");
 		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
@@ -286,30 +290,6 @@ class SchemaController extends Controller {
 		$schema->executeStatement($query);
 		$this->flash("Column Dropped Successfully");
 		$this->redirect("/fuel/schema/compareFields/{$data['tableName']}");
-	}
-	
-	private function init() {
-		require_once($GLOBALS['furnace']->rootdir . "/lib/furnace/foundation/database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObj.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjAttr.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FObjSocket.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlColumn.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/core/FSqlTable.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/generation/building/FModel.class.php");
-		require_once($GLOBALS['furnace']->rootdir . "/lib/fuel/lib/dbmgmt/FDatabaseSchema.class.php");
-	}
-	private function getModel() {
-		return new FModel(
-			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml"));
-	}
-	private function getSchema() {
-		$d = new FDatabaseSchema();
-		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
-			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
-		} else {
-			$d->discover($GLOBALS['furnace']->config['production_dsn']);
-		}
-		return $d;
 	}
 }
 ?>

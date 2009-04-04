@@ -39,7 +39,7 @@
  	
  	// Variable: reflect
  	// The name of the remote variable that reflects this socket.
- 	private $reflect;
+ 	private $bReflects;
  	
  	// Variable: reflectVariable
  	// A value describing the nature of the reflected relationship (1,M).
@@ -71,12 +71,17 @@
  	 * Constructor. Creates a new <FObjSocket> object.
  	 * 
  	 */
- 	public function __construct($name,$owner,$customRemoteVariableName='') {
- 		$this->name = $name;
- 		$this->owner = $owner;
- 		$this->customRemoteVariableName = $customRemoteVariableName;
- 		$this->reflect  = false;
- 		$this->required = true;
+ 	public function __construct($name,$owner,$foreign,$data) {
+ 		$this->name    = FModel::standardizeAttributeName($name);
+ 		$this->owner   = FModel::standardizeName($owner);
+ 		$this->foreign = FModel::standardizename($foreign);
+ 		
+ 		// use data to fill in details about this socket
+		$this->setDescription($data['desc']);
+		$this->setQuantity($data['quantity']);
+		$this->setReflection(isset($data['reflects']),$data['reflects']);
+		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "private");
+		$this->setRequired(("yes" == $data['required']) ? true : false);
  	}
  	
  	/*
@@ -153,7 +158,7 @@
   	 *  (boolean) - Whether or not this socket is a reflection
   	 */
  	public function doesReflect() {
- 		return $this->reflect;	
+ 		return $this->bReflects;	
  	}
  	
  	/*
@@ -269,8 +274,14 @@
   	 * 
   	 */
  	public function setReflection($bValue,$variable='') {
- 		$this->reflect = $bValue;	
- 		$this->reflectVariable = $variable;
+ 		$this->bReflects = $bValue;	
+ 		if (false !== strpos($variable,".")) {
+ 			list($ignore,$reflectVar) = explode(".",$variable);
+ 		} else {
+ 			$reflectVar = $variable;
+ 		}
+ 		
+ 		$this->reflectVariable = FModel::standardizeAttributeName($reflectVar);
  	}
  	
  	/*
@@ -282,7 +293,10 @@
   	 * 
   	 */
  	public function setReflectVariable($value) {
- 		$this->reflectVariable = $value;	
+ 		
+ 		list($ignore,$reflectVar) = explode(".",$value);
+ 		
+ 		$this->reflectVariable = FModel::standardizeAttributeName($reflectVar);	
  	}
  	
  	/*

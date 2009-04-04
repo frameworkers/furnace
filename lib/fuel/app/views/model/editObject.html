@@ -176,40 +176,33 @@
 	    <th>Action</th>
 	  </tr>
 	  <tr>
-	  	<td>[object.dependencies;block=tr][@.name]</td>
-	  	<td>[@.desc;default='']</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.class]">[@.class]</a></td>
+	  	<td>[object.parents;block=tr][@.name]</td>
+	  	<td>[@.description;default='']</td>
+	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
 	  	<td>Parent</td>
-	  	<td style="text-align:center;">No</td>
-	  	<td>[@.var]</td>
-	  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteDependency/[object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+	  	<td style="text-align:center;">[@.required;map="0|Yes,1|No"]</td>
+	  	<td>[@.reflectVariable]</td>
+	  	<td style="text-align:center;">
+	  		<a href="[_furnace.url_base]fuel/model/deleteDependency/[object.name]/[@.foreign]/[@.name]/[@.reflectVariable]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>
+	  	</td>
 	  </tr>
 	  <tr>
-	  	<td>[assert:optionals;block=tr][optionals;block=tr][@.data.name]</td>
-	  	<td>[@.data.description]</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.data.foreign]">[@.data.foreign]</a></td>
-	  	<td>[if:@.data.quantity=1;content=Parent;else=Child]</td>
-	  	<td style="text-align:center;">Yes</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.data.foreign]">[@.data.foreign]</a>.[@.data.actualremotevariablename]</td>
-	  	<td style="text-align:center;"><a href="[if:@.data.quantity=1;block=a][_furnace.url_base]fuel/model/deleteOptional/[object.name]/[@.data.foreign]/[@.data.name]/[@.remote]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
-	  </tr>
-	  <tr>
-	  	<td>[assert:children;block=tr][children;block=tr][@.name]</td>
+	  	<td>[object.children;block=tr][@.name]</td>
 	  	<td>[@.description]</td>
 	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
 	  	<td>Child</td>
-	  	<td style="text-align:center;">No</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
+	  	<td style="text-align:center;">n/a</td>
+	  	<td>[@.reflectVariable]</td>
 	  	<td style="text-align:center;"><!-- <a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>--></td>
 	  </tr>
 	  <tr>
-	  	<td>[relationships;block=tr][@.name]</td>
+	  	<td>[object.peers;block=tr][@.name]</td>
 	  	<td>[@.description]</td>
 	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
 	  	<td>Peer (M:M)</td>
 	  	<td style="text-align:center">n/a</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-	  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+	  	<td>[@.reflectVariable]</td>
+	  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.reflectVariable]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
 	  </tr>
 	  <tr>
 	  	<td style="width:18%;"><input type="text" name="socketName"/></td>
@@ -230,95 +223,5 @@
 	</table>
 </form>
 
-<!--  
 
-
-<h3>Relationships:</h3>
-<h4>M-1 (Parents)</h4>
-<form action="[_furnace.url_base]fuel/model/addDependency" method="POST">
-<input type="hidden" name="objectClass" value="[object.name]"/>
-<table style="width:100%;" cellspacing="0" cellpadding="0">
-  <tr>
-    <th>Local Attribute Name</th>
-    <th>Foreign Object</th>
-    <th>Description</th>
-    <th>(optional) Foreign Attribute Name</th>
-    <th>Action</th>
-  </tr>
-  <tr>
-  	<td>[object.dependencies;block=tr][@.name]</td>
-  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.class]">[@.class]</a></td>
-  	<td>[@.desc;default='']</td>
-  	<td>[@.var]</td>
-  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteDependency/[object.name]/[@.class]/[@.name]/[@.var]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
-  </tr>
-  <tr>
-    <td style="width:15%;"><input type="text" name="socketName"/></td>
-    <td style="width:20%;"><select name="dependingClass">
-    		<option>[model.objects;block=option][@.name]</option>
-    	</select>
-    </td>
-    <td style="width:30%;"><input type="text" name="description"/></td>
-    <td><input type="text" name="matchVariable"/></td>
-    <td style="width:10%;"><input type="submit" value="Create"/></td>
-  </tr>
-</table>
-</form>
-<h4>1-M (Children)</h4>
-<table style="width:100%;" cellspacing="0" cellpadding="0">
-  <tr>
-    <th>Local Attribute Name</th>
-    <th>Foreign Object</th>
-    <th>Quantity</th>
-    <th>Description</th>
-    <th>(optional) Foreign Attribute Name</th>
-    <th>Action</th>
-  </tr>
-  <tr>
-  	<td>[assert:children;block=tr][children;block=tr][@.name]</td>
-  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
-  	<td>[@.quantity]</td>
-  	<td>[@.description]</td>
-  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-  	<td style="text-align:center;"><a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
-  </tr>
-</table>
-
-<h4>M-M (Peers)</h4>
-<form action="[_furnace.url_base]fuel/model/addMMRelationship" method="POST">
-<input type="hidden" name="objectClass" value="[object.name]"/>
-<input type="hidden" name="quantity" value="M"/>
-<table style="width:100%;" cellspacing="0" cellpadding="0">
-  <tr>
-    <th>Local Attribute Name</th>
-    <th>Foreign Object</th>
-    <th>Quantity</th>
-    <th>Description</th>
-    <th>(optional) Foreign Attribute Name</th>
-    <th>Action</th>
-  </tr>
-  <tr>
-  	<td>[relationships;block=tr][@.name]</td>
-  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
-  	<td>[@.quantity]</td>
-  	<td>[@.description]</td>
-  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a>.[@.actualremotevariablename]</td>
-  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
-  </tr>
-  <tr>
-  	<td style="width:15%;"><input type="text" name="socketName"/></td>
-  	<td style="width:20%;"><select name="dependingClass">
-    		<option>[model.objects;block=option][@.name]</option>
-    	</select>
-    </td>
-    <td style="width:5%;">M</td>
-    
-    
-    <td style="width:30%;"><input type="text" name="description"/></td>
-    <td><input type="text" name="matchVariable"/></td>
-    <td style="width:10%;"><input type="submit" value="Create"/></td>
-  </tr>
-</table>
-</form>
--->
 </div><!-- end container -->

@@ -15,12 +15,18 @@
 	th {
 		border-bottom:solid 1px #888;
 		padding:3px;
+		text-align:left;
 	}
 	td {
 		border-left:solid 1px #bbb;
 		border-bottom:solid 1px #bbb;
 		background-color:#f3f3f3;
 		padding:3px;
+	}
+	td.hint {
+		font-size:90%;
+		color:#444;
+		font-style:italic;
 	}
 	select {
 		border:solid 1px #888;
@@ -117,11 +123,13 @@
 	</ul>
 </div>
 <div id="ff_content">
-<h1>Application Data: [object.name]</h1>
+<h2>Browse Application Data: [object.name]</h2>
 
 <table cellspacing="0" cellpadding="3">
 <tr>
-  <th>[headers;block=th][@]</th>
+  <th>objId</th>
+  <th>[object.attributes;block=th][@.name]</th>
+  <th>[object.parents;block=th][assert:@.required;block=th][@.name]</th>
   <th>&nbsp;</th>
 </tr>
 <tr>
@@ -140,8 +148,8 @@ Pages:
 </div>
 
 
-<h2>Create a new '[objectClass.name]' object:</h2>
-<form action="[_furnace.url_base]fuel/data/create/[objectClass.name]" method="POST"/>
+<h2 style="margin-bottom:5px;">Create a new '[objectClass.name]' object:</h2>
+<form action="[_furnace.url_base]fuel/data/create/[objectClass.name]" method="POST">
 <input type="hidden" name="fobjectType" value="[objectClass.name]"/>
 <table>
 <tr><th>[if:objectClass.parentClass=FAccount;block=table]Username:</th>
@@ -154,18 +162,19 @@ Pages:
 	<td><input type="text" name="emailAddress"/></td>
 </tr>
 </table>
-<table>
+<table class="ff">
   <tr>
     <th>[objectClass.attributes;block=tr][@.name]</th>
     <td><input type="text" name="[@.name]"/></td>
+    <td class="hint">[@.description]</td>
   </tr>
   <tr>
-  	<th [objectClass.sockets;block=tr]>[@.name] [if:@.quantity=1;content=`ID`;else=` (NOT FUNCTIONAL)`]</th>
+  	<th>[objectClass.parents;block=tr][@.name] [if:!@.required;content=<span style="font-weight:normal">(optional)</span>]</th>
   	<td><input type="text" name="[@.name]_id"/></td>
+  	<td class="hint">[@.description]</td>
   </tr>
   <tr>
-    <td>&nbsp;</td>
-    <td><input type="submit" value="Create"/></td>
+    <td colspan="3" style="text-align:right;"><input type="submit" value="Create" style="padding:3px;"/></td>
   </tr>
 </table>
 </form>

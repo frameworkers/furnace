@@ -111,7 +111,7 @@ legend {
   	  		<option value="[model.objects;block=option][@.name]">[@.name]</option>
   	  	</select>
   	  </td>
-  	  <td class="button"><input type="submit" name="deleteObject" value="Delete" [if:!model.objects;content=`disabled="disabled"`]/></td>
+  	  <td class="button"><input type="submit" name="deleteObject" value="Delete" [if:!model.objects;content=`disabled="disabled"`] onclick="return confirm('This action can not be undone. Continue?');"/></td>
   <tr/>
   <tr><td colspan="2" class="hint">
   		Select the object you wish to delete.</td>

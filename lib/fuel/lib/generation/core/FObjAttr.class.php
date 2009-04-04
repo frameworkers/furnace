@@ -76,9 +76,19 @@
   	 * 
   	 * Constructor. Creates a new <FObjAttr> object.
   	 */
-  	public function __construct($name) {
-  		$this->name = $name;
+  	public function __construct($name,$data) {
+  		$this->name = FModel::standardizeAttributeName($name);
   		$this->functionName = ucfirst($this->name);
+  		
+  		// Use attrData to fill in details about this attr
+		$this->setDescription($data['desc']);
+		$this->setType($data['type']);
+		$this->setSize($data['size']);
+		$this->setMin($data['min']);
+		$this->setMax($data['max']);
+		$this->setIsUnique($data['unique'] === true);
+		$this->setDefaultValue($data['default']);
+		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "private");
   	}
   	
   	/*
