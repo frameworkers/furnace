@@ -67,14 +67,18 @@ class FDatabaseSchema {
 		while ($r = $results->fetchRow()) {
 			$bIsAutoinc = (($r[5] != null));
 			$c = new FSqlColumn(
-				$r[0],		// name 
-				strtoupper($r[1]),		// type 
-				(($r[2] == "NO")? false : true),		// null
-				$bIsAutoinc	// autoinc
+				$r[0],								// name 
+				strtoupper($r[1]),					// type 
+				(($r[2] == "NO")? false : true),	// null
+				$bIsAutoinc							// autoinc
 			);
 			// Set key
 			if ($r[3] != null ) {
-				$c->setKey($r[3]);
+				$c->setKey($r[3]);					// key
+			}
+			// Set default value
+			if ($r[4] != null ) {
+				$c->setDefaultValue($r[4]);			// default
 			}
 			// Add the column to the table
 			$this->tables[$tableName]->addColumn($c);
