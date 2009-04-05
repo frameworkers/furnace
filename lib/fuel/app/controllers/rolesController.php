@@ -52,8 +52,6 @@ class RolesController extends Controller {
  	
  	public function defineRole() {
 		if ($this->form) {
-			var_dump($this->form);
-			die();
 			$name    =& $this->form['name'];
 			$desc    =& $this->form['desc'];
 			$default = ("grant" == $this->form['default']) ? true : false;
