@@ -37,8 +37,12 @@ class FSessionManager {
 		 }
 	}
 	
-	public static function doLogout() {
+	public static function doLogout($bPreserveSession = false) {
 		self::uninitSession();
+		if ($bPreserveSession) {
+			session_start();
+			header("cache-control: private");
+		}
 	}
 	
 	private function initSession($data) {
