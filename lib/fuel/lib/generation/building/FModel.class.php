@@ -306,6 +306,18 @@ class FModel {
  			$r .= "\t\tpublic function get{$s->getFunctionName()}(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n"
 				. "\t\t\treturn \$this->{$s->getName()}->get(\$uniqueValues,\$returnType,\$key,\$sortOrder);\r\n"
 				. "\t\t}\r\n\r\n";
+			if ("FAccount" == $this->objects[$s->getForeign()]->getParentClass() ) {
+				$r .= "\t\tpublic function get{$s->getFunctionName()}ByUsername(\$username) {\r\n"
+					. "\t\t\t\$q = \"SELECT `objectId` FROM `app_accounts` WHERE `username`='{\$username}'\";\r\n"
+					. "\t\t\t\$id= _db()->queryOne(\$q);\r\n"
+					. "\t\t\treturn {$s->getForeign()}::Retrieve(\$id);\r\n"
+					. "\t\t}\r\n\r\n";
+				$r .= "\t\tpublic function get{$s->getFunctionName()}ByEmailAddress(\$email) {\r\n"
+					. "\t\t\t\$q = \"SELECT `objectId` FROM `app_accounts` WHERE `emailAddress`='{\$email}'\";\r\n"
+					. "\t\t\t\$id= _db()->queryOne(\$q);\r\n"
+					. "\t\t\treturn {$s->getForeign()}::Retrieve(\$id);\r\n"
+					. "\t\t}\r\n\r\n";
+			}
  		}
  		
  		// Setters
