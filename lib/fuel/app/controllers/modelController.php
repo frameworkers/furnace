@@ -171,7 +171,7 @@ END;
 			$m->objects[$objectType] = $newObject;
 			
 			// Add the required SQL table
-			$m->tables[$objectType] = new FSqlTable($objectType);
+			$m->tables[FModel::standardizeTableName($objectType)] = new FSqlTable($objectType);
 			
 			// If the object extends FAccount, add the 'faccount_id' column
 			if ("FAccount" == $objectParent) {
@@ -183,7 +183,7 @@ END;
 					false,
 					"Link to account details for this {$objectType}");
 				
-				$m->tables[$objectType]->addColumn($col,$extra);
+				$m->tables[$tableName]->addColumn($col,$extra);
 			}
 			
 			// Write the changes to the model file
@@ -248,7 +248,7 @@ END;
 						$this->flash("Created required `app_roles` table");
 					}
 				}
-				_db()->exec($m->tables[$objectType]->toSqlString());
+				_db()->exec($m->tables[$tableName]->toSqlString());
 			} catch (FDatabaseException $e) {
 				die($e->__toString());
 			}
@@ -369,16 +369,16 @@ END;
 			
 			// Add the attribute and the column to the model
 			$m->objects[$objectClass]->addAttribute($attr);
-			$m->tables[$objectClass]->addColumn($column);
+			$m->tables[FModel::standardizeTableName($objectClass)]->addColumn($column);
 			
 			// Write the changes to the model file
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
 			try {
-				_db()->exec("ALTER TABLE `{$objectClass}` ADD COLUMN {$column->toSqlString()}");
+				_db()->exec("ALTER TABLE `{$tableName}` ADD COLUMN {$column->toSqlString()}");
 				if ($attr->isUnique()) {
-					_db()->exec("ALTER TABLE `{$objectClass}` ADD UNIQUE (`{$attr->getName()}`) ");
+					_db()->exec("ALTER TABLE `{$tableName}` ADD UNIQUE (`{$attr->getName()}`) ");
 				}
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
@@ -424,13 +424,14 @@ END;
 			
 			if ($this->form['action'] == "rename") {
 				// RENAME AN ATTRIBUTE
+				$tableName = FModel::standardizeTableName($objectType);
 				$columnOldName = $column->getName();
 				$newName = FModel::standardizeAttributeName($this->form['attrNewName']);
 				$attribute->setName($newName);
 				$column->setName($newName);
 
 				try {
-					$query = "ALTER TABLE `{$objectType}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
+					$query = "ALTER TABLE `{$tableName}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
 					_db()->exec($query);
 				} catch (FDatabaseException $e) {
 					die($e->__toString());	
@@ -448,6 +449,7 @@ END;
 	
 	public function deleteAttribute($objectClass,$attributeName) {
 		$this->init();
+		$tableName = FModel::standardizeTableName($objectClass);
 		$m = $this->getModel();
 		if (!isset($m->objects[$objectClass])) {
 			die("Object '{$objectClass}' is not defined in the model.");
@@ -459,8 +461,8 @@ END;
 			
 			// Execute SQL commands
 			try {
-				_db()->exec("ALTER TABLE `{$objectClass}` DROP COLUMN `{$attributeName}` ");
-				_db()->exec("ALTER TABLE `{$objectClass}` DROP INDEX  `{$attributeName}` ");
+				_db()->exec("ALTER TABLE `{$tableName}` DROP COLUMN `{$attributeName}` ");
+				_db()->exec("ALTER TABLE `{$tableName}` DROP INDEX  `{$attributeName}` ");
 			} catch (FDatabaseException $e) {
 				// silently ignore
 			}
@@ -553,8 +555,10 @@ END;
 			
 			// Execute SQL commands
 			try {
-				$q = "ALTER TABLE `" . FModel::standardizeName($this->form['objectClass'])
-					."` ADD COLUMN {$column->toSqlString()} AFTER `objId`";
+				$objectName = FModel::standardizeName($this->form['objectClass']);
+				$tableName  = FModel::standardizeTableName($objectName);
+				$q = "ALTER TABLE `{$tableName}` "
+					."ADD COLUMN {$column->toSqlString()} AFTER `objId`";
 				_db()->exec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
@@ -606,7 +610,9 @@ END;
 			
 			// Execute SQL commands
 			try {
-				$q = "ALTER TABLE `{$localObject->getName()}` DROP COLUMN `"
+				$objectName = $localObject->getName();
+				$tableName  = FModel::standardizeTableName($objectName);
+				$q = "ALTER TABLE `{$tableName}` DROP COLUMN `"
 					. FModel::standardizeAttributeName($localAttribute)
 					. "_id` ";
 				_db()->exec($q);
@@ -729,7 +735,8 @@ END;
 			}
 			// Delete the SQL table
 			try {
-				$q = "DROP TABLE `{$lookupTable}`";
+				$tableName  = FModel::standardizeTableName($lookupTable);
+				$q = "DROP TABLE `{$tableName}`";
 				_db()->exec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
@@ -761,12 +768,15 @@ END;
 			}
 			
 			$object =& $m->objects[$name];
+			$objectName = $object->getName();
 			
 			// Delete any children
 			foreach ($object->getChildren() as $child) {
 				// Delete from the database
 				try {
-					$q = "ALTER TABLE `{$child->getForeign()}` DROP COLUMN `"
+					$foreignName = $child->getForeign();
+					$tableName   = FModel::standardizeTableName($foreignName);
+					$q = "ALTER TABLE `{$tableName}` DROP COLUMN `"
 						. $child->getReflectVariable()
 						. "_id` ";
 					_db()->exec($q);
@@ -790,7 +800,8 @@ END;
 				
 				// Delete from the database
 				try {
-					$q = "ALTER TABLE `{$object->getName()}` DROP COLUMN `"
+					$tableName  = FModel::standardizeTableName($objectName);
+					$q = "ALTER TABLE `{$tableName}` DROP COLUMN `"
 						. $parent->getName()
 						. "_id` ";
 					_db()->exec($q);
@@ -836,7 +847,8 @@ END;
 			
 			// Drop the object table
 			$logMessage .= "<li>DELETING OBJECT: '{$name}' from the model</li></ul>";
-			$q = "DROP TABLE `{$object->getName()}` ";
+			$tableName   = FModel::standardizeTableName($objectName);
+			$q = "DROP TABLE `{$tableName}` ";
 			_db()->exec($q);
 			
 			// Delete the object from the model

@@ -38,7 +38,7 @@
   	
 	
 	public function __construct($name,$bIsLookupTable = false,$engine='MyISAM',$charset='latin1') {
-		$this->name = $name;
+		$this->name = FModel::standardizeTableName($name);
 		$this->columns = array();
 		$this->primaryKeys = array();
 		$this->engine = $engine;
@@ -58,7 +58,7 @@
   	}
   	
   	public function setName($value) {
-  		$this->name = $value;
+  		$this->name = FModel::standardizeTableName($value);
   	}
   	
   	public function getColumns() {

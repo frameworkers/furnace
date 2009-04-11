@@ -42,6 +42,7 @@ class FDatabaseSchema {
 		return $this->tables;
 	}
 	public function getTable($tableName) {
+		$tableName = FModel::standardizeTableName($tableName);
 		if (isset($this->tables[$tableName])) {
 			return $this->tables[$tableName];
 		} else {
@@ -62,6 +63,7 @@ class FDatabaseSchema {
 	}
 	
 	private function discoverAttributes($tableName) {
+		$tableName = FModel::standardizeTableName($tableName);
 		$results = $this->_db()->query("DESCRIBE `{$tableName}`");
 		
 		while ($r = $results->fetchRow()) {

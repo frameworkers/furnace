@@ -228,9 +228,9 @@
 		$sortedNames = array($this->getName(),$socket->getForeign());
 		sort($sortedNames);
 		if ($this->getName() == $sortedNames[0]) {
-			$socket->setLookupTable("{$sortedNames[0]}_{$sortedNames[1]}_{$socket->getName()}");
+			$socket->setLookupTable(FModel::standardizeTableName($sortedNames[0])."_".FModel::standardizeTableName($sortedNames[1])."_{$socket->getName()}");
 		} else {
-			$socket->setLookupTable("{$sortedNames[0]}_{$sortedNames[1]}_{$socket->getReflectVariable()}");
+			$socket->setLookupTable(FModel::standardizeTableName($sortedNames[1])."_".FModel::standardizeTableName($sortedNames[0])."_{$socket->getReflectVariable()}");
 		}
 		
 		// Add the socket to the list of peers

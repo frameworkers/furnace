@@ -21,7 +21,7 @@ class FModel {
 				new FObj( $model_object_name, $this->modelData );
 				
 			// Build database tables
-			$this->tables[self::standardizeName($model_object_name)] =
+			$this->tables[self::standardizeTableName($model_object_name)] = 
 				self::generateObjectTable($this->objects[self::standardizeName($model_object_name)]);
 		}
 		
@@ -238,20 +238,22 @@ class FModel {
  		foreach ($object->getPeers() as $s) {
  			
  			if ($s->getOwner() == $s->getForeign()) {
- 				$type = $s->getOwner();
+ 				$type = self::standardizeAttributeName($s->getOwner());
  				$lookup = $s->getLookupTable();
  				// Set the filter for M:M between two objects of the same type
  				$filter = "WHERE `objId` IN ( SELECT (`"
-					. strtolower($type[0]).substr($type,1) . "1_id` FROM `{$lookup}` WHERE `" . strtolower($type[0]).substr($type,1) . "2_id`='{\$data['objId']}') "
+					. $type . "1_id` FROM `{$lookup}` WHERE `" . $type . "2_id`='{\$data['objId']}') "
 					. "OR ("
-					. strtolower($type[0]).substr($type,1) . "2_id` FROM `{$lookup}` WHERE `" . strtolower($type[0]).substr($type,1) . "1_id`='{\$data['objId']}') "
+					. $type . "2_id` FROM `{$lookup}` WHERE `" . $type . "1_id`='{\$data['objId']}') "
 					. ") ";
  			} else {
  				// Set the filter for M:M between two different object types
+				$foreignName = self::standardizeAttributeName($s->getForeign());
+				$ownerName   = self::standardizeAttributeName($s->getOwner());
  				$filter = "WHERE `objId` IN ( SELECT `"
-					. strtolower(substr($s->getForeign(),0,1)).substr($s->getForeign(),1)
+					. $foreignName
  					. "_id` FROM `{$s->getLookupTable()}` WHERE `"
-					. strtolower(substr($s->getOwner(),0,1)).substr($s->getOwner(),1)
+					. $ownerName
 					. "_id` = '{\$data['objId']}' )";
  			}
 			
@@ -332,7 +334,7 @@ class FModel {
 		// setters to allow for 'parent' reassignment
 		foreach ($object->getParents() as $s) {
 			$r .= "\t\tpublic function set{$s->getFunctionName()}Id(\$id) {\r\n"
-				. "\t\t\t\$q = \"UPDATE `{$object->getName()}` SET `{$s->getName()}_id`='{\$id}' WHERE `objId`='{\$this->objId}'\";\r\n"
+				. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{$s->getName()}_id`='{\$id}' WHERE `objId`='{\$this->objId}'\";\r\n"
 				. "\t\t\t_db()->exec(\$q);\r\n"
 				. "\t\t\t\$this->{$s->getName()} = \$id;\r\n"
 				. "\t\t}\r\n\r\n";
@@ -375,7 +377,7 @@ class FModel {
  			$r .= "\t\t\t\tparent::faccount_save();\r\n";
  		}
  		if (count($object->getAttributes()) > 0) {
- 			$r .= "\t\t\t\t\$q = \"UPDATE `{$object->getName()}` SET \" \r\n";
+ 			$r .= "\t\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET \" \r\n";
  				$temp = array();
  				foreach ($object->getAttributes() as $a) {
  				 	if ($a->getType() == "text" || $a->getType() == "string") {
@@ -389,7 +391,7 @@ class FModel {
  				. "\t\t\t\t\$q .= \"WHERE `objId`='{\$this->objId}'\";\r\n";
 			}
  			$r .= "\t\t\t} else {\r\n"
- 			. "\t\t\t\t\$q = \"UPDATE `{$object->getName()}` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `objId`='{\$this->objId}' \";\r\n" 
+ 			. "\t\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `objId`='{\$this->objId}' \";\r\n" 
  			. "\t\t\t}\r\n"
  			. "\t\t\t_db()->exec(\$q);\r\n"
  			. "\t\t}\r\n\r\n";
@@ -439,7 +441,7 @@ class FModel {
  		}
  		// Create the object in the database
 		$r .= "\t\t\t// Create a new {$object->getName()} object in the database\r\n";
- 		$r .= "\t\t\t\$q = \"INSERT INTO `{$object->getName()}` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
+ 		$r .= "\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
  		$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n";
  		$r .= "\t\t\t\$objectId = _db()->lastInsertID(\"{$object->getName()}\",\"objId\");\r\n";
  	 		
@@ -473,14 +475,14 @@ class FModel {
  		if ("FAccount" == $object->getParentClass()) {
  			$r .= "\t\tpublic static function RetrieveByAccountId(\$accountId) {\r\n"
  				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
- 				. "\t\t\t\$q = \"SELECT * FROM `{$object->getName()}` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
+ 				. "\t\t\t\$q = \"SELECT * FROM `".self::standardizeTableName($object->getName())."` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
  				. "\t\t\t\$r = _db()->queryRow(\$q);\r\n"
  				. "\t\t\treturn new {$object->getName()}(\$r);\r\n"
  				. "\t\t}\r\n";
  				
  			$r .= "\t\tpublic static function ObjIdFromAccountId(\$accountId) {\r\n"
  				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
- 				. "\t\t\t\$q = \"SELECT `objId` FROM `{$object->getName()}` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
+ 				. "\t\t\t\$q = \"SELECT `objId` FROM `".self::standardizeTableName($object->getName())."` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
  				. "\t\t\t\$r = _db()->queryOne(\$q);\r\n"
  				. "\t\t\treturn \$r;\r\n"
  				. "\t\t}\r\n";
@@ -491,7 +493,7 @@ class FModel {
 		
 		if ("FAccount" == $object->getParentClass()) {
 			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
-			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `{$object->getName()}` WHERE `objId` = '{\$objId}'\"; \r\n";
+			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `".self::standardizeTableName($object->getName())."` WHERE `objId` = '{\$objId}'\"; \r\n";
 			$r .= "\t\t\t\$acct_id = _db()->queryOne(\$q);\r\n";
 			$r .= "\t\t\tFAccountManager::DeleteByAccountId(\$acct_id);\r\n\r\n";
 		}
@@ -525,7 +527,7 @@ class FModel {
 			}
 		}
 		$r .= "\r\n\t\t\t// Delete the object itself\r\n"
-			. "\t\t\t\$q = \"DELETE FROM `{$object->getName()}` WHERE `objId`='{\$objId}'\";\r\n"
+			. "\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `objId`='{\$objId}'\";\r\n"
 			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
 		$r .= "\t\t}\r\n";
 
@@ -564,7 +566,7 @@ class FModel {
 				'type'      => 'parent',
 				'required'  => (($remoteSocket->isRequired()) ? "yes" : "no"),
 				'class'     => $remoteSocket->getOwner(),
-				'sqltable'  => $remoteSocket->getOwner(),
+				'sqltable'  => self::standardizeTableName($remoteSocket->getOwner()),
 				'sqlcol'    => strtolower(substr($remoteSocket->getName(),0,1))
 					. substr($remoteSocket->getName(),1)
 					. "_id"
@@ -575,7 +577,7 @@ class FModel {
 			$peerInfo = array(
 				'type'      => 'lookup',
 				'class'     => $remoteSocket->getOwner(),
-				'sqltable'  => $remoteSocket->getLookupTable());
+				'sqltable'  => self::standardizeTableName($remoteSocket->getLookupTable()));
 			if ($remoteSocket->getOwner() == $peer->getOwner()) {
 				$peerInfo['sqlcol']  = strtolower(substr($remoteSocket->getOwner(),0,1))
 					.substr($remoteSocket->getOwner(),1)
@@ -623,11 +625,9 @@ class FModel {
  			$table->addColumn($c);	
 		}
 		foreach ($object->getParents() as $parent) {
-			$name = $parent->getName();
-			$name = strtolower($name[0]).substr($name,1)."_id";
 			$table->addColumn(
 				new FSqlColumn(
-					$name,
+					self::standardizeAttributeName($parent->getName())."_id",
 					FSqlColumn::convertToSqlType(
 						"integer",array("min"=>0)),
 				false,
@@ -668,16 +668,14 @@ class FModel {
 						$table = new FSqlTable($peer->getLookupTable(),true);
 						// If the two object types are the same...
 						if ($peer->getOwner() == $peer->getForeign()) {
-							$colName = $peer->getForeign();
-							$colName = strtolower($colName[0]).substr($colName,1);
 							$col1 = new FSqlColumn(
-								$colName."1_id",
+								self::standardizeAttributeName($peer->getForeign())."1_id",
 								"INT(11) UNSIGNED",
 								false,
 								false,
 								"");
 							$col2 = new FSqlColumn(
-								$colName."2_id",
+								self::standardizeAttributeName($peer->getForeign())."2_id",
 								"INT(11) UNSIGNED",
 								false,
 								false,
@@ -686,13 +684,13 @@ class FModel {
 							$ownerObjectName   = $peer->getOwner();
 							$foreignObjectName = $peer->getForeign();
 							$col1 = new FSqlColumn(
-								strtolower($ownerObjectName[0]).substr($ownerObjectName,1)."_id",
+								self::standardizeAttributeName($peer->getOwner())."_id",
 								"INT(11) UNSIGNED",
 								false,
 								false,
 								"");
 							$col2 = new FSqlColumn(
-								strtolower($foreignObjectName[0]).substr($foreignObjectName,1)."_id",
+								self::standardizeAttributeName($peer->getForeign())."_id",
 								"INT(11) UNSIGNED",
 								false,
 								false,
@@ -763,9 +761,24 @@ class FModel {
   		// Turns: long_variable_name
   		// into:  longVariableName
   		$s = str_replace(" ","",ucwords(str_replace("-"," ",str_replace("_"," ",$name))));
-  		return strtolower(substr($s,0,1)) . substr($s,1);
+  		return strtolower($s[0]) . substr($s,1);
   	} 
 
+  	public static function standardizeTableName($name) {
+  		if ("app_accounts" == $name || "app_roles" == $name) { return $name; }
+  		$stdName = self::standardizeAttributeName($name);
+  		if (isset($GLOBALS['furnace']->config['hostOS']) &&
+  			strtolower($GLOBALS['furnace']->config['hostOS']) == 'windows') {
+  				
+  			// Windows has a case-insensitive file system, and the default 
+			// settings of MySQL on windows force tablenames to be strictly lowercase
+  			return strtolower($stdName);	
+  		} else {
+  			// In all other environments, just return the standardized name
+			return $stdName;
+  		}
+  	}
+  	
 	public function getModelData() {
 		return $this->modelData;
 	}
