@@ -34,7 +34,13 @@
 			}
 			// Attempt to log in
 			if(FSessionManager::doLogin()) {
-				$this->controller->redirect($this->successURI);
+				if (isset($_SESSION['afterLogin'])) {
+					$goTo = $_SESSION['afterLogin'];	// save the URI
+					unset($_SESSION['afterLogin']);		// clear from the session
+					$this->controller->redirect($goTo);	// redirect
+				} else {
+					$this->controller->redirect($this->successURI);
+				}
 			} else {
 				$this->controller->set("loginError",true);
 			}
