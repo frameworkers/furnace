@@ -280,11 +280,8 @@
 				
  		$q .= "`{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		
- 		_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
- 		$result = _db()->queryRow($q);
- 		//while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
- 		//	$results[] = new $this->objectType($row);
- 		//}
+ 		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
+
 		return ((null == $result)
 			? false
 			: new $this->objectType($result)

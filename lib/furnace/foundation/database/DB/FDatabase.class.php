@@ -30,9 +30,12 @@
   	
   	private function __construct() {
   		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
-  			$this->db = DB::connect($GLOBALS['fconfig_debug_dsn']);
+  			$this->db = DB::connect($GLOBALS['furnace']->config['debug_dsn']);
   		} else {
-  			$this->db = DB::connect($GLOBALS['fconfig_production_dsn']);
+  			$this->db = DB::connect($GLOBALS['furnace']->config['production_dsn']);
+  		}
+  		if (DB::isError($this->db)) {
+  			die('<b>Furnace: </b>Could not connect to the database.');
   		}
   	}
   	

@@ -32,6 +32,9 @@
   		} else {
   			$this->mdb2 = MDB2::singleton(_furnace()->config['production_dsn']);
   		}
+  		if (MDB2::isError($this->mdb2)) {
+  			die('<b>Furnace: </b>Could not connect to the database.');
+  		}
   		// Turn off case-fixing portability switch
 		$this->mdb2->setOption('portability',MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);
   	}
