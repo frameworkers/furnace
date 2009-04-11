@@ -141,6 +141,9 @@
 			if ("" == $failPage) {
 				return false;
 			} else {
+				// Store the location of the current request for redirection
+				// after successful login
+				$_SESSION['afterLogin'] = $_SERVER['REQUEST_URI']; 
 				header("Location: {$failPage}");
 				exit;
 			}
