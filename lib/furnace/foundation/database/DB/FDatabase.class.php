@@ -20,6 +20,7 @@
   
   // CONSTANT DEFINITIONS
   define("FDATABASE_FETCHMODE_ASSOC", DB_FETCHMODE_ASSOC);
+  define("FDATABASE_FETCHMODE_NUMERIC",DB_FETCHMODE_NUMERIC);
   
   
   // DATABASE WRAPPER
@@ -63,11 +64,11 @@
 		return $r;		
 	}
 	
-	public function queryRow($q) {
+	public function queryRow($q,$fetchmode = FDATABASE_FETCHMODE_NUMERIC) {
 		if ($GLOBALS['furnace']->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->db->getRow($q);
+		$r = $this->db->getRow($q,null,$fetchmode);
 		if ( DB::isError($r) ) {
 			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");
 		}
@@ -99,11 +100,11 @@
 		return $r;
 	}
 	
-	public function queryAll($q) {
+	public function queryAll($q,$fetchmode = FDATABASE_FETCHMODE_NUMERIC) {
 		if ($GLOBALS['furnace']->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	
 		}	
-		$r = $this->db->getAll($q);
+		$r = $this->db->getAll($q,null,$fetchmode);
 		if ( DB::isError($r) ) {
 			throw new FDatabaseException($r->getMessage(),"\"{$q}\"");
 		}
