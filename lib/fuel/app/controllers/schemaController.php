@@ -1,5 +1,10 @@
 <?php
 class SchemaController extends Controller {
+
+	public function __construct(){
+		parent::__construct(); 
+		$this->init();
+	}
 	
 	public function index() {
 		
