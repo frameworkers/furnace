@@ -11,9 +11,11 @@
  class _DefaultController extends Controller {
  	
  	public function index() {
- 		$this->addStylesheet('furnace');
- 		$this->set('buildinfo',file_get_contents($GLOBALS['furnace']->rootdir . "/lib/furnace/VERSION"));
- 		$this->set('rootdir',$GLOBALS['furnace']->rootdir);
+ 		// Remove the following line when you are ready to
+ 		// develop your application. The corresponding view
+ 		// for this controller function is the file:
+ 		// /app/views/_default/index.html.
+ 		$this->internalRedirect("/_furnace/start");
  	}
  	
  	public function login() {

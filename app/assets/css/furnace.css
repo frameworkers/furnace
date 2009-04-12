@@ -1,22 +1,45 @@
 @CHARSET "UTF-8";
 
 body,html {
-  	width:800px;
-  	margin-left:auto;
-  	margin-right:auto;
-  	background-color:#eee;
-  	padding:5px;
+		margin:0px;
+		padding:0px;
+  	background-color:#323232;
   	font-family:verdana,sans-serif;
   	font-size:12px;
   }
 
-div.ff-banner {
-	border:solid 1px #888;
-	padding:5px;
+div#ff-banner {
+	position:relative;
+	background-color:#fff;
+	border:solid 15px #888;
+	border-left:0px;
+	border-right:0px;
+	padding:18px;
+	padding-left:10px;
+	margin-top:15px;
+	margin-bottom:2px;
 	font-size:15px;
-	
-
 }
+div#ff-banner-text {
+	position:absolute;
+	left:330px;
+	top:10px;
+}
+div#ff-banner-text h1 {
+	margin:0px;
+	margin-bottom:15px;
+	padding:0px;
+	font-size:36px;
+	font-weight:normal;
+	font-family:"Times New Roman",times,serif;
+}
+div#ff-banner-text table tr td {
+	padding:5px;
+}
+span.filename {
+	font-family:courier,serif;
+	border-bottom:dashed 1px #888;
+}	
 
 h3.ff {
 	font-weight:normal;
@@ -25,33 +48,31 @@ h3.ff {
 
 
 code {
-	display:block;
-	border:solid 2px #e0e0e0;
-	color:#333;
-	padding:8px;
-	background-color:#fafafa;
-	margin-top:3px;
+	border:solid 2px #666;
+	color:#000;
+	padding:3px;
+	background-color:#aaa;
 }
 
 div.page {
-	border-left:solid 2px #ccc;
-	border-bottom:solid 2px #ccc;
-	border-right:solid 1px #ddd;
-	border-top:dotted 1px #ccc;
+	
+	background-color:#333;
+	border-left:solid 2px #888;
+	border-bottom:solid 2px #888;
+	border-right:solid 1px #999;
+	border-top:dotted 1px #888;
 	padding:15px;
 }
 
 div.pageFooter {
 	font-size:90%;
-	border-top:solid 1px #ccc;
 	color:#777;
-	margin-top:8px;
-	padding-top:2px;
-	margin-bottom:-12px;
+	margin-top:0px;
+	margin-left:2px;
 }
 
 div.pageFooter a {
-	color:#444;
+	color:#ccc;
 	text-decoration:none;
 	
 }
@@ -65,10 +86,10 @@ div.ff_benchmark {
 h2.ff {
 	font-weight:normal;
 	font-size:21px;
-	background-color:#bdb;
+	background-color:#bbb;
 	padding:5px;
 	margin-top:0px;
 	margin-bottom:5px;
-	color:#353;
-	border-bottom:solid 2px #9b9;
+	color:#333;
+	border-bottom:solid 2px #999;
 }
