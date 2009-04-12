@@ -18,6 +18,10 @@ class _FurnaceController extends Controller {
 		
 	}
 	
+	public function start() {
+		$this->addStylesheet('furnace');	
+	}
+	
 	
 }
 ?>
