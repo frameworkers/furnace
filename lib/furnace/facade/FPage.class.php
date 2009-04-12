@@ -52,10 +52,6 @@
  		$this->stylesheets = array();
  		
  		$this->contents    = "";
- 		
- 		// Make application configuration variables available
-		$this->set('_furnace',$GLOBALS['furnace']);
-		$this->set('_app',$GLOBALS['furnace']->config);
  	}
 
  	public function render($bEcho = true) {

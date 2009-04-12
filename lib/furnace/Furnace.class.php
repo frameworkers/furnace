@@ -186,8 +186,9 @@ class Furnace {
  					}
  				}
  				
- 				// Provide access to Furnace project variables
- 				$controller->ref('_furnace',$this->config);
+ 				// Provide access to Furnace & application config vars
+ 				$controller->ref('_furnace',$this);
+ 				$controller->ref('_app',$this->config);
  				
  				// Send the rendered content out over the wire
  				if ($this->config['debug_level'] > 0) {
