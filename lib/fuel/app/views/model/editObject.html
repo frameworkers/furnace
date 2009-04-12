@@ -62,18 +62,18 @@
 	}
 </style>
 <div class="ff_header">
-<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_app.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
-	  <li><a href="[_furnace.url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]fuel/model/">AppChemistry</a>&nbsp;/</li>
 	  <li>Edit Object: [object.name]</li>
 	</ul>
 </div>
 <div class="ffuel_loginDetails">
-	Logged in as Root. <a href="[_furnace.url_base]fuel/logout"/>Log Out</a>
+	Logged in as Root. <a href="[_app.url_base]fuel/logout"/>Log Out</a>
 </div>
 
 <div class="container">
@@ -81,7 +81,7 @@
 <h2>[object.name]</h2>
 
 <h3 style="margin-top:20px;">Generic Attributes:</h3>
-<form action="[_furnace.url_base]fuel/model/addGenericAttribute" method="POST">
+<form action="[_app.url_base]fuel/model/addGenericAttribute" method="POST">
 <input type="hidden" name="objectClass" value="[object.name]"/>
 <table style="width:100%;" cellspacing="0" cellpadding="0">
   <tr>
@@ -129,7 +129,7 @@
   	<td>&nbsp;</td>
   </tr>
   <tr>
-    <td>[object.attributes;block=tr]<a href="[_furnace.url_base]fuel/model/editField/[object.name]/[@.name]">[@.name]</a></td>
+    <td>[object.attributes;block=tr]<a href="[_app.url_base]fuel/model/editField/[object.name]/[@.name]">[@.name]</a></td>
     <td>[@.description]</td>
     <td>[@.type]</td>
     <td>[@.size]</td>
@@ -137,7 +137,7 @@
     <td>[@.max]</td>
     <td>[@.defaultValue;map=0|False,1|True]</td>
     <td style="text-align:center;">[if:@.isUnique;content=`Yes`;else=`No`]</td>
-    <td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteAttribute/[object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+    <td style="text-align:center;"><a href="[_app.url_base]fuel/model/deleteAttribute/[object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
   	<td style="width:18%;"><input type="text" name="attrName"/></td>
@@ -163,7 +163,7 @@
 </form>
 
 <h3 style="margin-top:20px;">Model Specific Attributes:</h3>
-<form action="[_furnace.url_base]fuel/model/addModelSpecificAttribute" method="POST">
+<form action="[_app.url_base]fuel/model/addModelSpecificAttribute" method="POST">
 	<input type="hidden" name="objectClass" value="[object.name]"/>
 	<table style="width:100%;" cellspacing="0" cellpadding="0">
 	  <tr>
@@ -178,31 +178,31 @@
 	  <tr>
 	  	<td>[object.parents;block=tr][@.name]</td>
 	  	<td>[@.description;default='']</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+	  	<td><a href="[_app.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
 	  	<td>Parent</td>
 	  	<td style="text-align:center;">[@.required;map="0|Yes,1|No"]</td>
 	  	<td>[@.reflectVariable]</td>
 	  	<td style="text-align:center;">
-	  		<a href="[_furnace.url_base]fuel/model/deleteDependency/[object.name]/[@.foreign]/[@.name]/[@.reflectVariable]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>
+	  		<a href="[_app.url_base]fuel/model/deleteDependency/[object.name]/[@.foreign]/[@.name]/[@.reflectVariable]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>
 	  	</td>
 	  </tr>
 	  <tr>
 	  	<td>[object.children;block=tr][@.name]</td>
 	  	<td>[@.description]</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+	  	<td><a href="[_app.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
 	  	<td>Child</td>
 	  	<td style="text-align:center;">n/a</td>
 	  	<td>[@.reflectVariable]</td>
-	  	<td style="text-align:center;"><!-- <a href="[_furnace.url_base]/fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>--></td>
+	  	<td style="text-align:center;"><!-- <a href="[_app.url_base]/fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.actualremotevariablename]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a>--></td>
 	  </tr>
 	  <tr>
 	  	<td>[object.peers;block=tr][@.name]</td>
 	  	<td>[@.description]</td>
-	  	<td><a href="[_furnace.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
+	  	<td><a href="[_app.url_base]fuel/model/editObject/[@.foreign]">[@.foreign]</a></td>
 	  	<td>Peer (M:M)</td>
 	  	<td style="text-align:center">n/a</td>
 	  	<td>[@.reflectVariable]</td>
-	  	<td style="text-align:center;"><a href="[_furnace.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.reflectVariable]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
+	  	<td style="text-align:center;"><a href="[_app.url_base]fuel/model/deleteMMRelationship/[object.name]/[@.foreign]/[@.name]/[@.reflectVariable]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
 	  </tr>
 	  <tr>
 	  	<td style="width:18%;"><input type="text" name="socketName"/></td>

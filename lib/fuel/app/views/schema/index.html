@@ -1,10 +1,10 @@
 <div class="ff_header">
-<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_app.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]fuel/">Fuel</a>&nbsp;/</li>
 	  <li>Database Schema Updater</li>
 	</ul>
 </div>
@@ -12,21 +12,21 @@
 <div class="modelTable">
 	[tables;block=div]
 	<div class="modelTableIcon">
-		<img src="[_furnace.url_base]fuel/assets/images/[if:@.found;content=[@.status];else=missing].png" alt="[if:@.found;content=[@.status];else=missing]"/>
+		<img src="[_app.url_base]fuel/assets/images/[if:@.found;content=[@.status];else=missing].png" alt="[if:@.found;content=[@.status];else=missing]"/>
 	</div>
 	<div class="modelTableDetails">
-		<h3><a href="[_furnace.url_base]fuel/schema/compareFields/[@.name]">[if:@.found;block=a;else="Not Found: [@.name]"][@.name]</a></h3>
+		<h3><a href="[_app.url_base]fuel/schema/compareFields/[@.name]">[if:@.found;block=a;else="Not Found: [@.name]"][@.name]</a></h3>
 		<span>[assert:@.found;block=span] Status: 
 			<span>[if:@.status=fieldsDiffer;block=span;else=OK (no changes detected)] 
-				<a href="[_furnace.url_base]fuel/schema/compareFields/[@.name]">Fields Differ</a>!
+				<a href="[_app.url_base]fuel/schema/compareFields/[@.name]">Fields Differ</a>!
 			</span>
 		</span>
 		<span>[assert:!@.found;block=span] 
 		<em>'[@.name]'</em>&nbsp; has been defined in your model but was not detected in the database. Your options are:
 		<ol>
-		  <li><a href="[_furnace.url_base]fuel/schema/createTable/[@.name]">Add as a new table</a></li>
+		  <li><a href="[_app.url_base]fuel/schema/createTable/[@.name]">Add as a new table</a></li>
 		  <li>Rename an existing database table: 
-		    <form style="display:inline;" action="[_furnace.url_base]fuel/schema/renameDbTable/" method="POST">
+		    <form style="display:inline;" action="[_app.url_base]fuel/schema/renameDbTable/" method="POST">
 		    	<input type="hidden" name="renameTo" value="[@.name]"/>
 			 	<select name="tableName">
 			  		<option value="[existingTableNames;block=option][@]">[@]</option>
@@ -42,5 +42,5 @@
 
 <p>&nbsp;</p>
 <ul>
- <li class="ff_notice notice">[notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [ <a href="[_furnace.url_base]fuel/schema/deleteDbTable/[@.name]">delete this table</a> ]</li>
+ <li class="ff_notice notice">[notices;block=li]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [ <a href="[_app.url_base]fuel/schema/deleteDbTable/[@.name]">delete this table</a> ]</li>
 </ul>

@@ -72,11 +72,11 @@
 	}
 </style>
 <div class="ff_header">
-<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_app.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <span style="margin-left:15px;">
-<a href="[_furnace.url_base]">App</a>&nbsp;/
-<a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/
+<a href="[_app.url_base]">App</a>&nbsp;/
+<a href="[_app.url_base]fuel/">Fuel</a>&nbsp;/
 Users and Roles:</span>
 <h1>Existing Users and Roles</h1>
 <table>
@@ -86,13 +86,13 @@ Users and Roles:</span>
     <th>&nbsp;</th>
   <tr>
     <td style="text-align:center;">[users;block=tr][@;map=0|No,1|Yes;glue="</td><td>"]</td>
-    <td><a href="[_furnace.url_base]fuel/roles/deleteUser/[@.objId]" 
+    <td><a href="[_app.url_base]fuel/roles/deleteUser/[@.objId]" 
     	   onclick="return confirm('Really delete this user?');">Delete</a>
     </td>
   </tr>
 </table>
 <h2>Define a Role</h2>
-<form action="[_furnace.url_base]fuel/roles/defineRole" method="POST">
+<form action="[_app.url_base]fuel/roles/defineRole" method="POST">
 	<table>
 		<tr>
 		  <td>Name:</td>
@@ -118,7 +118,7 @@ Users and Roles:</span>
   <tr>
     <td>[defined_roles;block=tr][@.Field]</td>
     <td>[if:@.Default=1;content=`Grant All`;else=`Deny All`]</td>
-    <td><a href="[_furnace.url_base]fuel/roles/deleteRole/[@.Field]" 
+    <td><a href="[_app.url_base]fuel/roles/deleteRole/[@.Field]" 
     	   onclick="return confirm('Really delete this role?');">Delete</a>
     </td>
   </tr>

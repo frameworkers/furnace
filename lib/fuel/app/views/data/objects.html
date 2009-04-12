@@ -112,13 +112,13 @@
  }
 </style>
 <div class="ff_header">
-<img src="[_furnace.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
+<img src="[_app.url_base]fuel/assets/images/furnace_logo.png" style="margin:5px;"/>
 </div>
 <div class="ff_breadcrumbs">
 	<ul>
-	  <li><a href="[_furnace.url_base]">App</a>&nbsp;/</li>
-	  <li><a href="[_furnace.url_base]fuel/">Fuel</a>&nbsp;/</li>
-	  <li><a href="[_furnace.url_base]fuel/data/">Application Data Manager</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]">App</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]fuel/">Fuel</a>&nbsp;/</li>
+	  <li><a href="[_app.url_base]fuel/data/">Application Data Manager</a>&nbsp;/</li>
 	  <li>[object.name]</li>
 	</ul>
 </div>
@@ -142,14 +142,14 @@ Displaying objects [objPagination.stats.start] through
 Pages: 
 <ul id="pagination">
   <li>[objPagination.data;block=li]
-  	<a class="[tp-if:currentPage=@.pageNumber;content=`activeLink`]" href="[_furnace.url_base]fuel/data/objects/[object.name]/[@.suffix]">[@.pageNumber]</a>
+  	<a class="[tp-if:currentPage=@.pageNumber;content=`activeLink`]" href="[_app.url_base]fuel/data/objects/[object.name]/[@.suffix]">[@.pageNumber]</a>
   </li>
 </ul>
 </div>
 
 
 <h2 style="margin-bottom:5px;">Create a new '[objectClass.name]' object:</h2>
-<form action="[_furnace.url_base]fuel/data/create/[objectClass.name]" method="POST">
+<form action="[_app.url_base]fuel/data/create/[objectClass.name]" method="POST">
 <input type="hidden" name="fobjectType" value="[objectClass.name]"/>
 <table>
 <tr><th>[if:objectClass.parentClass=FAccount;block=table]Username:</th>
