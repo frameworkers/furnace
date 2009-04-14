@@ -410,7 +410,7 @@ class Tadpole {
 						$rejected = false;		// reset the rejection
 					} 
 					break;
-				case "map":
+				case 'map':
 					// Process the map in case it contains tags
 					if (false !== strpos($commands['map'],'[')) {
 						$commands['map'] = $this->compile($commands['map'],$iter_data);
@@ -418,7 +418,7 @@ class Tadpole {
 					$entries = explode(',',$commands['map']);
 					$kvpairs = array();
 					foreach ($entries as $entry) {
-						list ($k,$v) = explode("|",$entry);
+						list ($k,$v) = explode('|',$entry);
 						if (is_array($value)) {
 							foreach ($value as &$val) {
 								if ($val == $k) {
@@ -430,18 +430,24 @@ class Tadpole {
 						}
 					}
 					break;
-				case "type":
+				case 'type':
 					switch ($commands['type']) {
-						case "date":
+						case 'date':
 							$value = date((isset($commands['format'])
 								? $commands['format']
 								: 'Y-m-d g:i:s'),strtotime($value));
 							break;
+						case 'usphone':
+							$value = str_pad($value,10,"1", STR_PAD_LEFT);
+							$value = "{$value[0]}-".substr($value,1,3).'-'.substr($value,4,3).'-'.substr($value,7);
+							break;
 						default:
-							break;	
+								
 					}
 					break;
-				case "maxlen":
+						case	
+				
+				case 'maxlen':
 					// Process the contents of maxlen, in case it contains tags
 					if (false !== strpos($commands['maxlen'],'[')) {
 						$commands['maxlen'] = $this->compile($commands['maxlen'],$iter_data);
