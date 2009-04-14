@@ -171,7 +171,8 @@ END;
 			$m->objects[$objectType] = $newObject;
 			
 			// Add the required SQL table
-			$m->tables[FModel::standardizeTableName($objectType)] = new FSqlTable($objectType);
+			$tableName = FModel::standardizeTableName($objectType);
+			$m->tables[$tableName] = new FSqlTable($objectType);
 			
 			// If the object extends FAccount, add the 'faccount_id' column
 			if ("FAccount" == $objectParent) {
@@ -375,6 +376,7 @@ END;
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
+			$tableName = FModel::standardizeTableName($objectClass);
 			try {
 				_db()->exec("ALTER TABLE `{$tableName}` ADD COLUMN {$column->toSqlString()}");
 				if ($attr->isUnique()) {
@@ -419,7 +421,7 @@ END;
 			}
 			
 			
-			$column =& $m->tables[$objectType]->getColumn($this->form['attrName']);
+			$column =& $m->tables[FModel::standardizeTableName($objectType)]->getColumn($this->form['attrName']);
 			
 			
 			if ($this->form['action'] == "rename") {
@@ -431,6 +433,7 @@ END;
 				$column->setName($newName);
 
 				try {
+					$tableName = FModel::standardizeTableName($objectType);
 					$query = "ALTER TABLE `{$tableName}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
 					_db()->exec($query);
 				} catch (FDatabaseException $e) {
