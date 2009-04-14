@@ -444,8 +444,7 @@ class Tadpole {
 						default:
 								
 					}
-					break;
-						case	
+					break;	
 				
 				case 'maxlen':
 					// Process the contents of maxlen, in case it contains tags
