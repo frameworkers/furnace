@@ -438,7 +438,7 @@ class Tadpole {
 								: 'Y-m-d g:i:s'),strtotime($value));
 							break;
 						case 'usphone':
-							$value = str_pad($value,10,"1", STR_PAD_LEFT);
+							$value = str_pad($value,11,"1", STR_PAD_LEFT);
 							$value = "{$value[0]}-".substr($value,1,3).'-'.substr($value,4,3).'-'.substr($value,7);
 							break;
 						default:
