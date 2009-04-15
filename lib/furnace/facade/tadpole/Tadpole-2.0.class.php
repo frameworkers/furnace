@@ -435,7 +435,7 @@ class Tadpole {
 						case 'date':
 							$value = date((isset($commands['format'])
 								? $commands['format']
-								: 'Y-m-d g:i:s'),strtotime($value));
+								: 'Y-m-d G:i:s'),strtotime($value));
 							break;
 						case 'usphone':
 							$value = str_pad($value,11,"1", STR_PAD_LEFT);
