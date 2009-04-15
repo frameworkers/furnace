@@ -230,7 +230,7 @@
 		if ($this->getName() == $sortedNames[0]) {
 			$socket->setLookupTable(FModel::standardizeTableName($sortedNames[0])."_".FModel::standardizeTableName($sortedNames[1])."_{$socket->getName()}");
 		} else {
-			$socket->setLookupTable(FModel::standardizeTableName($sortedNames[1])."_".FModel::standardizeTableName($sortedNames[0])."_{$socket->getReflectVariable()}");
+			$socket->setLookupTable(FModel::standardizeTableName($sortedNames[0])."_".FModel::standardizeTableName($sortedNames[1])."_{$socket->getReflectVariable()}");
 		}
 		
 		// Add the socket to the list of peers

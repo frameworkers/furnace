@@ -577,7 +577,7 @@ class FModel {
 			$peerInfo = array(
 				'type'      => 'lookup',
 				'class'     => $remoteSocket->getOwner(),
-				'sqltable'  => self::standardizeTableName($remoteSocket->getLookupTable()));
+				'sqltable'  => self::standardizeTableName($remoteSocket->getLookupTable(),true));
 			if ($remoteSocket->getOwner() == $peer->getOwner()) {
 				$peerInfo['sqlcol']  = strtolower(substr($remoteSocket->getOwner(),0,1))
 					.substr($remoteSocket->getOwner(),1)
@@ -764,18 +764,30 @@ class FModel {
   		return strtolower($s[0]) . substr($s,1);
   	} 
 
-  	public static function standardizeTableName($name) {
+  	public static function standardizeTableName($name,$bIsLookupTable = false) {
   		if ("app_accounts" == $name || "app_roles" == $name) { return $name; }
-  		$stdName = self::standardizeAttributeName($name);
-  		if (isset($GLOBALS['furnace']->config['hostOS']) &&
-  			strtolower($GLOBALS['furnace']->config['hostOS']) == 'windows') {
-  				
-  			// Windows has a case-insensitive file system, and the default 
-			// settings of MySQL on windows force tablenames to be strictly lowercase
-  			return strtolower($stdName);	
+  		if ($bIsLookupTable) {
+  			// A lookup table needs to maintain its '_' characters (which are
+			// otherwise illegal. Standardize the 3 components, but leave the 
+			// '_' separators untouched.
+			list($t1,$t2,$v) = explode("_",$name);
+			return self::standardizeAttributeName($t1)
+				.  "_"
+				.  self::standardizeAttributeName($t2)
+				.  "_"
+				.  self::standardizeAttributeName($v);
   		} else {
-  			// In all other environments, just return the standardized name
-			return $stdName;
+  			$stdName = self::standardizeAttributeName($name);
+	  		if (isset($GLOBALS['furnace']->config['hostOS']) &&
+	  			strtolower($GLOBALS['furnace']->config['hostOS']) == 'windows') {
+	  				
+	  			// Windows has a case-insensitive file system, and the default 
+				// settings of MySQL on windows force tablenames to be strictly lowercase
+	  			return strtolower($stdName);	
+	  		} else {
+	  			// In all other environments, just return the standardized name
+				return $stdName;
+	  		}
   		}
   	}
   	

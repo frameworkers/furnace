@@ -35,14 +35,19 @@
   	// The database engine to use for this table
   	private $engine;
   	
+  	// Variable: bIsLookup
+	// Whether or not the table is a lookup table
+	private $bIsLookup;
+  	
   	
 	
 	public function __construct($name,$bIsLookupTable = false,$engine='MyISAM',$charset='latin1') {
-		$this->name = FModel::standardizeTableName($name);
-		$this->columns = array();
+		$this->name = FModel::standardizeTableName($name,$bIsLookupTable);
+		$this->columns     = array();
 		$this->primaryKeys = array();
-		$this->engine = $engine;
-		$this->charset = $charset;
+		$this->bIsLookup   = $bIsLookupTable;
+		$this->engine      = $engine;
+		$this->charset     = $charset;
 		if (false == $bIsLookupTable) {
 			$oid = new FSqlColumn("objId","INT(11) UNSIGNED",false,false,
 				"The unique id of this object in the database");	
@@ -58,7 +63,7 @@
   	}
   	
   	public function setName($value) {
-  		$this->name = FModel::standardizeTableName($value);
+  		$this->name = FModel::standardizeTableName($value,$this->bIsLookup);
   	}
   	
   	public function getColumns() {

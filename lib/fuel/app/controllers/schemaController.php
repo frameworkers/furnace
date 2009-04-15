@@ -92,7 +92,7 @@ class SchemaController extends Controller {
 		if ($tableName == '') {
 			$this->flash("Error: No Table Data Specified","error");
 		} else {
-			$tableName = FModel::standardizeTableName($tableName);
+			$isLookup  = (false !== strpos($tableName,"_"));
 			$this->init();
 			$model = $this->getModel();
 			$schema= $this->getSchema();
@@ -107,8 +107,6 @@ class SchemaController extends Controller {
 		if (!isset($data['tableName'])) {
 			$this->flash("Error: No table specified.","error");
 		} else {
-			$data['tableName'] = FModel::standardizeTableName($data['tableName']);
-			$data['renameTo']  = FModel::standardizeTableName($data['renameTo']);
 			$this->init();
 			$model = $this->getModel();
 			$schema= $this->getSchema();
@@ -119,13 +117,11 @@ class SchemaController extends Controller {
 		$this->redirect("/fuel/schema/");
 	}
 	
-	public function createTable($tableName='') {
+	public function createTable($tableName='',$bIsLookup = false) {
 		if ($tableName == '') {
 			$this->set('errorNoTableSpecified');
 		}
-		$tableName = FModel::standardizeTableName($tableName);
 		$this->init();		// Load required files
-
 		$model = $this->getModel();
 		$schema= $this->getSchema();
 		
@@ -142,7 +138,6 @@ class SchemaController extends Controller {
 		if (!isset($data['tableName'])) {
 			$this->flash("Error: No table specified.","error");
 		} else {
-			$data['tableName'] = FModel::standardizeTableName($data['tableName']);
 			$this->init();
 			$model = $this->getModel();
 			if (isset($model->tables[$data['tableName'] ])) {
@@ -162,7 +157,6 @@ class SchemaController extends Controller {
 		$model = $this->getModel();
 		$schema= $this->getSchema();
 		
-		$tableName  = FModel::standardizeTableName($tableName);
 		$modelTable = $model->tables[$tableName];
 		$dbTable    = $schema->getTable($tableName);
 		
@@ -251,7 +245,7 @@ class SchemaController extends Controller {
 			$this->flash("Error: Could not edit. No Column Data Specified","error");
 			$this->redirect("/fuel/schema/");
 		}
-		$data['tableName'] = FModel::standardizeTableName($data['tableName']);
+
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();
@@ -266,7 +260,7 @@ class SchemaController extends Controller {
 			$this->flash("Error: Could not rename. No Column Data Specified","error");
 			$this->redirect("/fuel/schema/");
 		}
-		$data['tableName'] = FModel::standardizeTableName($data['tableName']);
+		
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();
@@ -281,7 +275,7 @@ class SchemaController extends Controller {
 			$this->flash("Error: Could not add column. No Column Data Specified","error");
 			$this->redirect("/fuel/schema/");
 		}
-		$data['tableName'] = FModel::standardizeTableName($data['tableName']);
+		
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();
@@ -297,7 +291,7 @@ class SchemaController extends Controller {
 			$this->flash("Error: Could not delete column. No Column Data Specified","error");
 			$this->redirect("/fuel/schema/");
 		}
-		$data['tableName'] = FModel::standardizeTableName($data['tableName']);
+		
 		$this->init();
 		$model = $this->getModel();
 		$schema= $this->getSchema();

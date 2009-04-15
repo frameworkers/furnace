@@ -42,7 +42,6 @@ class FDatabaseSchema {
 		return $this->tables;
 	}
 	public function getTable($tableName) {
-		$tableName = FModel::standardizeTableName($tableName);
 		if (isset($this->tables[$tableName])) {
 			return $this->tables[$tableName];
 		} else {
@@ -58,12 +57,12 @@ class FDatabaseSchema {
 		
 		while ($r = $results->fetchRow()) {
 			$bIsLookupTable = ((strpos($r[0],"_") > 0));
-			$this->tables[$r[0]] = new FSqlTable($r[0],$bIsLookupTable);
+			$this->tables[FModel::standardizeTableName($r[0],$bIsLookupTable)] 
+				= new FSqlTable($r[0],$bIsLookupTable);
 		}
 	}
 	
 	private function discoverAttributes($tableName) {
-		$tableName = FModel::standardizeTableName($tableName);
 		$results = $this->_db()->query("DESCRIBE `{$tableName}`");
 		
 		while ($r = $results->fetchRow()) {

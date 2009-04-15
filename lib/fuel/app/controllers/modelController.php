@@ -738,7 +738,7 @@ END;
 			}
 			// Delete the SQL table
 			try {
-				$tableName  = FModel::standardizeTableName($lookupTable);
+				$tableName  = FModel::standardizeTableName($lookupTable,true);
 				$q = "DROP TABLE `{$tableName}`";
 				_db()->exec($q);
 			} catch (FDatabaseException $e) {

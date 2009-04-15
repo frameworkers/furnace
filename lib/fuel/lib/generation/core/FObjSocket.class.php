@@ -261,7 +261,7 @@
   	 * 
   	 */
  	public function setLookupTable($value) {
- 		$this->lookupTable = FModel::standardizeTableName($value);
+ 		$this->lookupTable = $value;
  	}
  	
  	/*
