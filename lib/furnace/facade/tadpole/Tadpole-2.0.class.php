@@ -4,10 +4,16 @@ class Tadpole {
 	// The data to use to determine actual tag values
 	public $page_data = array();
 	
+	// The cache of absolute tags that have already been processed
+	// see also: the relativeCache variable in the ::compile() function holds
+	// relative ('@') tags that have already been processed for that iteration.
+	public $tagCache;
+	
 	public function __construct() {
 		// Make global and session variables available
 		$this->page_data['_session'] =& $_SESSION;
 		$this->page_data['_globals'] =& $GLOBALS;
+		$this->tagCache = array();
 	}
 	
 	public function compile($contents,$iter_data = array(),$bOnlyNonRelative = false) {
@@ -17,6 +23,9 @@ class Tadpole {
 		// Where are we in the contents?
 		$offset   		  = 0;		// location of the beginning of the current tag
 		$outer_offset 	  = 0;		// location of the beginning of the 'outermost' tag (for nesting)
+
+		// Relative tag cache
+		$relativeCache= array();	// Keeps data for '@' tags which have already been processed
 		
 		while (1) {
 			
@@ -43,10 +52,10 @@ class Tadpole {
 			$commands = array();		// An array of commands attached to the tag
 
 			// Outer offset
-			$outer_offset = false;			// Outer offset marks the location of the outermost tag (for nesting);
+			$outer_offset = false;		// Outer offset marks the location of the outermost tag (for nesting);
 			
 			
-			
+
 			// Look for a '[' and store the offset
 			$tagStart = (($tagStart = strcspn($contents,"[",$offset)) != (strlen($contents) - $offset))
 				? $tagStart + $offset
@@ -313,6 +322,8 @@ class Tadpole {
 						? $blockEnd + 2
 						: $blockEnd + strlen($commands['block']) + 3));
 					$contents = $before . $completeBlockContents . $after;
+					// Clear the relative cache since the block is finished
+					$relativeCache = array();
 					// Increment offset
 					$offset = (false !== $outer_offset) ? $outer_offset : ($blockStart + strlen($completeBlockContents));
 				}
@@ -350,9 +361,19 @@ class Tadpole {
 						$offset = (false !== $outer_offset) ? $outer_offset : ($tagStart + strlen($commands['else']));
 					}
 				} else {
-					// Determine the actual value which will replace the tag
-					$actual_value = $this->process_commands($commands,
-						$this->get_recursively($value,$commands,$rejected,$iter_data),$rejected,$iter_data);
+					// Determine the actual value which will replace the tag. Look in cache first.
+					// Determine whether to check the global tag cache or the relative cache:
+					if ("@" == $value[0]) {
+						$cacheToCheck =& $relativeCache; 	// relative cache
+					} else {
+						$cacheToCheck =& $this->tagCache;	// global cache
+					}
+					if (! isset( $cacheToCheck[$value])) {
+						// Cache Miss ... compute and store value
+						$cacheToCheck[$value]   = $this->get_recursively($value,$commands,$rejected,$iter_data);
+					} 
+					
+					$actual_value = $this->process_commands($commands,$cacheToCheck[$value],$rejected,$iter_data);
 					//echo "ACTUAL_VALUE {$actual_value} ";
 						
 					// Skip this tag if it was rejected
@@ -494,7 +515,7 @@ class Tadpole {
 		return $value;
 	}
 	
-	private function get_recursively($needle,$commands,&$rejected,$iter_data=array()) {
+	private function get_recursively($needle,$commands,&$rejected,$iter_data=array()) { 
 		//NOTES:
 		// If iteration data has been provided, it is to be used with all "relative" tags, ie those
 		// beginning with [@...], otherwise needles are replaced with data from page_data
@@ -549,6 +570,7 @@ class Tadpole {
 						
 						// Handle the case in which a 'count' of the number of objects is requested
 						if ( "#" == $segment ) {
+							// return the number of objects
 							return count($flashlight);
 						}
 						
@@ -557,6 +579,7 @@ class Tadpole {
 							if (is_callable(array($flashlight,$privateMethod))) {
 								// Handle the case in which a limited subset of matches is requested
 								if (isset($commands['start']) || isset($commands['limit'])) {
+									
 									return $flashlight
 										->$privateMethod("*","collection")
 											->getSubset(
@@ -565,8 +588,9 @@ class Tadpole {
 												(isset($commands['sortkey']) ? $commands['sortkey'] : "objId"),
 												(isset($commands['order'])   ? $commands['order']   : "asc"));
 								
-												// Handle the case in which all matches are to be returned
+								// Handle the case in which all matches are to be returned
 								} else {
+									
 									return $flashlight
 										->$privateMethod("*","object",
 											(isset($commands['sortkey']) ? $commands['sortkey'] : "objId"),
@@ -578,12 +602,14 @@ class Tadpole {
 								
 								// Handle the case in which a limited subset of matches is requested
 								if (isset($commands['start']) || isset($commands['limit'])) {
+									
 									return array_slice($flashlight->$segment,
 										(isset($commands['start']) ? $commands['start'] : 0),
 										(isset($commands['limit']) ? $commands['limit'] : count($flashlight->segment)));
 								
 								// Handle the case in which all matches are to be returned
 								} else {
+									
 									return $flashlight->$segment;
 								}
 							}
@@ -592,12 +618,14 @@ class Tadpole {
 							
 							// Handle the case in which a limited subset of matches is requested
 							if (isset($commands['start']) || isset($commands['limit'])) {
+								
 								return array_slice($flashlight[$segment],
 									(isset($commands['start']) ? $commands['start'] : 0),
 									(isset($commands['limit']) ? $commands['limit'] : count($flashlight[$segment])));
 									
 							// Handle the case in which all matches are to be returned
 							} else {
+								
 								return $flashlight[$segment];
 							}
 							
