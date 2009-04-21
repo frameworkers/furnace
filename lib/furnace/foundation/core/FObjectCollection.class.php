@@ -20,6 +20,10 @@
  	// The type of objects being manipulated.
  	private $objectType = '';
  	
+ 	// Variable: objectTypeTableName
+	// The corresponding object table for this object type
+ 	protected $objectTypeTableName = '';
+ 	
  	// Variable: objectId
  	// The id of the owner object (if any)
  	private $objectId = '';
@@ -48,9 +52,10 @@
  	
  	public function __construct($type,$lookupTable,$filter='') {
  		$this->objectType = $type;
+ 		$this->objectTypeTableName = $type;
  		$this->setLookupTable($lookupTable);
  		//$theFilter = ("" == $filter) ? "WHERE 1 " : $filter;
- 		$this->filter = "{$filter}";
+ 		$this->filter = $filter;
  		
  		// Determine the primary limiting criteria for this group based
  		// on the relationType. 1M relations will take advantage of the 
@@ -87,7 +92,7 @@
  	}
  	
  	public function getCount() {
- 		$q = "SELECT COUNT(*) FROM {$this->objectType} {$this->filter}";
+ 		$q = "SELECT COUNT(*) FROM `{$this->objectTypeTableName}` {$this->filter}";
  		return _db()->queryOne($q);
  	}
 
@@ -241,7 +246,7 @@
  	
  	protected function get_case1(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);	
@@ -257,7 +262,7 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -272,7 +277,7 @@
  	
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
  		
  		$q .= ($this->filter) 
  				? " {$this->filter} AND "
@@ -301,7 +306,7 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . 
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
  				? " {$this->filter} AND "
 				: " WHERE ") .
@@ -320,7 +325,7 @@
  	
  	protected function get_case7(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
  				? " {$this->filter} AND "
 				: " WHERE ") . 
@@ -341,7 +346,7 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " . 
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
  				? " {$this->filter} AND "
 				: " WHERE ") .
@@ -359,7 +364,7 @@
  	}
 	
  	protected function get_case10(&$u_v,&$k,&$s,&$r) {
- 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
  				? "{$this->filter} AND "
 				: " WHERE ");
@@ -402,7 +407,7 @@
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectType}` " .
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " .
  			(($this->filter)
  				? "{$this->filter} AND " 
  				: " WHERE ");
@@ -437,7 +442,7 @@
  	}
  	
  	public function advancedGet($filter) {
- 		$q = "SELECT * FROM `{$this->objectType}` " . 
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
  				? " {$this->filter} AND "
 				: " WHERE ") . 

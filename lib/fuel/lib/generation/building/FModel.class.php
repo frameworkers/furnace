@@ -268,15 +268,7 @@ class FModel {
  		foreach ($object->getAttributes() as $a) {
  			$r .= "\t\t\t\$this->{$a->getName()} = \$data['{$a->getName()}'];\r\n";
  		}
-		if ("FAccount" == $object->getParentClass()) {
- 			$r .= "\r\n"
-				. "\t\t\t// Preload FAccount details (and set if necessary)\r\n"
-				. "\t\t\t\$this->fAccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
-				. "\t\t\tif ('' == \$this->fAccount->getObjectClass()) {\r\n"
-				. "\t\t\t\t\$this->fAccount->setObjectClass(\"{$object->getName()}\");\r\n"
-				. "\t\t\t\t\$this->fAccount->setObjectId(\$data['objId']);\r\n"
-				. "\t\t\t}\r\n";
- 		}
+
  		$r .= "\t\t} // end constructor\r\n\r\n";
  		
  		// Getters
@@ -543,8 +535,9 @@ class FModel {
 		$r = "\tclass {$object->getName()}Collection extends FObjectCollection {\r\n";
  		
  		// Add Constructor
- 		$r .= "\t\tpublic function __construct(\$lookupTable=\"{$object->getName()}\",\$filter=\"\") {\r\n"
- 			. "\t\t\tparent::__construct(\"{$object->getName()}\",\$lookupTable,\$filter);\r\n";
+ 		$r .= "\t\tpublic function __construct(\$lookupTable=\"".self::standardizeTableName($object->getName())."\",\$filter=\"\") {\r\n"
+ 			. "\t\t\tparent::__construct(\"{$object->getName()}\",\$lookupTable,\$filter);\r\n"
+			. "\t\t\t\$this->objectTypeTableName=\"".self::standardizeTableName($object->getName())."\";\r\n";
  		
  		$r .= "\t\t}\r\n";
  		
