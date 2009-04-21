@@ -186,6 +186,11 @@ class Furnace {
  					}
  				}
  				
+ 				// Set the referringPage attribute in the session. This 
+				// allows non-view controller actions to redirect to
+				// the location from which they were called.
+				$_SESSION['referringPage'] = $request;
+ 				
  				// Provide access to Furnace & application config vars
  				$controller->ref('_furnace',$this);
  				$controller->ref('_app',$this->config);
