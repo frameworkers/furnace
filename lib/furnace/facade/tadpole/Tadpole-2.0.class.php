@@ -488,7 +488,7 @@ class Tadpole {
 					break;
 				case "trailer":
 					// Process the trailer, in case it contains tags
-					if (false !== strpos($commands['maxlen'],'[')) {
+					if (false !== strpos($commands['trailer'],'[')) {
 						$commands['trailer'] = $this->compile($commands['trailer'],$iter_data);
 					}
 					if (isset($commands['trailer']) && !isset($commands['maxlen']) && isset($value[0])) {
