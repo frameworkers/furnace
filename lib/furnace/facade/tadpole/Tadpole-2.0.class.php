@@ -477,6 +477,15 @@ class Tadpole {
 							. (isset($commands['trailer']) ? $commands['trailer'] : '');
 					}
 					break;
+				case 'prefix':
+					// Process the prefix, in case it contains tags
+					if (false !== strpos($commands['prefix'],'[')) {
+						$commands['prefix'] = $this->compile($commands['prefix'],$iter_data);
+					}
+					if (isset($value[0])) {
+						$value = $commands['prefix'] . $value;
+					}
+					break;
 				case "trailer":
 					// Process the trailer, in case it contains tags
 					if (false !== strpos($commands['maxlen'],'[')) {
