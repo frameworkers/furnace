@@ -52,7 +52,7 @@
  	
  	public function __construct($type,$lookupTable,$filter='') {
  		$this->objectType = $type;
- 		$this->objectTypeTableName = $type;
+ 		$this->objectTypeTableName = strtolower($type[0]).substr($type,1);
  		$this->setLookupTable($lookupTable);
  		//$theFilter = ("" == $filter) ? "WHERE 1 " : $filter;
  		$this->filter = $filter;
@@ -103,7 +103,7 @@
  		$results = array();
  		
  		// Return an array of objects according to the pagination details given
-		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
+		$q = "SELECT * FROM `{$this->objectTypeTableName}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($per_page,$offset);
 		$result = _db()->query($q);
 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
@@ -121,13 +121,12 @@
 			"currentPage" => $page_number,
 			"totalPages"  => $pages
 		);
- 		
  		return $results;
  	}
  	
  	public function getSubset($firstIndex,$count,$key='objId',$sortOrder="default") {
  		// Return an array of objects according to the subset details given
-		$q = "SELECT * FROM `{$this->lookupTable}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
+		$q = "SELECT * FROM `{$this->objectTypeTableName}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($count,$firstIndex);
 		$result = _db()->query($q);
 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
