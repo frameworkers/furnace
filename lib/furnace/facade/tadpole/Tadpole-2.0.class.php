@@ -8,12 +8,14 @@ class Tadpole {
 	// see also: the relativeCache variable in the ::compile() function holds
 	// relative ('@') tags that have already been processed for that iteration.
 	public $tagCache;
+	public $conditionalCache;
 	
 	public function __construct() {
 		// Make global and session variables available
 		$this->page_data['_session'] =& $_SESSION;
 		$this->page_data['_globals'] =& $GLOBALS;
 		$this->tagCache = array();
+		$this->conditionalCache = array();
 	}
 	
 	public function compile($contents,$iter_data = array(),$bOnlyNonRelative = false) {
@@ -26,7 +28,7 @@ class Tadpole {
 
 		// Relative tag cache
 		$relativeCache= array();	// Keeps data for '@' tags which have already been processed
-		
+		$relativeConditionalCache = array();
 		while (1) {
 			
 			// Reset temporary variables
@@ -255,7 +257,17 @@ class Tadpole {
 					// PROCESSING A CONDITIONAL BLOCK
 					
 					// Evaluate the condition
-					$conditionHeld = $this->get_recursively($value,$commands,$rejected,$iter_data);
+					// Determine whether to check the global or relative conditional cache
+					if ('@' == $value[0]) {
+						$cacheToCheck =& $relativeConditionalCache;
+					} else {
+						$cacheToCheck =& $this->conditionalCache;
+					}
+					if (! isset( $cacheToCheck[$value])) {
+						// Cache Miss ... compute and store value
+						$cacheToCheck[$value] = $this->get_recursively($value,$commands,$rejected,$iter_data);
+					} 
+					$conditionHeld = $cacheToCheck[$value];
 					
 					// Skip this tag if it was rejected
 					if ($rejected) {
@@ -331,8 +343,18 @@ class Tadpole {
 				// PROCESSING A SIMPLE TAG
 				if ($conditional) {
 					// Evaluate the condition
-					$conditionHeld = $this->get_recursively($value,$commands,$rejected,$iter_data);
-
+					// Determine whether to check the global or relative conditional cache
+					if ('@' == $value[0]) {
+						$cacheToCheck =& $relativeConditionalCache;
+					} else {
+						$cacheToCheck =& $this->conditionalCache;
+					}
+					if (! isset( $cacheToCheck[$value])) {
+						// Cache Miss ... compute and store value
+						$cacheToCheck[$value] = $this->get_recursively($value,$commands,$rejected,$iter_data);
+					} 
+					$conditionHeld = $cacheToCheck[$value];
+					
 					// Skip this tag if it was rejected
 					if ($rejected) {
 						$offset = (false !== $outer_offset) ? $outer_offset : ($tagEnd + 1);	// Increment the offset
