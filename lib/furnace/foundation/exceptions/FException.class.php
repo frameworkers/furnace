@@ -27,7 +27,7 @@ class FException extends Exception {
     public function __toString() {
     	return "<b>". __CLASS__ . "</b>" 
     		. " [{$this->code}] : {$this->message}\n"
-    		. (($GLOBALS['fconfig_debug_level'] > 0)
+    		. (($GLOBALS['furnace']->config['debug_level'] > 0)
     			? "<pre>{$this->getTraceAsString()}</pre>\n"
     			: "<pre>Please contact the site administrator regarding this error.</pre>"
     		);	
@@ -50,6 +50,7 @@ class FException extends Exception {
  */
 class FDatabaseException extends FException {
 
+	private $query;
 	/*
 	 * Function: __construct
 	 * 
@@ -68,11 +69,17 @@ class FDatabaseException extends FException {
 			(($message == '')
 				? "Unknown database exception"
 				: $message)
-			. (($GLOBALS['fconfig_debug_level'] > 0)
+			. (($GLOBALS['furnace']->config['debug_level'] > 0)
 				? "\r\n<br/>Last query was: {$query}\r\n<br/>"
 				: ""),
 			100);	
+		// Store the query
+		$this->query = $query;
 	}	
+	
+	public function getQuery() {
+		return $this->query;
+	}
 }
 
 /*
