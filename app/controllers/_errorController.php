@@ -14,7 +14,7 @@ class _ErrorController extends Controller {
 		$this->addStylesheet('error');
 	}
 	
-	public function http404($request='') {
+	public function http404() {
 		$this->addStylesheet('error');
 		$this->set('request',$_SERVER['REQUEST_URI']);
 		
@@ -24,6 +24,16 @@ class _ErrorController extends Controller {
 		$this->addStylesheet('error');
 		$this->set('request',$request);	
 	}
+	
+	public function exception() {
+		
+		$ex = $_SESSION['_exception'];
+		$this->set('exToString',$ex->__toString());
+
+		// clear out the exception placeholder
+		unset($_SESSION['_exception']);
+	}
+	
 	
 }
 ?>
