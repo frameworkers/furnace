@@ -154,7 +154,21 @@ class Furnace {
  			// TODO: Check for the existence of the class within the file
  			
  			// Create an instance of the requested controller
- 			$controller = new $controllerClassName();
+ 			try {
+ 				$controller = new $controllerClassName();
+ 			} catch (FDatabaseException $fde) {
+ 				$_SESSION['_exception'] = $fde;
+ 				$this->process('/_error/exception');
+ 				exit(); 				
+ 			} catch (FException $fe) {
+ 				$_SESSION['_exception'] = $fe;
+ 				$this->process('/_error/exception');
+ 				exit();
+ 			} catch (Exception $e) {
+ 				$_SESSION['_exception'] = $e;
+ 				$this->process('/_error/exception');
+ 				exit();
+ 			}
  			
  			// Does the requested controller function exist?
  			$handlerExists = is_callable(array($controller,$routeData['view']));
@@ -169,7 +183,23 @@ class Furnace {
  				if ($this->config['debug_level'] > 0) {
  					$this->bm_processstart = microtime(true);
  				}
- 				call_user_func_array(array($controller,$routeData['view']),$routeData['parameters']);
+ 				
+ 				try {
+ 					call_user_func_array(array($controller,$routeData['view']),$routeData['parameters']);
+ 				} catch (FDatabaseException $fde) {
+ 					$_SESSION['_exception'] = $fde;
+ 					$this->process('/_error/exception');
+ 					exit(); 				
+ 				} catch (FException $fe) {
+ 					$_SESSION['_exception'] = $fe;
+ 					$this->process('/_error/exception');
+ 					exit();
+ 				} catch (Exception $e) {
+ 					$_SESSION['_exception'] = $e;
+ 					$this->process('/_error/exception');
+ 					exit();
+ 				}
+ 				
  				if ($this->config['debug_level'] > 0) {
  					$this->bm_processend   = microtime(true);
  				}
