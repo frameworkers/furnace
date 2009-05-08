@@ -13,6 +13,15 @@ class ImageUploader extends FPageModule {
 		return isset( $_FILES['image_file']);
 	}
 
+	/**
+	 * processUploadedFile
+	 * 
+	 * Perform the upload of a single file
+	 * 
+	 * @param string $uploadDir the full path to the directory where the uploaded file will reside
+	 * @param string $forceUploadedFileName the desired name (w/o extension) for the uploaded file
+	 * @return unknown_type
+	 */
 	public function processUploadedFile($uploadDir,$forceUploadedFileName='') {
 		if (!isset($_FILES) && isset($HTTP_POST_FILES)) {
 			$_FILES = $HTTP_POST_FILES;
@@ -20,17 +29,22 @@ class ImageUploader extends FPageModule {
 		if (! isset($_FILES['image_file'])) {
 			return false;
 		}
-			
+		
+		// Calculate the name + extension to use for the uploaded file
+		$base = basename($_FILES['image_file']['name']);
+		$imageExt  = substr($base,strrpos($base,'.')+1);
 		$imageName = ('' != $forceUploadedFileName)
-		? $forceUploadedFileName
-		: basename($_FILES['image_file']['name']);
-			
+			? ($forceUploadedFileName . ".{$imageExt}")
+			: $base;
+
+		// Ensure that an image name was calculated
 		if (empty($imageName)) {
 			$this->controller->flash("The name of the image was not found.","error");
 			$this->errorsEncountered = true;
 			return false;
 		}
 			
+		// Actually upload and store the file
 		if (is_uploaded_file($_FILES['image_file']['tmp_name'])) {
 			$newFile = $uploadDir . "/" . $imageName;
 			if (move_uploaded_file($_FILES['image_file']['tmp_name'],$newFile)) {
