@@ -2,9 +2,11 @@
 class ImageUploader extends FPageModule {
 
 	private $errorsEncountered = false;
+	private $maxUploadedFileSizeBytes = 0;
 	
-	public function __construct($controller) {
+	public function __construct($controller,$maxUploadedFileSizeBytes = 3000000) {
 		parent::__construct($controller,dirname(__FILE__));
+		$this->maxUploadedFileSizeBytes = $maxUploadedFileSizeBytes;
 	}
 
 	public function fileUploadRequested() {
@@ -48,6 +50,7 @@ class ImageUploader extends FPageModule {
 		$this->controller->set('ImageUploader_uploadActionURL',$uploadActionURL);
 		$this->controller->set('ImageUploader_uploadFormName',$uploadFormName);
 		$this->controller->set('ImageUploader_uploadFormId',$uploadFormId);
+		$this->controller->set('ImageUploader_maxUploadedFileSize',$this->maxUploadedFileSizeBytes);
 		return $this->getView('UploadForm');
 	}
 	
