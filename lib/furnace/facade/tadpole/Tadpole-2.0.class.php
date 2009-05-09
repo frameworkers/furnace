@@ -258,7 +258,7 @@ class Tadpole {
 					
 					// Evaluate the condition
 					// Determine whether to check the global or relative conditional cache
-					if ('@' == $value[0]) {
+					if ('@' == $value[3]) { // if:@
 						$cacheToCheck =& $relativeConditionalCache;
 					} else {
 						$cacheToCheck =& $this->conditionalCache;
@@ -301,6 +301,8 @@ class Tadpole {
 							$offset   = (false !== $outer_offset) ? $outer_offset : $offset;
 						}
 					}
+					// Clear the relative conditional cache since the block is finished
+					$relativeConditionalCache = array();
 				} else {
 					// PROCESSING A REGULAR BLOCK
 
@@ -336,6 +338,7 @@ class Tadpole {
 					$contents = $before . $completeBlockContents . $after;
 					// Clear the relative cache since the block is finished
 					$relativeCache = array();
+					$relativeConditionalCache = array();
 					// Increment offset
 					$offset = (false !== $outer_offset) ? $outer_offset : ($blockStart + strlen($completeBlockContents));
 				}
@@ -344,7 +347,7 @@ class Tadpole {
 				if ($conditional) {
 					// Evaluate the condition
 					// Determine whether to check the global or relative conditional cache
-					if ('@' == $value[0]) {
+					if ('@' == $value[3]) { // if:@
 						$cacheToCheck =& $relativeConditionalCache;
 					} else {
 						$cacheToCheck =& $this->conditionalCache;
