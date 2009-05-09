@@ -20,6 +20,8 @@ class ModelController extends Controller {
 		} else {
 			$this->dsn = $GLOBALS['furnace']->config['production_dsn'];
 		}
+		
+		$this->setTitle("FUEL :: model");
 	}
 	
 	public function index() {
@@ -191,28 +193,28 @@ END;
 			$this->writeModelFile($m->export());
 			
 			// Execute SQL commands
-			try {
-				// If the object is derived from FAccount:
-				if ("FAccount" == $objectParent) {
-					
-					// Verify that `app_accounts` and `app_roles` tables exist in the db
-					$results = _db()->query("SHOW TABLES");
-					$foundAppAccounts = false;
-					$foundAppRoles    = false;
-					while ($r = $results->fetchRow()) {
-						if ("app_accounts" == $r[0]) {
-							$foundAppAccounts = true;
-						} else if ("app_roles" == $r[0]) {
-							$foundAppRoles    = true;
-						}
-						if ($foundAppRoles && $foundAppAccounts) {
-							break;
-						}
+			
+			// If the object is derived from FAccount:
+			if ("FAccount" == $objectParent) {
+				
+				// Verify that `app_accounts` and `app_roles` tables exist in the db
+				$results = _db()->query("SHOW TABLES");
+				$foundAppAccounts = false;
+				$foundAppRoles    = false;
+				while ($r = $results->fetchRow()) {
+					if ("app_accounts" == $r[0]) {
+						$foundAppAccounts = true;
+					} else if ("app_roles" == $r[0]) {
+						$foundAppRoles    = true;
 					}
-					
-					// If they do not, create them:
-					if (!$foundAppAccounts) {
-						$appAccountsSql = <<<END
+					if ($foundAppRoles && $foundAppAccounts) {
+						break;
+					}
+				}
+				
+				// If they do not, create them:
+				if (!$foundAppAccounts) {
+					$appAccountsSql = <<<END
 -- 
 -- Table structure for table `app_accounts`
 -- 
@@ -231,11 +233,11 @@ CREATE TABLE `app_accounts` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
 END;
-						_db()->exec($appAccountsSql);
-						$this->flash("Created required `app_accounts` table");
-					}
-					if (!$foundAppRoles) {
-						$appRolesSql = <<<END
+					_db()->exec($appAccountsSql);
+					$this->flash("Created required `app_accounts` table");
+				}
+				if (!$foundAppRoles) {
+					$appRolesSql = <<<END
 -- 
 -- Table structure for table `app_roles`
 -- 
@@ -245,14 +247,12 @@ CREATE TABLE `app_roles` (
   PRIMARY KEY  (`accountId`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
 END;
-						_db()->exec($appRolesSql);
-						$this->flash("Created required `app_roles` table");
-					}
+					_db()->exec($appRolesSql);
+					$this->flash("Created required `app_roles` table");
 				}
-				_db()->exec($m->tables[$tableName]->toSqlString());
-			} catch (FDatabaseException $e) {
-				die($e->__toString());
 			}
+			_db()->exec($m->tables[$tableName]->toSqlString());
+			
 			
 			// Regenerate PHP code
 			$this->generateObjects();
