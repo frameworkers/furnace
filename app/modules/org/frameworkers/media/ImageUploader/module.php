@@ -68,6 +68,18 @@ class ImageUploader extends FPageModule {
 		return $this->getView('UploadForm');
 	}
 	
+	public function getUploadFormFileInputElement($bIncludeMaxFileSize,$inputName='image_file') {
+		$s = '';
+		if ($bIncludeMaxFileSize) {
+			$s .= "<!-- MAX_FILE_SIZE must precede the file input field -->";
+    		$s .= '<input type="hidden" name="MAX_FILE_SIZE" value="'.$this->maxUploadedFileSizeBytes.'" />';
+		}
+   		$s .= '<input name="'.$inputName.'" type="file" />';
+   		
+   		return $s;
+	}
+	
+	
 	public function errorsEncountered() {
 		return $this->errorsEncountered;
 	}
