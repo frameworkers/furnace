@@ -258,7 +258,7 @@ class Tadpole {
 					
 					// Evaluate the condition
 					// Determine whether to check the global or relative conditional cache
-					if ('@' == $value[3]) { // if:@
+					if ('@' == $value[3] || ('!' == $value[3] && '@' == $value[4])) { // if:@ || if:!@
 						$cacheToCheck =& $relativeConditionalCache;
 					} else {
 						$cacheToCheck =& $this->conditionalCache;
@@ -347,7 +347,7 @@ class Tadpole {
 				if ($conditional) {
 					// Evaluate the condition
 					// Determine whether to check the global or relative conditional cache
-					if ('@' == $value[3]) { // if:@
+					if ('@' == $value[3] || ('!' == $value[3] && '@' == $value[4])) { // if:@ || if:!@
 						$cacheToCheck =& $relativeConditionalCache;
 					} else {
 						$cacheToCheck =& $this->conditionalCache;
