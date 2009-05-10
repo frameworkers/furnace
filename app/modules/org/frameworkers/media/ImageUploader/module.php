@@ -57,6 +57,7 @@ class ImageUploader extends FPageModule {
 			}
 		} else {
 			$this->controller->flash("No uploaded file was detected.","error");
+			return false;
 		}
 	}
 
