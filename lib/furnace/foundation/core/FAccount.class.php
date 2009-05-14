@@ -305,6 +305,22 @@ class FAccount extends FBaseObject {
 			return new FAccount($r);
 		}
 		
+		public static function RetrieveByRole($objectClass,$role,$value=true) {
+			
+			if ($value) {$value = '1';} else {$value = '0';}
+			
+			$q = "SELECT `app_accounts`.`objectId` FROM `app_accounts`, `app_roles`
+				WHERE `app_accounts`.`objId`=`app_roles`.`accountId` 
+				AND `app_roles`.`{$role}`='{$value}' 
+				AND `app_accounts`.`objectClass`='{$objectClass}'";
+			$results  = _db()->queryAll($q);
+			$response = array();
+			foreach ($results as $r) {
+				$response[] = $r['objectId'];
+			}
+			return $response;
+		}
+		
 		public static function Delete($objId) {
 			// Delete the `app_roles` entry associated with this account
 			$q = "DELETE FROM `app_roles` WHERE `accountId`='{$objId}' ";
