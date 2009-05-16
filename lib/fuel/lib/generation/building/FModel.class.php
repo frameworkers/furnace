@@ -226,6 +226,9 @@ class FModel {
 				. "\t\t\t\$this->username = \$faccount->getUsername();\r\n"
 				. "\t\t\t\$this->password = \$faccount->getPassword();\r\n"
 				. "\t\t\t\$this->emailAddress = \$faccount->getEmailAddress();\r\n"
+				. "\t\t\t\$this->created      = \$faccount->getCreated();\r\n"
+				. "\t\t\t\$this->modified     = \$faccount->getModified();\r\n"
+				. "\t\t\t\$this->lastLogin    = \$faccount->getLastLogin();\r\n"
 				. "\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
 				. "\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
 				. "\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n";
