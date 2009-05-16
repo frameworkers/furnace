@@ -31,6 +31,9 @@ class FSessionManager {
 		 if (is_array($r)) {
 		 	// Populate session
 			self::initSession($r);
+			// Mark the lastLogin time for this account
+			$q = "UPDATE `app_accounts` SET `lastLogin`=NOW() WHERE `objId`='{$r['objId']}' ";
+			_db()->exec($q);
 			return true;
 		 } else {
 		 	return false;

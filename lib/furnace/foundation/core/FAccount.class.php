@@ -8,63 +8,12 @@
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
- 
- /*
-  * YML Model
-  * 
-object FAccount:
-  attr Username:
-    desc: The username associated with this account
-    type: string
-    size: 20
-    min:  5
-    unique: yes
-  attr Password:
-    desc: The password for the account
-    type: string
-    size: 160
-  attr EmailAddress:
-    desc: The email address associated with this account
-    type: string
-    size: 80
-  attr Status:
-    desc: The status of this account
-    type: string
-    size: 20
-  attr SecretQuestion:
-    desc: The secret question for access to this account
-    type: string
-    size: 160
-  attr SecretAnswer:
-    desc: The secret answer for the secret question
-    type: string
-    size: 160
-  attr ObjectClass:
-    desc: The class of the primary object associated with this account
-    type: string
-    size: 50
-  attr ObjectId:
-    desc: The id of the primary object associated with this account
-    type: integer
-    min: 0
-  *
-  */
 
-class FAccountAttrs {
-		 const USERNAME = "username";
-		 const PASSWORD = "password";
-		 const EMAILADDRESS = "emailAddress";
-		 const STATUS = "status";
-		 const SECRETQUESTION = "secretQuestion";
-		 const SECRETANSWER = "secretAnswer";
-		 const OBJECTCLASS = "objectClass";
-		 const OBJECTID = "objectId";
-	}
 
 /*
  * Class: FAccount
  * Provides a common base class for user-defined objects requiring
- * some sort of login (user accounts). 
+ * some sort of login (user/member accounts). 
  * 
  * Extends:
  * 
@@ -106,7 +55,20 @@ class FAccount extends FBaseObject {
 		// Variable: roles
 		// The roles granted to this user account
 		public $roles;
-
+		
+		// Variable: created 
+		// The date/time this account was created
+		public $created;
+		
+		// Variable: modified
+		// The last time this account was modified
+		public $modified;
+		
+		// Variable: lastLogin
+		// The last time this account logged in
+		public $lastLogin;
+		
+		
 		public function __construct($data) {
 			if (isset($data['objid'])) {$data['objId'] = $data['objid'];}
 			if ($data['objId'] <= 0) {
@@ -121,6 +83,9 @@ class FAccount extends FBaseObject {
 			$this->secretAnswer = $data['secretAnswer'];
 			$this->objectClass = $data['objectClass'];
 			$this->objectId = $data['objectId'];
+			$this->created  = $data['created'];
+			$this->modified = $data['modified'];
+			$this->lastLogin= $data['lastLogin'];
 			
 			// Get Roles
 			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$this->objId}' ";
@@ -164,6 +129,18 @@ class FAccount extends FBaseObject {
 
 		public function getObjectId() {
 			return $this->objectId;
+		}
+		
+		public function getCreated() {
+			return $this->created;
+		}
+		
+		public function getModified() {
+			return $this->modified;
+		}
+		
+		public function getLastLogin() {
+			return $this->lastLogin;
 		}
 
 		public function getRoles() {
@@ -224,6 +201,27 @@ class FAccount extends FBaseObject {
 				$this->faccount_save('objectId');
 			}
 		}
+		
+		public function setCreated($value,$bSaveImmediately = true) {
+			$this->created = $value;
+			if ($bSaveImmediately) {
+				$this->faccount_save('created');
+			}
+		}
+		
+		public function setModified($value,$bSaveImmediately = true) {
+			$this->created = $value;
+			if ($bSaveImmediately) {
+				$this->faccount_save('modified');
+			}
+		}
+		
+		public function setLastLogin($value,$bSaveImmediately = true) {
+			$this->created = $value;
+			if ($bSaveImmediately) {
+				$this->faccount_save('lastLogin');
+			}
+		}
 
 		public function faccount_save($attribute = '') {
 			if('' == $attribute) {
@@ -235,10 +233,13 @@ class FAccount extends FBaseObject {
 				. "`secretQuestion`='{$this->secretQuestion}', "
 				. "`secretAnswer`='{$this->secretAnswer}', "
 				. "`objectClass`='{$this->objectClass}', "
-				. "`objectId`='{$this->objectId}' ";
+				. "`objectId`='{$this->objectId}', "
+				. "`created`='{$this->created}', "
+				. "`modified`=NOW(), "
+				. "`lastLogin`='{$this->lastLogin}' ";
 				$q .= "WHERE `objId`='{$this->objId}'";
 			} else {
-				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}' WHERE `objId`='{$this->objId}' ";
+				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}', `modified`=NOW() WHERE `objId`='{$this->objId}' ";
 			}
 			_db()->exec($q);
 		}
@@ -281,13 +282,14 @@ class FAccount extends FBaseObject {
 		}
 
 		public static function Create($username) {
-			$q = "INSERT INTO `app_accounts` (`username`) VALUES ('{$username}')"; 
+			$now = date('Y-m-d G:i:s');
+			$q = "INSERT INTO `app_accounts` (`username`,`created`,`modified`) VALUES ('{$username}','{$now}','{$now}')"; 
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
 			$objectId = _db()->lastInsertID("app_accounts","objId");
-			$data = array("objid"=>$objectId,"username"=>$username);
+			$data = array("objid"=>$objectId,"username"=>$username,"created"=>$now,"modified"=>$now);
 			
 			$q = "INSERT INTO `app_roles` (`accountId`) VALUES ('{$objectId}')";
 			$r = _db()->exec($q);
