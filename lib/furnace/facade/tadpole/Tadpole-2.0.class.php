@@ -424,6 +424,7 @@ class Tadpole {
 	}
 	
 	private function process_commands(&$commands,$value,&$rejected,$iter_data=array()) {
+		$foundNeverDate = false;
 		foreach ($commands as $commandKey => $commandValue) {
 			switch ($commandKey) {
 				case "empty":
@@ -442,7 +443,11 @@ class Tadpole {
 						? $commandValue
 						: $value;
 					break;
-				default:
+				case "ifnever":
+					if ($value == '0000-00-00 00:00:00') {
+						$foundNeverDate = true;
+						$value = $commandValue;
+					}
 					break;
 				case "error":
 				case "unset":
@@ -479,6 +484,7 @@ class Tadpole {
 				case 'type':
 					switch ($commands['type']) {
 						case 'date':
+							if ($foundNeverDate && isset($commands['ifnever'])) { break; /* handled already */}
 							$value = date((isset($commands['format'])
 								? $commands['format']
 								: 'Y-m-d G:i:s'),strtotime($value));
@@ -491,7 +497,6 @@ class Tadpole {
 								
 					}
 					break;	
-				
 				case 'maxlen':
 					// Process the contents of maxlen, in case it contains tags
 					if (false !== strpos($commands['maxlen'],'[')) {
@@ -543,6 +548,8 @@ class Tadpole {
 						default:
 							break;
 					}
+					break;
+				default:
 					break;
 			}
 		}
