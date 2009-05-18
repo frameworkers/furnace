@@ -46,16 +46,21 @@
 	// An array containing information required to construct pagination links
  	private $paginationData = array();
  	
+ 	//Variable: bInheritFAccount
+ 	// Whether or not to include the FAccount variables (app_accounts)
+ 	private $bInheritFAccount;
+ 	
  	// Variable: filter
  	// The primary selection criteria determining group membership
  	private $filter = '';
  	
- 	public function __construct($type,$lookupTable,$filter='') {
+ 	public function __construct($type,$lookupTable,$filter='',$bInheritFAccount = false) {
  		$this->objectType = $type;
  		$this->objectTypeTableName = strtolower($type[0]).substr($type,1);
  		$this->setLookupTable($lookupTable);
  		//$theFilter = ("" == $filter) ? "WHERE 1 " : $filter;
  		$this->filter = $filter;
+ 		$this->bInheritFAccount = $bInheritFAccount;
  		
  		// Determine the primary limiting criteria for this group based
  		// on the relationType. 1M relations will take advantage of the 
@@ -126,7 +131,15 @@
  	
  	public function getSubset($firstIndex,$count,$key='objId',$sortOrder="default") {
  		// Return an array of objects according to the subset details given
-		$q = "SELECT * FROM `{$this->objectTypeTableName}` {$this->filter} ORDER BY `{$key}` " . (($sortOrder == "desc") ? " DESC " : " ASC ");
+		$q = "SELECT * FROM `{$this->objectTypeTableName}` "
+			.(($this->bInheritFAccount)
+ 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
+ 				: '')
+ 			."{$this->filter} ORDER BY "
+ 			.(('objId' == $key)
+ 				? "`{$this->objectTypeTableName}`.`objId` "
+ 				: "`{$key}` ")
+ 			.(($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($count,$firstIndex);
 		$result = _db()->query($q);
 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
@@ -243,9 +256,18 @@
  		
  	}
  	
+ 	// UV_TYPE: *, RETURN TYPE: 'object'
  	protected function get_case1(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " 
+ 			.(($this->bInheritFAccount)
+ 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
+ 				: '')
+ 			. $this->filter . " ORDER BY "
+ 			.(('objId' == $k)
+ 				? "`{$this->objectTypeTableName}`.`objId` "
+ 				: "`{$k}` ")
+ 			. (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);	
@@ -253,15 +275,29 @@
  		return $results;
  	}
  	
+ 	// UV_TYPE: *, RETURN TYPE: 'collection'
  	protected function get_case2(&$u_v,&$k,&$s,&$r) {
  		return $this;
  	}
  	
+ 	// UV_TYPE: *, RETURN TYPE: array
  	protected function get_case3(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$quotedValues = array();
- 		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " . $this->filter . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
+ 		// prepare the values to select, disambiguating objId, if it is found
+ 		foreach ($r as $unquoted) { 
+ 			$quotedValues[] = (('objId' == $unquoted) ? "`{$this->objectTypeTableName}`.`objId`" : "`{$unquoted}`"); 
+ 		}
+ 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " 
+ 			.(($this->bInheritFAccount)
+ 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
+ 				: '')
+ 			. $this->filter 
+ 			. " ORDER BY "
+ 			.(('objId' == $k)
+ 				? "`{$this->objectTypeTableName}`.`objId` "
+ 				: "`{$k}` ")
+ 			.(($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
  			$t = array();
@@ -274,29 +310,36 @@
  		return $results;
  	}
  	
+ 	// UV_TYPE: scalar, RETURN TYPE: 'object'
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
- 		
- 		$q .= ($this->filter) 
+ 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " 
+ 			.(($this->bInheritFAccount)
+ 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
+ 				: '')
+ 			.(($this->filter) 
  				? " {$this->filter} AND "
-				: " WHERE ";
-				
- 		$q .= "`{$k}`='{$u_v}' " . " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
- 		
- 		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
+				: " WHERE ")			
+ 			."`{$this->objectTypeTableName}`.`{$k}`='{$u_v}' "
+ 			." ORDER BY "
+ 			.(('objId' == $k)
+ 				? "`{$this->objectTypeTableName}`.`objId` "
+ 				: "`{$k}` ")
+ 			.(($s == "desc") ? " DESC " : " ASC ");
 
+ 		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 		return ((null == $result)
 			? false
 			: new $this->objectType($result)
 		);
  	}
  	
+ 	// UV_TYPE: scalar, RETURN TYPE: 'collection'
  	protected function get_case5(&$u_v,&$k,&$s,&$r) {
  		$cn = "{$this->objectType}Collection";
  		$newFilter = 
  			($this->filter)
- 				? " {$this->filter} AND `{$k}`='{$u_v}' "
+ 				? " {$this->filter} AND ".(('objId' == $k)? "`{$this->objectTypeTableName}`.`objId` " : "`{$k}` ")."`{$k}`='{$u_v}' "
 				: " WHERE `{$k}`='{$u_v}' ";
  		return new $cn($this->lookupTable, $newFilter);
  	}
@@ -467,7 +510,4 @@
  	
  	
  }
-function is_assoc_callback($a, $b) {
- 		return $a === $b ? $a + 1 : 0;
-}
 ?>

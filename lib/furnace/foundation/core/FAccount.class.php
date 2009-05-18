@@ -98,6 +98,20 @@ class FAccount extends FBaseObject {
 				}
 			}
 		}
+		
+		public static function getRolesForId($id) {
+			// Get Roles for the provided account id
+			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$id}' ";
+			$r = _db()->queryRow($q);
+			$roles = array();
+			foreach ($r as $role=>$value) {
+				if ("accountid" == $role) {continue;}
+				if (1 == $value) {
+					$roles[$role] = $value;
+				}
+			}
+			return $roles;
+		}
 
 		public function getUsername() {
 			return $this->username;
@@ -347,7 +361,7 @@ class FAccount extends FBaseObject {
 			$r = _db()->exec($q);
 		}
 	}
-
+/*
 	class FAccountCollection extends FObjectCollection {
 		public function __construct($lookupTable="app_accounts",$filter="WHERE 1") {
 			parent::__construct("FAccount",$lookupTable,$filter);
@@ -356,4 +370,5 @@ class FAccount extends FBaseObject {
 			//TODO: Implement this
 		}
 	}
+*/
 ?>
