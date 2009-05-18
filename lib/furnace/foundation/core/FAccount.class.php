@@ -89,10 +89,10 @@ class FAccount extends FBaseObject {
 			
 			// Get Roles
 			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$this->objId}' ";
-			$r = _db()->queryRow($q);
+			$r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 			$this->roles = array();
 			foreach ($r as $role=>$value) {
-				if ("accountid" == $role) {continue;}
+				if ("accountId" == $role) {continue;}
 				if (1 == $value) {
 					$this->roles[$role] = $value;
 				}
@@ -102,10 +102,10 @@ class FAccount extends FBaseObject {
 		public static function getRolesForId($id) {
 			// Get Roles for the provided account id
 			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$id}' ";
-			$r = _db()->queryRow($q);
+			$r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 			$roles = array();
 			foreach ($r as $role=>$value) {
-				if ("accountid" == $role) {continue;}
+				if ("accountId" == $role) {continue;}
 				if (1 == $value) {
 					$roles[$role] = $value;
 				}
