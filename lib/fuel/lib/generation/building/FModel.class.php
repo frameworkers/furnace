@@ -182,6 +182,9 @@ class FModel {
 				. "\t\t *  - username \r\n"
 				. "\t\t *  - password \r\n"
 				. "\t\t *  - emailAddress \r\n"
+				. "\t\t *  - created \r\n"
+				. "\t\t *  - modified \r\n"
+				. "\t\t *  - lastLogin \r\n"
 				. "\t\t */\r\n\r\n";
 		}
 		// add attributes
@@ -222,16 +225,30 @@ class FModel {
  				. "\t\t\t\tthrow new FException(\"Invalid <code>faccount_id</code> value in object constructor.\");\r\n"
  				. "\t\t\t}\r\n\r\n";
 			$r .= "\t\t\t// Initialize inherited attributes:\r\n"
-				. "\t\t\t\$faccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
-				. "\t\t\t\$this->username = \$faccount->getUsername();\r\n"
-				. "\t\t\t\$this->password = \$faccount->getPassword();\r\n"
-				. "\t\t\t\$this->emailAddress = \$faccount->getEmailAddress();\r\n"
-				. "\t\t\t\$this->created      = \$faccount->getCreated();\r\n"
-				. "\t\t\t\$this->modified     = \$faccount->getModified();\r\n"
-				. "\t\t\t\$this->lastLogin    = \$faccount->getLastLogin();\r\n"
-				. "\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
-				. "\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
-				. "\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n";
+				. "\t\t\tif (!isset(\$data['username'])) {\r\n"
+				. "\t\t\t\t// FAccount data was NOT provided or is incomplete, get it...\r\n"
+				. "\t\t\t\t\$faccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
+				. "\t\t\t\t\$this->username = \$faccount->getUsername();\r\n"
+				. "\t\t\t\t\$this->password = \$faccount->getPassword();\r\n"
+				. "\t\t\t\t\$this->emailAddress = \$faccount->getEmailAddress();\r\n"
+				. "\t\t\t\t\$this->created      = \$faccount->getCreated();\r\n"
+				. "\t\t\t\t\$this->modified     = \$faccount->getModified();\r\n"
+				. "\t\t\t\t\$this->lastLogin    = \$faccount->getLastLogin();\r\n"
+				. "\t\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
+				. "\t\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
+				. "\t\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n"
+				. "\t\t\t} else {\r\n"
+				. "\t\t\t\t// FAccount data was provided with {$object->getName()} data...\r\n"
+				. "\t\t\t\t\$this->username = \$data['username'];\r\n"
+				. "\t\t\t\t\$this->password = \$data['password'];\r\n"
+				. "\t\t\t\t\$this->emailAddress = \$data['emailAddress'];\r\n"
+				. "\t\t\t\t\$this->created  = \$data['created'];\r\n"
+				. "\t\t\t\t\$this->modified = \$data['modified'];\r\n"
+				. "\t\t\t\t\$this->lastLogin= \$data['lastLogin'];\r\n"
+				. "\t\t\t\t\$this->objectClass = \$data['objectClass'];\r\n"
+				. "\t\t\t\t\$this->objectId    = \$data['objectId'];\r\n"
+				. "\t\t\t\t\$this->roles       = FAccount::getRolesForId(\$data['faccount_id']);\r\n"
+				. "\t\t\t}\r\n";
 		}
 		$r .= "\t\t\t// Initialize local attributes and sockets:\r\n"
 			. "\t\t\t\$this->objId = \$data['objId'];\r\n";
@@ -239,23 +256,23 @@ class FModel {
  			$r .= "\t\t\t\$this->{$s->getName()} = \$data['{$s->getName()}_id'];\r\n";
  		}
  		foreach ($object->getPeers() as $s) {
- 			
+ 			$table = self::standardizeTableName($s->getOwner());
  			if ($s->getOwner() == $s->getForeign()) {
  				$type = self::standardizeAttributeName($s->getOwner());
  				$lookup = $s->getLookupTable();
  				// Set the filter for M:M between two objects of the same type
- 				$filter = "WHERE `objId` IN ( SELECT (`"
-					. $type . "1_id` FROM `{$lookup}` WHERE `" . $type . "2_id`='{\$data['objId']}') "
+ 				$filter = "WHERE `{$table}`.`objId` IN ( SELECT (`"
+					. $type . "1_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "2_id`='{\$data['objId']}') "
 					. "OR ("
-					. $type . "2_id` FROM `{$lookup}` WHERE `" . $type . "1_id`='{\$data['objId']}') "
+					. $type . "2_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "1_id`='{\$data['objId']}') "
 					. ") ";
  			} else {
  				// Set the filter for M:M between two different object types
 				$foreignName = self::standardizeAttributeName($s->getForeign());
 				$ownerName   = self::standardizeAttributeName($s->getOwner());
- 				$filter = "WHERE `objId` IN ( SELECT `"
+ 				$filter = "WHERE `{$table}`.`objId` IN ( SELECT `{$s->getLookupTable}`.`"
 					. $foreignName
- 					. "_id` FROM `{$s->getLookupTable()}` WHERE `"
+ 					. "_id` FROM `{$s->getLookupTable()}` WHERE `{$s->getLookupTable}`.`"
 					. $ownerName
 					. "_id` = '{\$data['objId']}' )";
  			}
@@ -264,7 +281,7 @@ class FModel {
 			$r .= "\t\t\t\$this->{$s->getName()}->setOwnerId(\$data['objId']);\r\n";
  		}
  		foreach ($object->getChildren() as $s) {
- 			$filter = "WHERE `{$s->getReflectVariable()}_id`='{\$data['objId']}' ";
+ 			$filter = "WHERE `".self::standardizeTableName($s->getForeign())."`.`{$s->getReflectVariable()}_id`='{\$data['objId']}' ";
  			$r .= "\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
  			$r .= "\t\t\t\$this->{$s->getName()}->setOwnerId(\$data['objId']);\r\n";
  		}
@@ -329,7 +346,7 @@ class FModel {
 		// setters to allow for 'parent' reassignment
 		foreach ($object->getParents() as $s) {
 			$r .= "\t\tpublic function set{$s->getFunctionName()}Id(\$id) {\r\n"
-				. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{$s->getName()}_id`='{\$id}' WHERE `objId`='{\$this->objId}'\";\r\n"
+				. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{$s->getName()}_id`='{\$id}' WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}'\";\r\n"
 				. "\t\t\t_db()->exec(\$q);\r\n"
 				. "\t\t\t\$this->{$s->getName()} = \$id;\r\n"
 				. "\t\t}\r\n\r\n";
@@ -383,10 +400,10 @@ class FModel {
  				}
  			$r .= implode(", \"\r\n",$temp)
  				. " \";\r\n"
- 				. "\t\t\t\t\$q .= \"WHERE `objId`='{\$this->objId}'\";\r\n";
+ 				. "\t\t\t\t\$q .= \"WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}'\";\r\n";
 			}
  			$r .= "\t\t\t} else {\r\n"
- 			. "\t\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `objId`='{\$this->objId}' \";\r\n" 
+ 			. "\t\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}' \";\r\n" 
  			. "\t\t\t}\r\n"
  			. "\t\t\t_db()->exec(\$q);\r\n"
  			. "\t\t}\r\n\r\n";
@@ -445,7 +462,7 @@ class FModel {
  	 	if ("FAccount" == $object->getParentClass()) {
 			// Set the reverse link (object,id)
 			$r .= "\t\t\t\$q = \"UPDATE `app_accounts` SET `objectClass`='{$object->getName()}', "
-				. "`objectId`='{\$objectId}' WHERE `objId`='{\$faccount_id}'\";\r\n"
+				. "`objectId`='{\$objectId}' WHERE `app_accounts`.`objId`='{\$faccount_id}'\";\r\n"
 				. "\t\t\t\$r = _db()->exec(\$q);\r\n";
  	 	}
  		$r .= "\r\n"
@@ -470,14 +487,16 @@ class FModel {
  		if ("FAccount" == $object->getParentClass()) {
  			$r .= "\t\tpublic static function RetrieveByAccountId(\$accountId) {\r\n"
  				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
- 				. "\t\t\t\$q = \"SELECT * FROM `".self::standardizeTableName($object->getName())."` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
+ 				. "\t\t\t\$q = \"SELECT * FROM `".self::standardizeTableName($object->getName())."` "
+ 					."INNER JOIN `app_accounts` ON `".self::standardizeTableName($object->getName())."`.`objId`=`app_accounts`.`objectId` "
+ 					."WHERE `fAccount_id`='{\$accountId}'\";\r\n"
  				. "\t\t\t\$r = _db()->queryRow(\$q);\r\n"
  				. "\t\t\treturn new {$object->getName()}(\$r);\r\n"
  				. "\t\t}\r\n";
  				
  			$r .= "\t\tpublic static function ObjIdFromAccountId(\$accountId) {\r\n"
  				. "\t\t\t_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);\r\n"
- 				. "\t\t\t\$q = \"SELECT `objId` FROM `".self::standardizeTableName($object->getName())."` WHERE `fAccount_id`='{\$accountId}'\";\r\n"
+ 				. "\t\t\t\$q = \"SELECT `".self::standardizeTableName($object->getName())."`.`objId` FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`fAccount_id`='{\$accountId}'\";\r\n"
  				. "\t\t\t\$r = _db()->queryOne(\$q);\r\n"
  				. "\t\t\treturn \$r;\r\n"
  				. "\t\t}\r\n";
@@ -488,7 +507,7 @@ class FModel {
 		
 		if ("FAccount" == $object->getParentClass()) {
 			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
-			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `".self::standardizeTableName($object->getName())."` WHERE `objId` = '{\$objId}'\"; \r\n";
+			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId` = '{\$objId}'\"; \r\n";
 			$r .= "\t\t\t\$acct_id = _db()->queryOne(\$q);\r\n";
 			$r .= "\t\t\tFAccountManager::DeleteByAccountId(\$acct_id);\r\n\r\n";
 		}
@@ -499,7 +518,7 @@ class FModel {
 				if ("yes" == $info['required']) {
 					// Delete objects that depend on this object
 					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
-					$r .= "\t\t\t\$q= \"SELECT `objId` FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+					$r .= "\t\t\t\$q= \"SELECT `{$info['sqltable']}`.`objId` FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}'\";\r\n";
 					$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
 					$r .= "\t\t\twhile (\$data = \$r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {\r\n"
 						. "\t\t\t\t{$info['class']}::Delete(\$data['objId']);\r\n"
@@ -507,22 +526,22 @@ class FModel {
 				} else {
 					// Clear references to this object for objects with a non-required parent relationship to this object
 					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that have an optional parent relationship to this object\r\n";
-					$r .= "\t\t\t\$q= \"UPDATE `{$info['sqltable']}` SET `{$info['sqlcol']}`='0' WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+					$r .= "\t\t\t\$q= \"UPDATE `{$info['sqltable']}` SET `{$info['sqltable']}`.`{$info['sqlcol']}`='0' WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
 					$r .= "\t\t\t_db()->exec(\$q);\r\n";
 				}
 			} else if ("lookup" == $info['type']) {
 				// Clear entries in all lookup tables with references to this object
 				$r .= "\r\n\t\t\t// Delete entries in {$info['sqltable']} containing this object\r\n";
 				if ($object->getName() == $info['class']) {
-					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
 				} else {
-					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
+					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}'\";\r\n";
 				}
 				$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";	
 			}
 		}
 		$r .= "\r\n\t\t\t// Delete the object itself\r\n"
-			. "\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `objId`='{\$objId}'\";\r\n"
+			. "\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$objId}'\";\r\n"
 			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
 		$r .= "\t\t}\r\n";
 
@@ -535,11 +554,18 @@ class FModel {
 	}
 	
 	private function generateObjectCollectionClass(&$object) {
-		$r = "\tclass {$object->getName()}Collection extends FObjectCollection {\r\n";
+		if ("FAccount" == $object->getParentClass()) {
+			$r = "\tclass {$object->getName()}Collection extends FAccountCollection {\r\n";
+		} else {
+			$r = "\tclass {$object->getName()}Collection extends FObjectCollection {\r\n";
+		}
  		
  		// Add Constructor
- 		$r .= "\t\tpublic function __construct(\$lookupTable=\"".self::standardizeTableName($object->getName())."\",\$filter=\"\") {\r\n"
- 			. "\t\t\tparent::__construct(\"{$object->getName()}\",\$lookupTable,\$filter);\r\n"
+ 		$r .= "\t\tpublic function __construct(\$lookupTable=\""
+ 				.self::standardizeTableName($object->getName())."\","
+ 				."\$filter='') {\r\n"
+ 			. "\t\t\tparent::__construct(\"{$object->getName()}\",\$lookupTable,\$filter,"
+ 			.(("FAccount" == $object->getParentClass()) ? 'true' : 'false').");\r\n"
 			. "\t\t\t\$this->objectTypeTableName=\"".self::standardizeTableName($object->getName())."\";\r\n";
  		
  		$r .= "\t\t}\r\n";
