@@ -303,8 +303,8 @@ abstract class FAccountCollection {
  		
  		$q .= ($this->filter) 
  				? " {$this->filter} AND "
-				: " WHERE {$k}='{$u_v}' " 
- 			. " ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
+				: " WHERE {$k}='{$u_v}' "; 
+ 		$q .= "ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		
  		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 
