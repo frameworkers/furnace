@@ -366,5 +366,10 @@ class Furnace {
 	 		return array();
 	 	}	
  	}
- }
+}
+
+// Temporary location for this utility function
+function is_assoc_callback($a, $b) {
+ 		return $a === $b ? $a + 1 : 0;
+}
 ?>
