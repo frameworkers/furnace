@@ -13,6 +13,7 @@
  require("core/FBaseObject.class.php");
  require("core/FObjectCollection.class.php");
  require("core/FAccount.class.php");
+ require("core/FAccountCollection.class.php");
  require("core/FAccountManager.class.php");
  require("core/FSessionManager.class.php");
  require("database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
