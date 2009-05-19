@@ -819,6 +819,11 @@ class Tadpole {
 	    if($difference != 1) {
 	        $periods[$j].= "s";
 	    }
+	    
+	    // Fix '0 seconds from now' bug --> 'just now'
+	    if ($difference == 0 && $periods[$j] == 'seconds') {
+	    	return 'just now';
+	    }
    
 	    return "$difference $periods[$j] {$tense}";
 	}
