@@ -132,13 +132,7 @@
  	public function getSubset($firstIndex,$count,$key='objId',$sortOrder="default") {
  		// Return an array of objects according to the subset details given
 		$q = "SELECT * FROM `{$this->objectTypeTableName}` "
-			.(($this->bInheritFAccount)
- 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
- 				: '')
- 			."{$this->filter} ORDER BY "
- 			.(('objId' == $key)
- 				? "`{$this->objectTypeTableName}`.`objId` "
- 				: "`{$key}` ")
+			."{$this->filter} ORDER BY `{$key}` "
  			.(($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($count,$firstIndex);
 		$result = _db()->query($q);
@@ -260,14 +254,8 @@
  	protected function get_case1(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectTypeTableName}` " 
- 			.(($this->bInheritFAccount)
- 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
- 				: '')
- 			. $this->filter . " ORDER BY "
- 			.(('objId' == $k)
- 				? "`{$this->objectTypeTableName}`.`objId` "
- 				: "`{$k}` ")
- 			. (($s == "desc") ? " DESC " : " ASC ");
+ 			.$this->filter . " ORDER BY `{$k}` "
+ 			.(($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  			$results[] = new $this->objectType($row);	
@@ -289,14 +277,8 @@
  			$quotedValues[] = (('objId' == $unquoted) ? "`{$this->objectTypeTableName}`.`objId`" : "`{$unquoted}`"); 
  		}
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " 
- 			.(($this->bInheritFAccount)
- 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
- 				: '')
  			. $this->filter 
- 			. " ORDER BY "
- 			.(('objId' == $k)
- 				? "`{$this->objectTypeTableName}`.`objId` "
- 				: "`{$k}` ")
+ 			. " ORDER BY `{$k}` "
  			.(($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
@@ -314,17 +296,11 @@
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
  		$q = "SELECT * FROM `{$this->objectTypeTableName}` " 
- 			.(($this->bInheritFAccount)
- 				? "INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
- 				: '')
  			.(($this->filter) 
  				? " {$this->filter} AND "
 				: " WHERE ")			
  			."`{$this->objectTypeTableName}`.`{$k}`='{$u_v}' "
- 			." ORDER BY "
- 			.(('objId' == $k)
- 				? "`{$this->objectTypeTableName}`.`objId` "
- 				: "`{$k}` ")
+ 			." ORDER BY `{$k}` "
  			.(($s == "desc") ? " DESC " : " ASC ");
 
  		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
