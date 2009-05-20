@@ -256,7 +256,7 @@ class FModel {
  			$r .= "\t\t\t\$this->{$s->getName()} = \$data['{$s->getName()}_id'];\r\n";
  		}
  		foreach ($object->getPeers() as $s) {
- 			$table = self::standardizeTableName($s->getOwner());
+ 			$table = self::standardizeTableName($s->getForeign());
  			if ($s->getOwner() == $s->getForeign()) {
  				$type = self::standardizeAttributeName($s->getOwner());
  				$lookup = $s->getLookupTable();
@@ -270,9 +270,9 @@ class FModel {
  				// Set the filter for M:M between two different object types
 				$foreignName = self::standardizeAttributeName($s->getForeign());
 				$ownerName   = self::standardizeAttributeName($s->getOwner());
- 				$filter = "WHERE `{$table}`.`objId` IN ( SELECT `{$s->getLookupTable}`.`"
+ 				$filter = "WHERE `{$table}`.`objId` IN ( SELECT `{$s->getLookupTable()}`.`"
 					. $foreignName
- 					. "_id` FROM `{$s->getLookupTable()}` WHERE `{$s->getLookupTable}`.`"
+ 					. "_id` FROM `{$s->getLookupTable()}` WHERE `{$s->getLookupTable()}`.`"
 					. $ownerName
 					. "_id` = '{\$data['objId']}' )";
  			}
