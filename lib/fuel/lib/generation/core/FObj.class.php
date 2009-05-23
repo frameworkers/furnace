@@ -82,8 +82,9 @@
 			}
 		}
 		
+		
 		// Add parent sockets
-		if (isset($objectData['parents'])) {
+		if (isset($objectData['parents']) && !empty($objectData['parents'])) {
 			foreach ($objectData['parents'] as $foreignObjectName => $sockets) {
 				foreach ($sockets as $socketName => $socketData) {
 					$this->addParent(new FObjSocket($socketName,$this->name,$foreignObjectName,$socketData));
@@ -92,7 +93,7 @@
 		}
 		
 		// Add peer sockets
-		if (isset($objectData['peers'])) {
+		if (isset($objectData['peers']) && !empty($objectData['peers'])) {
 			foreach ($objectData['peers'] as $foreignObjectName => $sockets) {
 				foreach ($sockets as $socketName => $socketData) {
 					$this->addPeer(new FObjSocket($socketName,$this->name,$foreignObjectName,$socketData),$modelData);
@@ -101,7 +102,7 @@
 		}
 		
 		// Add child sockets
-		if (isset($objectData['children'])) {
+		if (isset($objectData['children']) && !empty($objectData['children'])) {
 			foreach ($objectData['children'] as $foreignObjectName => $sockets) {
 				foreach ($sockets as $socketName => $socketData) {
 					$this->addChild(new FObjSocket($socketName,$this->name,$foreignObjectName,$socketData));
