@@ -264,8 +264,12 @@ class Tadpole {
 						$cacheToCheck =& $this->conditionalCache;
 					}
 					if (! isset( $cacheToCheck[$value])) {
-						// Cache Miss ... compute and store value
-						$cacheToCheck[$value] = $this->get_recursively($value,$commands,$rejected,$iter_data);
+						// Cache Miss ... compute, and store value in the cache if it has not been rejected
+						//if ($cacheToCheck == $relativeConditionalCache) {echo ' rcc chosen';} else {echo ' conditional cache chosen';}
+						$v = $this->get_recursively($value,$commands,$rejected,$iter_data);
+						if (!$rejected) {
+							$cacheToCheck[$value] = $v;
+						}
 					} 
 					$conditionHeld = $cacheToCheck[$value];
 					
@@ -353,9 +357,12 @@ class Tadpole {
 						$cacheToCheck =& $this->conditionalCache;
 					}
 					if (! isset( $cacheToCheck[$value])) {
-						// Cache Miss ... compute and store value
-						$cacheToCheck[$value] = $this->get_recursively($value,$commands,$rejected,$iter_data);
-					} 
+						// Cache Miss ... compute, and store value in the cache if it has not been rejected
+						$v = $this->get_recursively($value,$commands,$rejected,$iter_data);
+						if (!$rejected) {
+							$cacheToCheck[$value] = $v;
+						}
+					}
 					$conditionHeld = $cacheToCheck[$value];
 					
 					// Skip this tag if it was rejected
@@ -393,10 +400,13 @@ class Tadpole {
 					} else {
 						$cacheToCheck =& $this->tagCache;	// global cache
 					}
-					if (! isset( $cacheToCheck[$value])) {
-						// Cache Miss ... compute and store value
-						$cacheToCheck[$value]   = $this->get_recursively($value,$commands,$rejected,$iter_data);
-					} 
+					if (! isset( $cacheToCheck["{$value}"])) {
+						// Cache Miss ... compute, and store value in the cache if it is not rejected
+						$v = $this->get_recursively($value,$commands,$rejected,$iter_data);
+						if (!$rejected) {
+							$cacheToCheck[$value] = $v;
+						}
+					}
 					
 					$actual_value = $this->process_commands($commands,$cacheToCheck[$value],$rejected,$iter_data);
 					//echo "ACTUAL_VALUE {$actual_value} ";
