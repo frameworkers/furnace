@@ -57,6 +57,10 @@
 	// Variable: visibility
 	// Specify the visibility {public,private,protected} of the attribute
 	private $visibility;
+	
+	// Array: validation
+	// An array of information regarding the validation of this attribute
+	private $validation;
   	
   	// Variable: functionName
   	// The unique name of this attribute as it would
@@ -89,6 +93,7 @@
 		$this->setIsUnique($data['unique'] === true);
 		$this->setDefaultValue($data['default']);
 		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "private");
+		$this->setValidation(isset($data['validation']) ? $data['validation'] : array());
   	}
   	
   	/*
@@ -212,6 +217,17 @@
   		return $this->visibility;	
   	}
   	
+  	/*
+  	 * Function: getValidation
+  	 * 
+  	 * Returns:
+  	 * 
+  	 *  (array) - The attribute's validation information
+  	 */
+  	public function getValidation() {
+  		return $this->validation;	
+  	}
+  	
   	public function setName($value) {
   		$this->name = $value;
   	}
@@ -328,6 +344,20 @@
   	 */
   	public function setVisibility($value) {
   		$this->visibility = $value;	
+  	}
+  	
+  	/*
+  	 * Function: setValidation
+  	 * 
+  	 * Parameters:
+  	 * 
+  	 *  value - The validation information to use for this attribute
+  	 * 
+  	 */
+  	public function setValidation($value) {
+  		if (empty($value)) { $this->validation = array(); }
+  		else 
+  			$this->validation = $value;	
   	}
   }
 ?>
