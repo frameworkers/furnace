@@ -59,7 +59,23 @@ class FModel {
 					. "      size: {$attr->getSize()}\r\n"
 					. "      min:  {$attr->getMin()}\r\n"
 					. "      max:  {$attr->getMax()}\r\n"
-					. "      default: {$attr->getDefaultValue()}\r\n";	
+					. "      default: {$attr->getDefaultValue()}\r\n"
+					. "      validation:\r\n";
+					foreach ($attr->getValidation() as $validationInstruction => $instructionParameters) {
+						$r .= "        {$validationInstruction}: { ";
+						$parms = array();
+						foreach ($instructionParameters as $k=>$v) {
+							if (true  === $v) {$v = 'y';}
+							if (false === $v) {$v = 'n';}
+							if ($k == "pattern") {	// patterns need to be in quotes
+								$parms[] = "{$k}: \"{$v}\"";
+							} else {
+								$parms[] = "{$k}: {$v}";
+							}
+						}
+						$r .= implode(' , ', $parms) . " }\r\n";
+					}
+						
 					if ($attr->isUnique()) {
 						$r .= "      unique: yes\r\n";
 					}
