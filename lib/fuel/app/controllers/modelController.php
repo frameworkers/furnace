@@ -68,7 +68,7 @@ class ModelController extends Controller {
 	public function saveModel() {
 		file_put_contents(
 			_furnace()->rootdir.
-			"/app/model/model.yml",$this->form['contents']);
+			"/app/model/model.yml",stripslashes($this->form['contents']));
 			
 		$this->flash("model changes saved. Don't forget to "
 			."<a class=\"ff\" href=\"/fuel/model/generate/\">regenerate your model objects</a>!");
