@@ -545,7 +545,62 @@ class FModel {
 			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
 		$r .= "\t\t}\r\n";
 
- 		
+		
+		/*
+		 * Create/Delete functions for 'child' relationships
+		 */
+ 		foreach ($object->getChildren() as $childObject) {
+ 			// Compute 'Create' signature for childObject
+	 		$ua    = array();
+	 		$nonua = array();
+	 		foreach ($this->objects[$childObject->getForeign()]->getParents() as $dep) {
+	 			if ($dep->isRequired()) {
+	 				$ua[] = "\$objectData['{$dep->getName()}_id']";
+	 			}
+	 		}
+	 		foreach ($this->objects[$childObject->getForeign()]->getAttributes() as $attr) {
+	 			if ($attr->isUnique()) {
+	 				$ua[]    = "\$objectData['{$attr->getName()}']";
+	 			} else {
+	 				$nonua[] = "\t\t\t\t\$o->set".self::standardizeName($attr->getName())
+	 					."(\$objectData['{$attr->getName()}'],false);\r\n";
+	 			}
+	 		}
+	 		$parentParams = '';
+	 		if ("FAccount" == $this->objects[$childObject->getForeign()]->getParentClass()) {	
+				// Allow for specification of inherited FAccount parameters
+	 			$parentParams = "$\$objectData['username'],\$objectData['password'],\$objectData['emailAddress']";
+	 			if (count($ua) > 0) {
+	 				$parentParams .= ",";
+	 			}
+	 		}
+	 		$createSignature = $parentParams.implode(",",$ua);
+	 		
+	 		// Output the function bodies
+ 			$r .= "\r\n\t\t// Create new '{$childObject->getName()}' object(s)\r\n"
+ 				. "\t\tpublic function create".self::standardizeName($childObject->getName())."FromArray(\$data=array()) {\r\n"
+ 				. "\t\t\t//TODO: implement this\r\n"
+ 				. "\t\t\t\$createdObjects = array();\r\n"
+ 				. "\t\t\tforeach (\$data as \$objectData) {\r\n"
+ 				. "\t\t\t\t\$o = {$childObject->getForeign()}::Create({$createSignature});\r\n"
+ 				. implode($nonua)
+ 				. "\t\t\t\t\$o->save();\r\n"
+ 				. "\t\t\t}\r\n"
+ 				. "\t\t\treturn (count(\$createdObjects) == 1) \r\n"
+ 				. "\t\t\t\t? \$createdObjects[0]\r\n"
+ 				. "\t\t\t\t: \$createdObjects;\r\n"
+ 				. "\t\t}\r\n"
+ 				. "\r\n\t\t// Delete existing '{$childObject->getName()}' object(s)\r\n"
+ 				. "\t\tpublic function delete".self::standardizeName($childObject->getName())."(\$ids=array()) {\r\n"
+ 				. "\t\t\tif (is_array(\$ids)) {\r\n"
+ 				. "\t\t\t\tforeach (\$ids as \$id) {\r\n"
+ 				. "\t\t\t\t\t{$childObject->getForeign()}::Delete(\$id);\r\n"
+ 				. "\t\t\t\t}\r\n"
+ 				. "\t\t\t} else {\r\n"
+ 				. "\t\t\t\t{$childObject->getForeign()}::Delete(\$ids);\r\n"
+ 				. "\t\t\t}\r\n"
+ 				. "\t\t}\r\n";
+ 		}
  		
  		
 		$r .="\t} // end {$object->getName()}\r\n\r\n";
