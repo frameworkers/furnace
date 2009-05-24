@@ -79,7 +79,8 @@ class Furnace {
  		}
  		
  		//Include the yml parser
-		include($this->rootdir . '/lib/yaml/spyc-0.2.5.php5');
+		//include($this->rootdir . '/lib/yaml/spyc-0.2.5.php5');
+		include($this->rootdir . '/lib/yaml/spyc-0.4.1.php');
 		
 		// Load the YML route definitions
 		$this->routes = self::yaml($this->rootdir . '/app/config/routes.yml');
