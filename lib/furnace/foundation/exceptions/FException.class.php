@@ -134,13 +134,17 @@ class MDB2_ErrorTranslator {
 class FValidationException extends FException {
 
 	//TODO: implement this class
+	protected $validator = '';
+	protected $variable  = '';
 	
-	public function __construct($message='') {
-		parent::__construct($message);
+	public function __construct($validator,$variable,$message='') {
+		parent::__construct($message,0);
+		$this->validator = $validator;
+		$this->variable  = $variable;
 	}
 	
 	public function __toString() {
-		'There was a problem with your input. Please check your values and try again.';
+		return "<b>There was a problem with your input:</b><br/>{$this->message} <br/><br/> Please check your values and try again.";
 	}
 }
 ?>
