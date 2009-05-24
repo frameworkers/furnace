@@ -353,11 +353,13 @@ class FModel {
  		
  		// Setters
 		foreach ($object->getAttributes() as $a) {
-			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true) {\r\n";
+			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true,\$bValidate = true) {\r\n";
 				
 			if ($a->getValidation()) {
 				$r .= "\t\t\t// Validate the provided value\r\n\t\t\t// FValidationException thrown on failure)\r\n";
-				$r .= "\t\t\t". FValidator::BuildValidationCodeForAttribute("\$value",$a);
+				$r .= "\t\t\tif(\$bValidate) {\r\n";
+				$r .= "\t\t\t\t". FValidator::BuildValidationCodeForAttribute("\$value",$a);
+				$r .= "\r\n\t\t\t}\r\n";
 				$r .= "\r\n";
 			}
 			$r .= "\t\t\t// Save the provided value\r\n"
@@ -452,6 +454,16 @@ class FModel {
  				$sqluv[] = "'{\${$attr->getName()}}'";
  				$dataua[] = "{$attr->getName()}";
  			}
+ 			if ('created' == $attr->getName()) {
+ 				$sqlua[] = '`created`';
+ 				$sqluv[] = 'NOW()';
+ 				$dataua[]= "created";
+ 			}
+ 			if ('modified' == $attr->getName()) {
+ 				$sqlua[] = '`modified`';
+ 				$sqluv[] = 'NOW()';
+ 				$dataua[]= "modified";
+ 			}
  		}
  		$parentParams = '';
  		if ("FAccount" == $object->getParentClass()) {
@@ -480,6 +492,7 @@ class FModel {
  		$r .= "\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
  		$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n";
  		$r .= "\t\t\t\$objectId = _db()->lastInsertID(\"{$object->getName()}\",\"objId\");\r\n";
+ 		$r .= "\t\t\t\$created  = \$modified = date('Y-m-d G:i:s',mktime());\r\n";
  	 		
  		// If the object extends FAccount, create a new account object first, and store the core
 		// attributes in the list of unique attributes for the class.
@@ -570,6 +583,30 @@ class FModel {
 		$r .= "\t\t}\r\n";
 
 		
+		// Update
+		$r .= "\r\n\t\tpublic function update(\$data,\$bSaveChanges = true,\$bValidate = true) {\r\n";
+		$ua    = array();
+		$nonua = array();
+		foreach ($object->getAttributes() as $attr) {
+ 			if ($attr->isUnique()) {
+ 				//$ua[]    = "\$data['{$attr->getName()}']";
+ 			} else {
+ 				if ("modified" == $attr->getName()) {
+ 					// Special case for 'modified' attribute
+ 					$nonua[] = "\t\t\tif (isset(\$data['modified'])) {\$this->setModified(\$data['modified'],false,\$bValidate);} else {\$this->setModified(date('Y-m-d G:i:s'),false,\$bValidate);}\r\n";
+ 				} else if ("created" == $attr->getName()) {
+ 					// Special case for 'created' attribute
+ 					$nonua[] = "\t\t\tif (isset(\$data['created'])) {\$this->setCreated(\$data['created'],false,\$bValidate);} \r\n";
+ 				} else {
+ 					$nonua[] = "\t\t\tif (isset(\$data['{$attr->getName()}'])) {\$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}'],false,\$bValidate);}\r\n";
+ 				}
+ 			}
+ 		}
+ 		
+ 		$r .= implode("",$nonua)."\r\n"
+ 			. "\t\t\tif (\$bSaveChanges) {\$this->save();}\r\n"
+ 			. "\t\t}\r\n";
+		
 		/*
 		 * Create/Delete functions for 'child' relationships
 		 */
@@ -579,13 +616,21 @@ class FModel {
 	 		$nonua = array();
 	 		foreach ($this->objects[$childObject->getForeign()]->getParents() as $dep) {
 	 			if ($dep->isRequired()) {
-	 				$ua[] = "\$objectData['{$dep->getName()}_id']";
+	 				if (strtolower($dep->getForeign()) == strtolower($object->getName())) {
+	 					$ua[] = "(isset(\$data['{$dep->getName()}_id']) ? \$data['{$dep->getName()}_id'] : \$this->objId)";
+	 				} else if ($this->objects[$dep->getForeign()]->getParentClass() == "FAccount") {
+	 					$ua[] = "(isset(\$data['{$dep->getName()}_id']) ? \$data['{$dep->getName()}_id'] : _user()->getObjId())";
+	 				} else {
+	 					$ua[] = "\$objectData['{$dep->getName()}_id']";
+	 				}
 	 			}
 	 		}
 	 		foreach ($this->objects[$childObject->getForeign()]->getAttributes() as $attr) {
 	 			if ($attr->isUnique()) {
 	 				$ua[]    = "\$objectData['{$attr->getName()}']";
 	 			} else {
+	 				// Special cases for created/modified -- ignore: handled internally
+	 				if ("created" == $attr->getName() || "modified" == $attr->getName()) { continue; }
 	 				$nonua[] = "\t\t\t\t\$o->set".self::standardizeName($attr->getName())
 	 					."(\$objectData['{$attr->getName()}'],false);\r\n";
 	 			}
@@ -593,16 +638,16 @@ class FModel {
 	 		$parentParams = '';
 	 		if ("FAccount" == $this->objects[$childObject->getForeign()]->getParentClass()) {	
 				// Allow for specification of inherited FAccount parameters
-	 			$parentParams = "$\$objectData['username'],\$objectData['password'],\$objectData['emailAddress']";
+	 			$parentParams = "\$objectData['username'],\$objectData['password'],\$objectData['emailAddress']";
 	 			if (count($ua) > 0) {
 	 				$parentParams .= ",";
 	 			}
 	 		}
-	 		$createSignature = $parentParams.implode(",",$ua);
+	 		$createSignature = $parentParams.implode(",\r\n\t\t\t\t\t",$ua);
 	 		
 	 		// Output the function bodies
  			$r .= "\r\n\t\t// Create new '{$childObject->getName()}' object(s)\r\n"
- 				. "\t\tpublic function create".self::standardizeName($childObject->getName())."FromArray(\$data=array()) {\r\n"
+ 				. "\t\tpublic function create".self::standardizeName($childObject->getName())."(\$data=array()) {\r\n"
  				. "\t\t\t//TODO: implement this\r\n"
  				. "\t\t\t\$createdObjects = array();\r\n"
  				. "\t\t\tforeach (\$data as \$objectData) {\r\n"
