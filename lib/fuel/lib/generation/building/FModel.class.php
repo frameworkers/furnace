@@ -65,9 +65,10 @@ class FModel {
 						$r .= "        {$validationInstruction}: { ";
 						$parms = array();
 						foreach ($instructionParameters as $k=>$v) {
-							if (true  === $v) {$v = 'y';}
-							if (false === $v) {$v = 'n';}
-							if ($k == "pattern") {	// patterns need to be in quotes
+							if ($v == null) { continue; }	// skip empty parameters
+							if (true  === $v) {$v = 'y';}	// handle boolean true
+							if (false === $v) {$v = 'n';}	// handle boolean false
+							if ($k == "pattern") {			// patterns need to be in quotes
 								$parms[] = "{$k}: \"{$v}\"";
 							} else {
 								$parms[] = "{$k}: {$v}";
@@ -352,8 +353,15 @@ class FModel {
  		
  		// Setters
 		foreach ($object->getAttributes() as $a) {
-			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true) {\r\n"
- 				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
+			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true) {\r\n";
+				
+			if ($a->getValidation()) {
+				$r .= "\t\t\t// Validate the provided value\r\n\t\t\t// FValidationException thrown on failure)\r\n";
+				$r .= "\t\t\t". FValidator::BuildValidationCodeForAttribute("\$value",$a);
+				$r .= "\r\n";
+			}
+			$r .= "\t\t\t// Save the provided value\r\n"
+				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
  				. "\t\t\tif (\$bSaveImmediately) {\r\n"
  				. "\t\t\t\t\$this->save('{$a->getName()}');\r\n"
  				. "\t\t\t}\r\n"
