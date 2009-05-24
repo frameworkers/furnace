@@ -34,9 +34,21 @@ class FValidator {
 	}
 	
 	// Test whether the length of var matches the criteria
-	public static function Length($var,$is=null,$minimum=null,$maximum=null) {
-		//TODO: implement this function
-		return true;
+	public static function Length($var,$is=null,$minimum=null,$maximum=null,$field=null) {
+		if ($is != null && (strlen($var) != $is)) {
+			throw new FValidationException('Length',$var,
+				"'{$var}' has incorrect length. Expected {$is} character(s)");
+		}
+		
+		if ($minimum != null && (!isset($var[$minimum-1]))) {
+			throw new FValidationException('Length',$var,
+				"'{$var}' does not meet minimum length requirement of {$minimum} character(s) for <b>{$field}</b>");
+		}
+		
+		if ($maximum != null && (isset($var[$maximum]))) {
+			throw new FValidationException('Length',$var,
+				"'{$var}' exceeds maximum permitted length of {$maximum} character(s)");
+		}
 	}
 	
 	// Test whether var IS in a set of values
@@ -53,14 +65,18 @@ class FValidator {
 	
 	//Test whether var evaluates to true
 	public static function Acceptance($var,$bStrict = false) {
-		return ($bStrict) 
-			? $var === true
-			: $var ==  true;
+		if (($bStrict && ($var !== true)) || (!$bStrict && ($var != true))) {
+			throw new FValidationException('Acceptance',$var,
+				"{$var} did not evaluate to 'true'");
+		}
 	}
 	
 	// Test whether the values confirm one another
 	public static function Confirmation($var,$match) {
-		return ($var == $match);
+		if ($var != $match) {
+			throw new FValidationException('Confirmation',$var,
+				"{$var} did not match expected value {$match}");
+		}
 	}
 	
 	public static function Email($var) {
@@ -91,6 +107,7 @@ class FValidator {
 				}
 		}*/
 		$criteria = $attribute->getValidation();
+		$field    = $attribute->getName();
 		$response = array();
 		foreach ($criteria as $validationInstruction => $detail) {
 			switch (strtolower($validationInstruction)) {
@@ -113,7 +130,7 @@ class FValidator {
 					$is = isset($detail['is']) ? $detail['is'] : 'null';
 					$min= isset($detail['min'])? $detail['min']: 'null';
 					$max= isset($detail['max'])? $detail['max']: 'null';
-					$response[] = "FValidator::Length({$var},{$is},{$min},{$max});";
+					$response[] = "FValidator::Length({$var},{$is},{$min},{$max},{$field});";
 					break;
 				case "email":
 					$response[] = "FValidator::Email({$var});";
@@ -121,7 +138,7 @@ class FValidator {
 				default: break;
 			}
 		}
-		return implode("\r\n\t\t\t",$response) . "\r\n";
+		return implode("\r\n\t\t\t\t",$response) . "\r\n";
 	}
 }
 ?>
