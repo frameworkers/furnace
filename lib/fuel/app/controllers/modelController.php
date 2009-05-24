@@ -443,6 +443,36 @@ END;
 				$this->flash("Renamed attribute");
 			}
 			
+			if ($this->form['action'] == "validation") {
+				
+				// Process selected validation options
+				$validationData = array();
+				if (isset($this->form['optionFormat'])) {
+					$validationData['format'] = array(
+						'pattern' => (isset($this->form['formatPattern'])? $this->form['formatPattern'] : null),
+						'negate'  => (isset($this->form['formatNegate']) ? true : false)
+					);
+				}
+				if (isset($this->form['optionNumeric'])) {
+					$validationData['numeric'] = array(
+						'is' => (isset($this->form['numericIs'])? $this->form['numericIs'] : null),
+						'min'=> (isset($this->form['numericMin'])? $this->form['numericMin'] : null),
+						'max'=> (isset($this->form['numericMax'])? $this->form['numericMax'] : null)
+					);
+				}
+				if (isset($this->form['optionLength'])) {
+					$validationData['length'] = array(
+						'is' => (isset($this->form['lengthIs'])? $this->form['lengthIs'] : null),
+						'min'=> (isset($this->form['lengthMin'])? $this->form['lengthMin'] : null),
+						'max'=> (isset($this->form['lengthMax'])? $this->form['lengthMax'] : null)
+					);
+				}
+				
+				// Store the validation data in the attribute
+				$attribute->setValidation($validationData);	
+				$this->flash("Set validation criteria for attribute");		
+			}
+			
 			// Write changes to the model file
 			$this->writeModelFile($m->export());
 			$this->generateObjects();
