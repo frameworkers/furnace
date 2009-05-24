@@ -198,12 +198,12 @@ class Tadpole {
 			
 			
 			// Determine whether the value implies a conditional statement
-			$conditional = ("if:" == substr($value,0,3))
+			$conditional = (isset($value[2]) && "if:" == substr($value,0,3))
 				? true
 				: false;
 				
 			// Determine whether the value implies an assert statement
-			if ("assert:" == substr($value,0,7)) {
+			if (isset($value[6]) && "assert:" == substr($value,0,7)) {
 				$conditional = true;				// mark the tag conditional
 				$value = "if:" . substr($value,7);	// Internally Rewrite as an "if" tag
 				$commands['else'] = '';				// Hide the content on failure	
