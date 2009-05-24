@@ -18,4 +18,5 @@
  require("core/FSessionManager.class.php");
  require("database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
  require("exceptions/FException.class.php");
+ require("validation/FValidator.class.php");
 ?>
