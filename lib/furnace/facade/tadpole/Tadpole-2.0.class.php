@@ -208,6 +208,83 @@ class Tadpole {
 				$value = "if:" . substr($value,7);	// Internally Rewrite as an "if" tag
 				$commands['else'] = '';				// Hide the content on failure	
 			}
+			
+			// Determine whether the value implies an input statement
+			if (isset($value[5]) && "input:" == substr($value,0,6)) {
+				$value = substr($value,6);
+				
+				// Process the input statement
+				
+				// 1. get the base object
+				$dotPosition = strrpos($value,'.');
+				if (false !== $dotPosition) {
+					$baseObjectNeedle = substr($value,0,strrpos($value,'.'));
+					$attributeNeedle  = substr($value,strrpos($value,'.') + 1);
+				} else {
+					$baseObjectNeedle = $value;
+					$attributeNeedle  = '';
+				}
+				// style pre-processing (replace | with ; in style definition)
+				if (isset($commands['style'])) {
+					$commands['style'] = str_replace('|',';',$commands['style']);
+				}
+				$output           = '';
+				
+				// Special case for the "submit" input
+				if ("_submit" == $baseObjectNeedle) {
+					$output = "<input type=\"submit\" name=\"{$commands['name']}\" id=\"{$commands['id']}\" value=\"{$commands['value']}\" class=\"{$commands['class']}\" style=\"{$commands['style']}\"/>";
+				} else 
+				// Special case for the "reset" input
+				// Special case for the "button" input
+				
+				// If the baseObjectNeedle begins with '~', it is a class definition, not an object
+				if ('~' == $baseObjectNeedle[0]) {
+					try {
+						$attributeData = call_user_func(
+							array(substr($baseObjectNeedle,1),'_getAttribute'),$attributeNeedle);
+						$output = $this->input_helper(null,$attributeNeedle,$attributeData,$commands);
+					} catch (Exception $e) {
+						$rejected = true;
+					}
+				} else {
+					$baseObject = $this->get_recursively($baseObjectNeedle,$commands,$rejected,$iter_data);
+					if (!$rejected && is_object($baseObject)) {
+						
+						// Special case for the 'objId' attribute:
+						if ('objId' == $attributeNeedle) {
+							// check for name override
+							$name   = (isset($commands['name'])) ? $commands['name'] : "{$baseObject->_getObjectClassName()}_id";
+							$output = "<input type=\"hidden\" name=\"{$name}\" value=\"{$baseObject->getObjId()}\"/>";
+						// All other attributes:
+						} else {
+							if (false !== ($attributeData = $baseObject->_getAttribute($attributeNeedle))) {
+								// Generate the output for the attribute input item
+								$output = $this->input_helper($baseObject,$attributeNeedle,$attributeData,$commands);
+							} else {
+								$rejected = true;
+							}
+						}
+					}
+				}
+
+				if (!$rejected ) {
+					// apply the output and update the offset
+					$before   = substr($contents,0,$tagStart);
+					$after    = substr($contents,$tagEnd + 1);				
+					$contents = $before . $output . $after;
+					// Increment offset
+					$offset = (false !== $outer_offset) ? $outer_offset : ($tagStart + strlen($output));
+					// Move on to the next tag
+					continue;
+				}  
+				
+				// Skip this tag if it was rejected
+				if ($rejected) {
+					$offset = (false !== $outer_offset) ? $outer_offset : ($tagEnd + 1);	// Increment the offset
+					continue;	// Move on to the next tag
+				}
+
+			}
 							
 			// Determine whether the tag represents a block, or is simple
 			if (isset($commands['block'])) {
@@ -836,6 +913,48 @@ class Tadpole {
 	    }
    
 	    return "$difference $periods[$j] {$tense}";
+	}
+	
+	public function input_helper($object,$attributeName,$attributeData,&$commands) {
+		
+		// prefer POSTed/submitted values over the currently stored object attribute value
+		if (isset($_POST) && isset($_POST[$attributeName])) {
+			// reads the value from the POST array
+			$value = $_POST[$attributeName];
+		} else if (null !== ($value = _readUserInput($attributeName))) {
+			// reads the value from the previously saved user input
+		} else {
+			// reads the value from the stored object attribute value
+			if (is_object($object)) {
+				$fn = "get{$attributeName}";
+				$value = $object->$fn();
+			} else {
+				// No value provided
+				$value = '';
+			}
+		}
+		
+		// determine whether any validation errors exist for the attribute
+		$bHasErrors = (isset($_SESSION['_validationErrors'][$attributeName]));
+		$errorClass = ($bHasErrors) ? "inputError" : '';
+		
+		$errorInformation = '';
+		if ($bHasErrors) {
+			$errorInformation = '<div class="error"><ul style="list-style:none;">';
+			foreach ($_SESSION['_validationErrors'][$attributeName] as $err) {
+				$errorInformation .= "<li>({$err[0]}) {$err[1]}</li>";
+			}
+			$errorInformation .= "</ul></div>";
+		}
+		
+		// determine the type of input to create
+		switch ($attributeData['type']) {
+			case 'text':
+				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$value}</textarea>{$errorInformation}";
+			case 'string':
+			default:
+				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".htmlentities($value)."\" maxlen=\"{$attributeData['size']}\"/>{$errorInformation}";
+		}
 	}
 	
 	public function set($key,$value) {
