@@ -308,6 +308,10 @@ class FModel {
 
  		$r .= "\t\t} // end constructor\r\n\r\n";
  		
+ 		$r .= "\t\tpublic static function _getObjectClassName() {\r\n"
+ 			. "\t\t\treturn \"{$object->getName()}\";\r\n"
+ 			. "\t\t}\r\n";
+ 		
  		// Getters
 		foreach ($object->getAttributes() as $a) {
 	 		$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n";
@@ -351,6 +355,32 @@ class FModel {
 			}
  		}
  		
+ 		// Validators
+ 		$r .= "\t\tpublic static function validate(\$data) {\r\n"
+ 			. "\t\t\t\$validated = true;\r\n"
+ 			. "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
+ 			. "\t\t\t\tswitch (\$k) {\r\n";
+ 		foreach ($object->getAttributes() as $a) {
+ 			if ($a->getValidation()) {
+ 				$r .= "\t\t\t\t\tcase '{$a->getName()}':\r\n"
+ 					. "\t\t\t\t\t\ttry { self::validate{$a->getFunctionName()}(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
+ 			}
+ 		}	
+ 		$r .= "\t\t\t\t\tdefault: break;\r\n"
+ 			. "\t\t\t\t}\r\n"
+ 			. "\t\t\t}\r\n"
+ 			. "\t\t\treturn \$validated;\r\n"
+ 			. "\t\t}\r\n\r\n";
+ 		
+ 		// Individual Validation Methods
+ 		foreach ($object->getAttributes() as $a) {
+ 			if ($a->getValidation()) {
+ 				$r .= "\t\tpublic static function validate{$a->getFunctionName()}(\$value) {\r\n"
+ 					. "\t\t\t" . FValidator::BuildValidationCodeForAttribute("\$value",$a)
+ 					. "\r\n\t\t}\r\n\r\n";
+ 			}
+ 		}
+ 		
  		// Setters
 		foreach ($object->getAttributes() as $a) {
 			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true,\$bValidate = true) {\r\n";
@@ -358,8 +388,8 @@ class FModel {
 			if ($a->getValidation()) {
 				$r .= "\t\t\t// Validate the provided value\r\n\t\t\t// FValidationException thrown on failure)\r\n";
 				$r .= "\t\t\tif(\$bValidate) {\r\n";
-				$r .= "\t\t\t\t". FValidator::BuildValidationCodeForAttribute("\$value",$a);
-				$r .= "\r\n\t\t\t}\r\n";
+				$r .= "\t\t\t\tself::validate{$a->getFunctionName()}(\$value);\r\n";
+				$r .= "\t\t\t}\r\n";
 				$r .= "\r\n";
 			}
 			$r .= "\t\t\t// Save the provided value\r\n"
@@ -584,7 +614,8 @@ class FModel {
 
 		
 		// Update
-		$r .= "\r\n\t\tpublic function update(\$data,\$bSaveChanges = true,\$bValidate = true) {\r\n";
+		$r .= "\r\n\t\tpublic function update(\$data,\$bSaveChanges = true,\$bValidate = true) {\r\n"
+			. "\t\t\t\$validated = true;\r\n";
 		$ua    = array();
 		$nonua = array();
 		foreach ($object->getAttributes() as $attr) {
@@ -598,13 +629,14 @@ class FModel {
  					// Special case for 'created' attribute
  					$nonua[] = "\t\t\tif (isset(\$data['created'])) {\$this->setCreated(\$data['created'],false,\$bValidate);} \r\n";
  				} else {
- 					$nonua[] = "\t\t\tif (isset(\$data['{$attr->getName()}'])) {\$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}'],false,\$bValidate);}\r\n";
+ 					$nonua[] = "\t\t\tif (isset(\$data['{$attr->getName()}'])) { try { \$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}'],false,\$bValidate);} catch (FValidationException \$e) {\$validated = false;} }\r\n";
  				}
  			}
  		}
  		
  		$r .= implode("",$nonua)."\r\n"
- 			. "\t\t\tif (\$bSaveChanges) {\$this->save();}\r\n"
+ 			. "\t\t\tif (\$bValidate && !\$validated) { return false; }\r\n"
+ 			. "\t\t\tif (\$bSaveChanges && \$validated) {\$this->save();}\r\n"
  			. "\t\t}\r\n";
 		
 		/*
@@ -631,8 +663,8 @@ class FModel {
 	 			} else {
 	 				// Special cases for created/modified -- ignore: handled internally
 	 				if ("created" == $attr->getName() || "modified" == $attr->getName()) { continue; }
-	 				$nonua[] = "\t\t\t\t\$o->set".self::standardizeName($attr->getName())
-	 					."(\$objectData['{$attr->getName()}'],false);\r\n";
+	 				$nonua[] = "\t\t\t\t\t\$o->set".self::standardizeName($attr->getName())
+	 					."(\$objectData['{$attr->getName()}'],false,false);\r\n";	//validation already handled 
 	 			}
 	 		}
 	 		$parentParams = '';
@@ -651,9 +683,11 @@ class FModel {
  				. "\t\t\t//TODO: implement this\r\n"
  				. "\t\t\t\$createdObjects = array();\r\n"
  				. "\t\t\tforeach (\$data as \$objectData) {\r\n"
- 				. "\t\t\t\t\$o = {$childObject->getForeign()}::Create({$createSignature});\r\n"
+ 				. "\t\t\t\tif ( {$childObject->getForeign()}::validate(\$objectData) ) {\r\n"
+ 				. "\t\t\t\t\t\$o = {$childObject->getForeign()}::Create({$createSignature});\r\n"
  				. implode($nonua)
- 				. "\t\t\t\t\$o->save();\r\n"
+ 				. "\t\t\t\t\t\$o->save();\r\n"
+ 				. "\t\t\t\t} else { return false; }\r\n"
  				. "\t\t\t}\r\n"
  				. "\t\t\treturn (count(\$createdObjects) == 1) \r\n"
  				. "\t\t\t\t? \$createdObjects[0]\r\n"
@@ -668,8 +702,31 @@ class FModel {
  				. "\t\t\t} else {\r\n"
  				. "\t\t\t\t{$childObject->getForeign()}::Delete(\$ids);\r\n"
  				. "\t\t\t}\r\n"
+ 				. "\t\t\treturn true;\r\n"
  				. "\t\t}\r\n";
  		}
+ 		
+ 		// 'Reflective' functions (give model information about attributes to the form input builder)
+ 		$r .= "\t\tpublic static function _getAttribute(\$name) {\r\n";
+ 		$r .= "\t\t\tswitch (\$name) {\r\n";
+		foreach ($object->getAttributes() as $attr) {
+			$components = array();
+			switch ($attr->getType()) {
+				case "text":
+					$components[] = "'type'=>'text'";
+					break;
+				case "string":
+					$components[] = "'type'=>'string'";
+					$components[] = "'size'=>{$attr->getSize()}";
+					break;
+				default: break;
+			}
+			$r .= "\t\t\t\tcase '{$attr->getName()}':\r\n";
+			$r .= "\t\t\t\t\treturn array(".implode(',',$components).");\r\n";
+		}
+		$r .= "\t\t\t\tdefault: return false;\r\n";
+		$r .= "\t\t\t}\r\n";
+		$r .= "\t\t}\r\n\r\n";
  		
  		
 		$r .="\t} // end {$object->getName()}\r\n\r\n";
