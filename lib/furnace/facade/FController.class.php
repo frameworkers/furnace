@@ -15,7 +15,10 @@ class FController extends FPage {
 	}
 	
 	private function processPostedData() {
+		// Store a pointer to the recently submitted data 
 		$this->form =& $_POST;
+		// Clear old validation errors from the session
+		$_SESSION['_validationErrors'] = array();
 	}
 	
 	
