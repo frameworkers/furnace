@@ -141,6 +141,9 @@ class FValidationException extends FException {
 		parent::__construct($message,0);
 		$this->validator = $validator;
 		$this->variable  = $variable;
+		
+		// store error message in the session
+		$_SESSION['_validationErrors'][$variable][] = array($validator,$message);
 	}
 	
 	public function __toString() {

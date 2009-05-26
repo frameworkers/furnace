@@ -36,18 +36,18 @@ class FValidator {
 	// Test whether the length of var matches the criteria
 	public static function Length($var,$is=null,$minimum=null,$maximum=null,$field=null) {
 		if ($is != null && (strlen($var) != $is)) {
-			throw new FValidationException('Length',$var,
-				"'{$var}' has incorrect length. Expected {$is} character(s)");
+			throw new FValidationException('Length',$field,
+				"<b>{$field}</b> has incorrect length. Expected {$is} character(s) but got ".strlen($var)."</b>");
 		}
 		
 		if ($minimum != null && (!isset($var[$minimum-1]))) {
-			throw new FValidationException('Length',$var,
-				"'{$var}' does not meet minimum length requirement of {$minimum} character(s) for <b>{$field}</b>");
+			throw new FValidationException('Length',$field,
+				"<b>{$field}</b> must be at least {$minimum} character(s)");
 		}
 		
 		if ($maximum != null && (isset($var[$maximum]))) {
-			throw new FValidationException('Length',$var,
-				"'{$var}' exceeds maximum permitted length of {$maximum} character(s)");
+			throw new FValidationException('Length',$field,
+				"<b>{$field}</b> must be less than {$maximum} character(s)");
 		}
 	}
 	
@@ -64,17 +64,17 @@ class FValidator {
 	}
 	
 	//Test whether var evaluates to true
-	public static function Acceptance($var,$bStrict = false) {
+	public static function Acceptance($var,$bStrict = false,$field=null) {
 		if (($bStrict && ($var !== true)) || (!$bStrict && ($var != true))) {
-			throw new FValidationException('Acceptance',$var,
-				"{$var} did not evaluate to 'true'");
+			throw new FValidationException('Acceptance',$field,
+				"<b>{$field}</b> did not evaluate to 'true'");
 		}
 	}
 	
 	// Test whether the values confirm one another
-	public static function Confirmation($var,$match) {
+	public static function Confirmation($var,$match,$field=null) {
 		if ($var != $match) {
-			throw new FValidationException('Confirmation',$var,
+			throw new FValidationException('Confirmation',$field,
 				"{$var} did not match expected value {$match}");
 		}
 	}
@@ -107,7 +107,7 @@ class FValidator {
 				}
 		}*/
 		$criteria = $attribute->getValidation();
-		$field    = $attribute->getName();
+		$field    = "'{$attribute->getName()}'";
 		$response = array();
 		foreach ($criteria as $validationInstruction => $detail) {
 			switch (strtolower($validationInstruction)) {
@@ -138,7 +138,7 @@ class FValidator {
 				default: break;
 			}
 		}
-		return implode("\r\n\t\t\t\t",$response) . "\r\n";
+		return implode("\r\n\t\t\t",$response) . "\r\n";
 	}
 }
 ?>
