@@ -153,7 +153,7 @@ class FValidator {
 				case "format":
 					$pattern = isset($detail['pattern']) ? "\"{$detail['pattern']}\"" : 'null';
 					$negate  = isset($detail['negate'])  ? (($detail['negate']) ? 'true' : 'false')  : 'null';
-					$response[] = "FValidator::Format({$var},{$pattern},{$negate});";
+					$response[] = "FValidator::Format({$var},{$pattern},{$negate},{$field});";
 					break;
 				case "numeric":
 					$is = isset($detail['is']) ? $detail['is'] : 'null';
