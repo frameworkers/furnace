@@ -209,9 +209,9 @@ class Tadpole {
 				$commands['else'] = '';				// Hide the content on failure	
 			}
 			
-			// Determine whether the value implies an input statement
-			if (isset($value[5]) && "input:" == substr($value,0,6)) {
-				$value = substr($value,6);
+			// Determine whether the value implies an input/error statement
+			if (isset($value[5]) && ("input:" == substr($value,0,6) || "error:" == substr($value,0,6))) {
+				list($type,$value) = explode(':',$value,2);
 				
 				// Process the input statement
 				
@@ -228,43 +228,48 @@ class Tadpole {
 				if (isset($commands['style'])) {
 					$commands['style'] = str_replace('|',';',$commands['style']);
 				}
-				$output           = '';
 				
-				// Special case for the "submit" input
-				if ("_submit" == $baseObjectNeedle) {
-					$output = "<input type=\"submit\" name=\"{$commands['name']}\" id=\"{$commands['id']}\" value=\"{$commands['value']}\" class=\"{$commands['class']}\" style=\"{$commands['style']}\"/>";
-				} else 
-				// Special case for the "reset" input
-				// Special case for the "button" input
-				
-				// If the baseObjectNeedle begins with '~', it is a class definition, not an object
-				if ('~' == $baseObjectNeedle[0]) {
-					try {
-						$attributeData = call_user_func(
-							array(substr($baseObjectNeedle,1),'_getAttribute'),$attributeNeedle);
-						$output = $this->input_helper(null,$attributeNeedle,$attributeData,$commands);
-					} catch (Exception $e) {
-						$rejected = true;
-					}
-				} else {
-					$baseObject = $this->get_recursively($baseObjectNeedle,$commands,$rejected,$iter_data);
-					if (!$rejected && is_object($baseObject)) {
-						
-						// Special case for the 'objId' attribute:
-						if ('objId' == $attributeNeedle) {
-							// check for name override
-							$name   = (isset($commands['name'])) ? $commands['name'] : "{$baseObject->_getObjectClassName()}_id";
-							$output = "<input type=\"hidden\" name=\"{$name}\" value=\"{$baseObject->getObjId()}\"/>";
-						// All other attributes:
-						} else {
-							if (false !== ($attributeData = $baseObject->_getAttribute($attributeNeedle))) {
-								// Generate the output for the attribute input item
-								$output = $this->input_helper($baseObject,$attributeNeedle,$attributeData,$commands);
+				if ("input" == $type) {
+					$output           = '';
+					// Special case for the "submit" input
+					if ("_submit" == $baseObjectNeedle) {
+						$output = "<input type=\"submit\" name=\"{$commands['name']}\" id=\"{$commands['id']}\" value=\"{$commands['value']}\" class=\"{$commands['class']}\" style=\"{$commands['style']}\"/>";
+					} else 
+					// Special case for the "reset" input
+					// Special case for the "button" input
+					
+					// If the baseObjectNeedle begins with '~', it is a class definition, not an object
+					if ('~' == $baseObjectNeedle[0]) {
+						try {
+							$attributeData = call_user_func(
+								array(substr($baseObjectNeedle,1),'_getAttribute'),$attributeNeedle);
+							$output = $this->input_helper(null,$attributeNeedle,$attributeData,$commands);
+						} catch (Exception $e) {
+							$rejected = true;
+						}
+					} else {
+						$baseObject = $this->get_recursively($baseObjectNeedle,$commands,$rejected,$iter_data);
+						if (!$rejected && is_object($baseObject)) {
+							
+							// Special case for the 'objId' attribute:
+							if ('objId' == $attributeNeedle) {
+								// check for name override
+								$name   = (isset($commands['name'])) ? $commands['name'] : "{$baseObject->_getObjectClassName()}_id";
+								$output = "<input type=\"hidden\" name=\"{$name}\" value=\"{$baseObject->getObjId()}\"/>";
+							// All other attributes:
 							} else {
-								$rejected = true;
+								if (false !== ($attributeData = $baseObject->_getAttribute($attributeNeedle))) {
+									// Generate the output for the attribute input item
+									$output = $this->input_helper($baseObject,$attributeNeedle,$attributeData,$commands);
+								} else {
+									$rejected = true;
+								}
 							}
 						}
 					}
+				} else if ("error" == $type) {
+					// Get the stored error information for this attribute
+					$output = $this->error_helper($attributeNeedle,$commands);
 				}
 
 				if (!$rejected ) {
@@ -639,6 +644,9 @@ class Tadpole {
 							break;
 					}
 					break;
+				case "htmlentities":
+					$value = htmlentities($value);
+					break;
 				default:
 					break;
 			}
@@ -915,6 +923,24 @@ class Tadpole {
 	    return "$difference $periods[$j] {$tense}";
 	}
 	
+	public function error_helper($attributeName,&$commands) {
+		// determine whether any validation errors exist for the attribute
+		$bHasErrors = (isset($_SESSION['_validationErrors'][$attributeName]));
+		$errorClass = ($bHasErrors) ? "inputError" : '';
+		
+		$errorInformation = '';
+		if ($bHasErrors) {
+			$errorInformation = '<div class="error"><ul style="list-style:none;">';
+			foreach ($_SESSION['_validationErrors'][$attributeName] as $err) {
+				$errorInformation .= "<li>({$err[0]}) {$err[1]}</li>";
+			}
+			$errorInformation .= "</ul></div>";
+			unset($_SESSION['_validationErrors'][$attributeName]); 	// consume the error
+		}
+		
+		return $errorInformation;
+	}
+	
 	public function input_helper($object,$attributeName,$attributeData,&$commands) {
 		
 		// prefer POSTed/submitted values over the currently stored object attribute value
@@ -945,15 +971,18 @@ class Tadpole {
 				$errorInformation .= "<li>({$err[0]}) {$err[1]}</li>";
 			}
 			$errorInformation .= "</ul></div>";
+			unset($_SESSION['_validationErrors'][$attributeName]); 	// consume the error
 		}
 		
 		// determine the type of input to create
 		switch ($attributeData['type']) {
 			case 'text':
-				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$value}</textarea>{$errorInformation}";
+				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">".stripslashes($value)."</textarea>{$errorInformation}";
 			case 'string':
+			case 'integer':
+			case 'float':
 			default:
-				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".htmlentities($value)."\" maxlen=\"{$attributeData['size']}\"/>{$errorInformation}";
+				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes(htmlentities($value))."\" maxlen=\"{$attributeData['size']}\"/>{$errorInformation}";
 		}
 	}
 	
