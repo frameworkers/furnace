@@ -211,6 +211,10 @@ class FModel {
 				. "\t\t{$a->getVisibility()} \${$a->getName()};\r\n\r\n";	
  		}
  		
+ 		$r .= "\t\t// Internal variable: _valid\r\n"
+ 			. "\t\t// boolean flag for current object validation state\r\n"
+ 			. "\t\tprivate \$_valid;";
+ 		
 		// add parents
  		foreach ($object->getParents() as $s) {
  			$r .= "\t\t// Variable: {$s->getName()}\r\n"
@@ -233,16 +237,13 @@ class FModel {
  		}
  		
  		// constructor
-		$r .= "\t\tpublic function __construct(\$data) {\r\n";
-		$r .= "\t\t\tif (!isset(\$data['objId']) || \$data['objId'] <= 0) {\r\n"
- 			. "\t\t\t\tthrow new FException(\"Invalid <code>objId</code> value in object constructor.\");\r\n"
- 			. "\t\t\t}\r\n\r\n";
-		if ("FAccount" == $object->getParentClass()) {
- 			$r .= "\t\t\tif (!isset(\$data['faccount_id']) || \$data['faccount_id'] <= 0) {\r\n"
- 				. "\t\t\t\tthrow new FException(\"Invalid <code>faccount_id</code> value in object constructor.\");\r\n"
- 				. "\t\t\t}\r\n\r\n";
+		$r .= "\t\tpublic function __construct(\$data=array()) {\r\n";	
+		$r .= "\t\t\t\$this->objId = isset(\$data['objId']) ? \$data['objId'] : 0;\r\n\r\n";
+		$r .= "\t\t\t\$this->_valid= true;\r\n";
+		
+		if ("FAccount" == $object->getParentClass()) {			
 			$r .= "\t\t\t// Initialize inherited attributes:\r\n"
-				. "\t\t\tif (!isset(\$data['username'])) {\r\n"
+				. "\t\t\tif (\$this->objId > 0 && !isset(\$data['username'])) {\r\n"
 				. "\t\t\t\t// FAccount data was NOT provided or is incomplete, get it...\r\n"
 				. "\t\t\t\t\$faccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
 				. "\t\t\t\t\$this->username = \$faccount->getUsername();\r\n"
@@ -254,7 +255,7 @@ class FModel {
 				. "\t\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
 				. "\t\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
 				. "\t\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n"
-				. "\t\t\t} else {\r\n"
+				. "\t\t\t} else if (\$this->objId > 0) {\r\n"
 				. "\t\t\t\t// FAccount data was provided with {$object->getName()} data...\r\n"
 				. "\t\t\t\t\$this->username = \$data['username'];\r\n"
 				. "\t\t\t\t\$this->password = \$data['password'];\r\n"
@@ -267,11 +268,20 @@ class FModel {
 				. "\t\t\t\t\$this->roles       = FAccount::getRolesForId(\$data['faccount_id']);\r\n"
 				. "\t\t\t}\r\n";
 		}
-		$r .= "\t\t\t// Initialize local attributes and sockets:\r\n"
-			. "\t\t\t\$this->objId = \$data['objId'];\r\n";
-		foreach ($object->getParents() as $s) {
- 			$r .= "\t\t\t\$this->{$s->getName()} = \$data['{$s->getName()}_id'];\r\n";
+		$r .= "\t\t\t// Initialize parents, peers, and children...\r\n";
+		$r .= "\t\t\t\$this->_initNonlocalAttributes(\$data);\r\n"
+ 			. "\t\t\t// Initialize local attributes...\r\n";
+ 		foreach ($object->getAttributes() as $a) {
+ 			$r .= "\t\t\tif (isset(\$data['{$a->getName()}'])) {\$this->{$a->getName()} = \$data['{$a->getName()}'];}\r\n";
  		}
+
+ 		$r .= "\t\t} // end constructor\r\n\r\n";
+ 		
+ 		$r .= "\t\tprivate function _initNonlocalAttributes(\$data) {\r\n";
+		foreach ($object->getParents() as $s) {
+ 			$r .= "\t\t\tif (isset(\$data['{$s->getName()}_id'])) {\$this->{$s->getName()} = \$data['{$s->getName()}_id'];} else {\$this->{$s->getName()} = 0; }\r\n";
+ 		}
+ 		$r .= "\t\t\tif (\$this->objId > 0) {\r\n";
  		foreach ($object->getPeers() as $s) {
  			$table = self::standardizeTableName($s->getForeign());
  			if ($s->getOwner() == $s->getForeign()) {
@@ -279,9 +289,9 @@ class FModel {
  				$lookup = $s->getLookupTable();
  				// Set the filter for M:M between two objects of the same type
  				$filter = "WHERE `{$table}`.`objId` IN ( SELECT (`"
-					. $type . "1_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "2_id`='{\$data['objId']}') "
+					. $type . "1_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "2_id`='{\$this->objId}') "
 					. "OR ("
-					. $type . "2_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "1_id`='{\$data['objId']}') "
+					. $type . "2_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "1_id`='{\$this->objId}') "
 					. ") ";
  			} else {
  				// Set the filter for M:M between two different object types
@@ -291,22 +301,19 @@ class FModel {
 					. $foreignName
  					. "_id` FROM `{$s->getLookupTable()}` WHERE `{$s->getLookupTable()}`.`"
 					. $ownerName
-					. "_id` = '{\$data['objId']}' )";
+					. "_id` = '{\$this->objId}' )";
  			}
 			
-			$r .= "\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
-			$r .= "\t\t\t\$this->{$s->getName()}->setOwnerId(\$data['objId']);\r\n";
+			$r .= "\t\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
+			$r .= "\t\t\t\t\$this->{$s->getName()}->setOwnerId(\$this->objId);\r\n";
  		}
  		foreach ($object->getChildren() as $s) {
- 			$filter = "WHERE `".self::standardizeTableName($s->getForeign())."`.`{$s->getReflectVariable()}_id`='{\$data['objId']}' ";
- 			$r .= "\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
- 			$r .= "\t\t\t\$this->{$s->getName()}->setOwnerId(\$data['objId']);\r\n";
+ 			$filter = "WHERE `".self::standardizeTableName($s->getForeign())."`.`{$s->getReflectVariable()}_id`='{\$this->objId}' ";
+ 			$r .= "\t\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
+ 			$r .= "\t\t\t\t\$this->{$s->getName()}->setOwnerId(\$this->objId);\r\n";
  		}
- 		foreach ($object->getAttributes() as $a) {
- 			$r .= "\t\t\t\$this->{$a->getName()} = \$data['{$a->getName()}'];\r\n";
- 		}
-
- 		$r .= "\t\t} // end constructor\r\n\r\n";
+ 		$r .= "\t\t\t}\r\n";
+ 		$r .= "\t\t} // end _initNonlocalAttributes\r\n\r\n";
  		
  		$r .= "\t\tpublic static function _getObjectClassName() {\r\n"
  			. "\t\t\treturn \"{$object->getName()}\";\r\n"
@@ -356,14 +363,33 @@ class FModel {
  		}
  		
  		// Validators
- 		$r .= "\t\tpublic static function validate(\$data) {\r\n"
+ 		//
+ 		// internal self validation function to ensure all required information is present and valid
+ 		// Required information:
+ 		//		-- all required parent attributes are either objects or non-zero ids
+ 		//		-- all required attributes are valid
+ 		$r .= "\t\tprivate function _validateRequired() {\r\n"
+ 			. "\t\t\t\$validated = true;\r\n"; 
+ 		foreach ($object->getParents() as $s) {
+ 			if ($s->isRequired()) {
+ 				// Don't catch these errors
+ 				$r .= "\t\t\tif (!is_object(\$this->{$s->getName()})) { FValidator::Numericality(\$this->{$s->getName()},0,null,null,null,true,'{$s->getName()}_id'); }\r\n";
+ 			}
+ 		}
+ 		//TODO: verify that all required attributes validate
+ 		$r .= "\t\t\treturn \$validated;\r\n"
+ 			. "\t\t}\r\n\r\n";
+ 		
+ 		
+ 		
+ 		$r .= "\t\tpublic static function Validate(\$data) {\r\n"
  			. "\t\t\t\$validated = true;\r\n"
  			. "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
  			. "\t\t\t\tswitch (\$k) {\r\n";
  		foreach ($object->getAttributes() as $a) {
  			if ($a->getValidation()) {
  				$r .= "\t\t\t\t\tcase '{$a->getName()}':\r\n"
- 					. "\t\t\t\t\t\ttry { self::validate{$a->getFunctionName()}(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
+ 					. "\t\t\t\t\t\ttry { self::Validate{$a->getFunctionName()}(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
  			}
  		}	
  		$r .= "\t\t\t\t\tdefault: break;\r\n"
@@ -375,7 +401,7 @@ class FModel {
  		// Individual Validation Methods
  		foreach ($object->getAttributes() as $a) {
  			if ($a->getValidation()) {
- 				$r .= "\t\tpublic static function validate{$a->getFunctionName()}(\$value) {\r\n"
+ 				$r .= "\t\tpublic static function Validate{$a->getFunctionName()}(\$value) {\r\n"
  					. "\t\t\t" . FValidator::BuildValidationCodeForAttribute("\$value",$a)
  					. "\r\n\t\t}\r\n\r\n";
  			}
@@ -383,33 +409,48 @@ class FModel {
  		
  		// Setters
 		foreach ($object->getAttributes() as $a) {
-			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = true,\$bValidate = true) {\r\n";
+			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = false,\$bValidate = true) {\r\n";
 				
 			if ($a->getValidation()) {
 				$r .= "\t\t\t// Validate the provided value\r\n\t\t\t// FValidationException thrown on failure)\r\n";
 				$r .= "\t\t\tif(\$bValidate) {\r\n";
-				$r .= "\t\t\t\tself::validate{$a->getFunctionName()}(\$value);\r\n";
+				$r .= "\t\t\t\ttry {self::validate{$a->getFunctionName()}(\$value);} catch (FValidationException \$e) {\$this->_valid = false; return false;}\r\n";
 				$r .= "\t\t\t}\r\n";
 				$r .= "\r\n";
 			}
 			$r .= "\t\t\t// Save the provided value\r\n"
 				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
  				. "\t\t\tif (\$bSaveImmediately) {\r\n"
- 				. "\t\t\t\t\$this->save('{$a->getName()}');\r\n"
+ 				. "\t\t\t\tif (\$this->objId > 0 ) {\r\n"
+ 				. "\t\t\t\t\t\$this->save(array('{$a->getName()}'=>\$this->{$a->getName()}));\r\n"
+ 				. "\t\t\t\t} else { \r\n\t\t\t\t\tdie(\"tried to save attribute '{$a->getName()}' on an incomplete object\");\r\n\t\t\t\t }\r\n"
  				. "\t\t\t}\r\n"
  				. "\t\t}\r\n\r\n";	
 		}
 		// setters to allow for 'parent' reassignment
 		foreach ($object->getParents() as $s) {
-			$r .= "\t\tpublic function set{$s->getFunctionName()}Id(\$id) {\r\n"
-				. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{$s->getName()}_id`='{\$id}' WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}'\";\r\n"
-				. "\t\t\t_db()->exec(\$q);\r\n"
-				. "\t\t\t\$this->{$s->getName()} = \$id;\r\n"
+			$r .= "\t\tpublic function set{$s->getFunctionName()}(\$value) {\r\n";
+			
+			$r .= "\t\t\tif (is_object(\$value)) {\r\n";
+			if ($s->isRequired()) {
+				// Verify that the value being set is not '0' for required parent attributes
+				$r .= "\t\t\t\tFValidator::Numericality(\$value->getObjId(),0,null,null,null,true,'{$s->getName()}_id');\r\n";
+			}
+			$r .= "\t\t\t\t\$this->{$s->getName()} = \$value;\r\n"
+				. "\t\t\t} else {\r\n";
+			if ($s->isRequired()) {
+				// Verify that the value being set is not '0' for required parent attributes
+				$r .= "\t\t\t\tFValidator::Numericality(\$value,0,null,null,null,true,'{$s->getName()}_id');\r\n";
+			}
+			$r .= "\t\t\t\t\$this->{$s->getName()} = (is_object(\$this->{$s->getName()}) ? {$s->getForeign()}::Retrieve(\$value) : \$value);\r\n"
+				. "\t\t\t}\r\n"
 				. "\t\t}\r\n\r\n";
 		}
 		// adders and removers (for peer relationships)
 		foreach ($object->getPeers() as $s) {
-			$r .= "\t\tpublic function add{$s->getFunctionName()}(\$ids) {\r\n";
+			$r .= "\t\tpublic function add{$s->getFunctionName()}(\$ids) {\r\n"
+				. "\t\t\t// Only perform this action if the object has a valid objId...\r\n"
+				. "\t\t\tif (\$this->objId == 0) { return false; }\r\n\r\n";
 			$owner   = FModel::standardizeAttributeName($s->getOwner());
 			$foreign = FModel::standardizeAttributeName($s->getForeign());
 			if ($s->getOwner() == $s->getForeign()) {
@@ -427,7 +468,9 @@ class FModel {
 				. "\t\t\t_db()->exec(\$q);\r\n"
 				. "\t\t}\r\n"
 				. "\t\t\r\n"
-				. "\t\tpublic function remove{$s->getFunctionName()}(\$ids) {\r\n";
+				. "\t\tpublic function remove{$s->getFunctionName()}(\$ids) {\r\n"
+				. "\t\t\t// Only perform this action if the object has a valid objId...\r\n"
+				. "\t\t\tif (\$this->objId ==0) { return false; }\r\n\r\n";
 			if ($s->getOwner() == $s->getForeign()) {
 				$r .= "\t\t\t\$q = \"DELETE FROM `{$s->getLookupTable()}` WHERE ((`{$owner}1_id`={\$this->getObjId()} AND `{$owner}2_id` IN (\".implode(',',\$ids).\")) OR (`{$owner}2_id`={\$this->getObjId()} AND `{$owner}1_id` IN (\".implode(',',\$ids).\"))  \";\r\n";
 			} else {
@@ -439,110 +482,141 @@ class FModel {
 		}
 		
 		// Save
- 		$r .= "\t\tpublic function save(\$attribute = '') {\r\n"
- 			. "\t\t\tif('' == \$attribute) {\r\n";
- 		if ("FAccount" == $object->getParentClass()) {
- 			$r .= "\t\t\t\tparent::faccount_save();\r\n";
+ 		$r .= "\t\tpublic function save( \$data = array() ) {\r\n"; 		
+ 		$r .= "\t\t\t// do nothing if this is not a valid object\r\n"
+ 			. "\t\t\tif (!\$this->_valid) { return false; }\r\n\r\n";
+ 		// Case 1 ( objId == 0: NEW OBJECT CREATION)
+ 		$r .= "\t\t\tif (\$this->objId == 0) {\r\n"
+ 			. "\t\t\t\t// Creating a new object in the database...\r\n"
+ 			. "\t\t\t\tif (\$this->_validateRequired() && self::Validate(\$data)) {\r\n";
+
+ 		// Build the attributes lists for the sql query
+ 		$attrs 	= array();			// sql keys for local attributes 
+ 		$vals 	= array();			// sql values for local attributes
+ 		$parentsAttrs = array();	// sql keys for parent attributes  (runtime-compute)
+ 		$parentsVals  = array();	// sql values for local attributes (runtime-compute)
+ 		 		
+ 		foreach ($object->getParents() as $dep) {
+ 			$parentsAttrs[] = "\"`{$dep->GetName()}_id`\"";
+ 			$parentsVals[]  = "(is_object(\$this->{$dep->getName()}) ? \$this->{$dep->getName()}->getObjId() : \$this->{$dep->getName()})";
  		}
- 		if (count($object->getAttributes()) > 0) {
- 			$r .= "\t\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET \" \r\n";
- 				$temp = array();
- 				foreach ($object->getAttributes() as $a) {
- 				 	if ($a->getType() == "text" || $a->getType() == "string") {
- 						$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='\".addslashes(\$this->{$a->getName()}).\"'";
- 					} else {
- 						$temp[] = "\t\t\t\t\t. \"`{$a->getName()}`='{\$this->{$a->getName()}}'";
- 					}
- 				}
- 			$r .= implode(", \"\r\n",$temp)
- 				. " \";\r\n"
- 				. "\t\t\t\t\$q .= \"WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}'\";\r\n";
-			}
- 			$r .= "\t\t\t} else {\r\n"
- 			. "\t\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET `{\$attribute}`='{\$this->\$attribute}' WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}' \";\r\n" 
+		if ("FAccount" == $object->getParentClass()) {
+ 			$parentsAttrs[] = "\"`faccount_id`\"";
+ 			$parentsVals[]  = "\$this->faccount_id";
+ 		}
+ 		
+ 		$r .= "\t\t\t\t\t\$parentsAttrs = array( ".implode(',',$parentsAttrs)." );\r\n";
+ 		$r .= "\t\t\t\t\t\$parentsVals  = array( ".implode(',',$parentsVals)." );\r\n";
+ 		
+ 		foreach ($object->getAttributes() as $attr) {
+ 			if ('created' == $attr->getName()) {
+ 				$attrs[] = '`created`';
+ 				$vals[] = 'NOW()';
+ 			} else if ('modified' == $attr->getName()) {
+ 				$attrs[] = '`modified`';
+ 				$vals[] = 'NOW()';
+ 			} else {
+ 				$attrs[] = "`{$attr->getName()}`";
+ 				$vals[] = "'{\$this->{$attr->getName()}}'";
+ 			}
+ 		}
+ 		
+ 		// Build Keys and Values strings for query
+ 		$keys = implode(',',$attrs);
+ 		$keys .= (isset($keys[1]) ? ',' : '' ) . "\".implode(',',\$parentsAttrs).\" ";
+ 		
+ 		$values = implode(',',$vals);
+ 		$values .= (isset($values[1]) ? ',' : '' ) . "\".implode(',',\$parentsVals).\" ";
+ 		
+ 		if ("FAccount" == $object->getParentClass()) {	
+ 			// Create an FAccount object
+			$r .= "\r\n"
+				. "\t\t\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
+				. "\t\t\t\t\t\$faccount_id = FAccountManager::Create(\$this->username,\$this->password,\$this->emailAddress);\r\n"
+				. "\t\t\t\t\tif (false === \$faccount_id) { return false; }\r\n\r\n";
+ 		}
+ 		// Create the object in the database
+		$r .= "\t\t\t\t\t// Create a new {$object->getName()} object in the database\r\n";
+ 		$r .= "\t\t\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` ({$keys}) VALUES ({$values})\"; \r\n";
+ 		$r .= "\t\t\t\t\t\$r = _db()->exec(\$q);\r\n";
+ 		$r .= "\t\t\t\t\t\$this->objId    = _db()->lastInsertID(\"{$object->getName()}\",\"objId\");\r\n";
+ 		$r .= "\t\t\t\t\t\$this->created  = \$this->modified = date('Y-m-d G:i:s',mktime());\r\n";
+ 		
+		// If the object extends FAccount, set the reverse link
+ 	 	if ("FAccount" == $object->getParentClass()) {
+			// Set the reverse link (object,id)
+			$r .= "\t\t\t\t\t\$q = \"UPDATE `app_accounts` SET `objectClass`='{$object->getName()}', "
+				. "`objectId`='{\$this->objId}' WHERE `app_accounts`.`objId`='{\$faccount_id}'\";\r\n"
+				. "\t\t\t\t\t\$r = _db()->exec(\$q);\r\n";
+ 	 	}
+ 	 	
+ 	 	// Merge the data in $data into the object (it has already been validated)
+ 	 	$r .= "\t\t\t\t\t// Merge \$data into the object (it has already been validated)\r\n";
+ 	 	$r .= "\t\t\t\t\tforeach (\$data as \$k => \$v) {\r\n"
+ 	 		. "\t\t\t\t\t\t\$realK = \$k;\r\n"
+ 	 		. "\t\t\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
+ 	 		. "\t\t\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
+ 	 		. "\t\t\t\t\t\t}\r\n"
+ 	 		. "\t\t\t\t\t\t\$this->\$realK = \$v;\r\n"
+ 	 		. "\t\t\t\t\t}\r\n";
+ 		$r .= "\t\t\t\t\treturn true;\r\n";	
+		$r .= "\r\n\t\t\t\t} else {\r\n"
+ 			. "\t\t\t\t\t return false;\t// validation failed\r\n"
+ 			. "\t\t\t\t}\r\n"
+ 			. "\t\t\t}";
+ 			
+ 		// Case 2 (objId > 0: UPDATE EXISTING OBJECT)
+ 		$r .= " else {\r\n"
+ 			. "\t\t\t\t// Updating an existing object in the database...\r\n"
+ 			. "\t\t\t\t return \$this->update(\$data,true);\r\n"
  			. "\t\t\t}\r\n"
- 			. "\t\t\t_db()->exec(\$q);\r\n"
- 			. "\t\t}\r\n\r\n";
+ 			. "\t\t}\r\n";
+ 		
  			
  		// Create
  		$ua = array();
- 		$sqlua = array(); 
- 		$sqluv = array();
  		$dataua = array();
  		foreach ($object->getParents() as $dep) {
  			if ($dep->isRequired()) {
  				$ua[] = "\${$dep->getName()}_id";
- 				$sqlua[] = "`{$dep->getName()}_id`";
- 				$sqluv[] = "'{\${$dep->getName()}_id}'";
  				$dataua[]= "{$dep->getName()}_id";
  			}
  		}
  		foreach ($object->getAttributes() as $attr) {
  			if ($attr->isUnique()) {
  				$ua[] = "\${$attr->getName()}";
- 				$sqlua[] = "`{$attr->getName()}`";
- 				$sqluv[] = "'{\${$attr->getName()}}'";
  				$dataua[] = "{$attr->getName()}";
- 			}
- 			if ('created' == $attr->getName()) {
- 				$sqlua[] = '`created`';
- 				$sqluv[] = 'NOW()';
- 				$dataua[]= "created";
- 			}
- 			if ('modified' == $attr->getName()) {
- 				$sqlua[] = '`modified`';
- 				$sqluv[] = 'NOW()';
- 				$dataua[]= "modified";
  			}
  		}
  		$parentParams = '';
  		if ("FAccount" == $object->getParentClass()) {
  			// Include 'faccount_id' as a unique attribute
 			//$ua[]    = "\$faccount_id";
-			$sqlua[] = "`faccount_id`";
-			$sqluv[] = "'{\$faccount_id}'";
 			$dataua[]= "faccount_id"; 
  		 	
 			// Allow for specification of inherited FAccount parameters
  			$parentParams = '$username,$password,$emailAddress';
- 			if (count($ua) > 0) {
- 				$parentParams .= ",";
- 			}
  		}
+ 		$createString = (strlen($parentParams) > 0) ? "{$parentParams}," : '';
+ 		$createString .= implode(",",$ua);
+ 		$createString .= (strlen($createString) > 0) ? ",\$additional_data=array()" : "\$additional_data=array()";
  		
- 		$r .= "\t\tpublic static function Create(".$parentParams.implode(",",$ua).") {\r\n";	
- 		if ("FAccount" == $object->getParentClass()) {	
- 			// Create an FAccount object
-			$r .= "\r\n"
-				. "\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
-				. "\t\t\t\$faccount_id = FAccountManager::Create(\$username,\$password,\$emailAddress);\r\n\r\n";
- 		}
- 		// Create the object in the database
-		$r .= "\t\t\t// Create a new {$object->getName()} object in the database\r\n";
- 		$r .= "\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` (".implode(",",$sqlua).") VALUES (".implode(",",$sqluv).")\"; \r\n";
- 		$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n";
- 		$r .= "\t\t\t\$objectId = _db()->lastInsertID(\"{$object->getName()}\",\"objId\");\r\n";
- 		$r .= "\t\t\t\$created  = \$modified = date('Y-m-d G:i:s',mktime());\r\n";
- 	 		
- 		// If the object extends FAccount, create a new account object first, and store the core
-		// attributes in the list of unique attributes for the class.
- 	 	if ("FAccount" == $object->getParentClass()) {
-			// Set the reverse link (object,id)
-			$r .= "\t\t\t\$q = \"UPDATE `app_accounts` SET `objectClass`='{$object->getName()}', "
-				. "`objectId`='{\$objectId}' WHERE `app_accounts`.`objId`='{\$faccount_id}'\";\r\n"
-				. "\t\t\t\$r = _db()->exec(\$q);\r\n";
- 	 	}
+ 		$r .= "\r\n";
+ 		$r .= "\t\tpublic static function Create({$createString}) {\r\n";	
+ 			
  		$r .= "\r\n"
 			. "\t\t\t// Build the data array to pass to the constructor\r\n";
- 		$r .= "\t\t\t\$data = array(\"objId\"=>\$objectId";
+ 		
+ 		$r .= "\t\t\t\$data = array('objId'=>0";
  		foreach ($dataua as $a) {
  			$r .= ",\r\n\t\t\t\t\"{$a}\"=>\${$a}";
  		}
  		$r .= "\r\n\t\t\t);\r\n";
  		$r .= "\r\n"
 			. "\t\t\t// Return the populated array\r\n"
-			. "\t\t\treturn new {$object->getName()}(\$data);\r\n";
+			. "\t\t\treturn new {$object->getName()}(array_merge(\$additional_data,\$data));\r\n";
  		$r .= "\t\t}\r\n";
+ 		$r .= "\r\n";
  		
  		// Retrieve
  		$r .= "\t\tpublic static function Retrieve(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n";
@@ -614,30 +688,61 @@ class FModel {
 
 		
 		// Update
-		$r .= "\r\n\t\tpublic function update(\$data,\$bSaveChanges = true,\$bValidate = true) {\r\n"
-			. "\t\t\t\$validated = true;\r\n";
-		$ua    = array();
-		$nonua = array();
-		foreach ($object->getAttributes() as $attr) {
- 			if ($attr->isUnique()) {
- 				//$ua[]    = "\$data['{$attr->getName()}']";
- 			} else {
+		$r .= "\r\n\t\tprivate function update(\$data = null,\$bValidate = true) {\r\n"
+			. "\t\t\tif (\$this->objId == 0) { die('{$object->getName()}::update(...) called on non-existent object. use {$object->getName()}::save(...) first'); }\r\n"
+			. "\t\t\t\$validated = true;\r\n\r\n";
+			
+		if (count($object->getAttributes()) > 0) {
+			// merge the provided attribute/value data, optionally validating the data first
+			// and update the database for those fields only. if \$data == null, update all fields
+		
+			$r .= "\t\t\t// Merge (with optional validation) the provided attribute/value data into the object and update\r\n"
+				. "\t\t\t\$fieldsToSave = array();\r\n"
+				. "\t\t\t\$saveAll      = (\$data == array());\r\n";
+		
+			$parentAttrStrings = array();
+			$attrStrings       = array();
+			
+			foreach ($object->getParents() as $dep) {
+					$parentAttrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['{$dep->getName()}_id'])) {try { \$this->set".self::standardizeName($dep->getName())."((isset(\$data['{$dep->getName()}_id']) ? \$data['{$dep->getName()}_id'] : (is_object(\$this->{$dep->getName()}) ? \$this->{$dep->getName()}->getObjId() : \$this->{$dep->getName()}))); } catch (FValidationException \$e) {\$validated = false;} }\r\n";
+			}
+			foreach ($object->getAttributes() as $attr) {
  				if ("modified" == $attr->getName()) {
  					// Special case for 'modified' attribute
- 					$nonua[] = "\t\t\tif (isset(\$data['modified'])) {\$this->setModified(\$data['modified'],false,\$bValidate);} else {\$this->setModified(date('Y-m-d G:i:s'),false,\$bValidate);}\r\n";
+ 					$attrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['modified'])) {\$this->setModified((isset(\$data['modified']) ? \$data['modified'] : \$this->modified),false,\$bValidate);\$fieldsToSave['modified'] = \$this->modified;} else {\$this->setModified(date('Y-m-d G:i:s'),false,\$bValidate);\$fieldsToSave['modified'] = \$this->modified;}\r\n";
  				} else if ("created" == $attr->getName()) {
  					// Special case for 'created' attribute
- 					$nonua[] = "\t\t\tif (isset(\$data['created'])) {\$this->setCreated(\$data['created'],false,\$bValidate);} \r\n";
+ 					$attrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['created'])) {\$this->setCreated((isset(\$data['created']) ? \$data['created'] : \$this->created),false,\$bValidate);\$fieldsToSave['created'] = \$this->created;} \r\n";
  				} else {
- 					$nonua[] = "\t\t\tif (isset(\$data['{$attr->getName()}'])) { try { \$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}'],false,\$bValidate);} catch (FValidationException \$e) {\$validated = false;} }\r\n";
+ 					$attrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['{$attr->getName()}'])) { if (false !== \$this->set".self::standardizeName($attr->getName())."((isset(\$data['{$attr->getName()}']) ? \$data['{$attr->getName()}'] : \$this->{$attr->getName()}),false,\$bValidate)) {\$fieldsToSave['{$attr->getName()}'] = \$this->{$attr->getName()};} else {\$validated = false;} }\r\n";
  				}
- 			}
- 		}
- 		
- 		$r .= implode("",$nonua)."\r\n"
- 			. "\t\t\tif (\$bValidate && !\$validated) { return false; }\r\n"
- 			. "\t\t\tif (\$bSaveChanges && \$validated) {\$this->save();}\r\n"
- 			. "\t\t}\r\n";
+	 		}
+	 		$r .= "\t\t\t//parents...\r\n";
+	 		$r .= implode("",$parentAttrStrings)."\r\n";
+	 		$r .= "\t\t\t//attributes...\r\n";
+	 		$r .= implode("",$attrStrings)."\r\n"
+	 			. "\t\t\tif (\$bValidate && !\$validated) { \r\n"
+	 			. "\t\t\t\treturn false;\t// stop now if validation was requested and failed\r\n"
+				. "\t\t\t}\r\n"
+				. "\t\t\t\$fieldsToSaveStringArray = '';\r\n"
+				. "\t\t\tforeach (\$fieldsToSave as \$fk => \$fv) {\r\n"
+				. "\t\t\t\t\$fieldsToSaveStringArray[] = \"`{\$fk}`='{\$fv}'\";\r\n"
+				. "\t\t\t}\r\n"
+	 			. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET \".implode(',',\$fieldsToSaveStringArray).\" WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}' \";\r\n"; 
+	 			
+			$r .= "\t\t\t_db()->exec(\$q);\r\n";
+	 		
+			// Update the object in the database
+			if ("FAccount" == $object->getParentClass()) {
+	 			$r .= "\t\t\tparent::faccount_save();\r\n";
+	 		}
+		} // end if count($object->getAttributes() > 0)
+		else {
+			$r .= "\t\t\t// No attributes defined\r\n";
+		}
+		$r .= "\t\t\treturn true;\r\n";
+		$r .= "\t\t}\r\n\r\n";
+
 		
 		/*
 		 * Create/Delete functions for 'child' relationships
@@ -660,12 +765,7 @@ class FModel {
 	 		foreach ($this->objects[$childObject->getForeign()]->getAttributes() as $attr) {
 	 			if ($attr->isUnique()) {
 	 				$ua[]    = "\$objectData['{$attr->getName()}']";
-	 			} else {
-	 				// Special cases for created/modified -- ignore: handled internally
-	 				if ("created" == $attr->getName() || "modified" == $attr->getName()) { continue; }
-	 				$nonua[] = "\t\t\t\t\t\$o->set".self::standardizeName($attr->getName())
-	 					."(\$objectData['{$attr->getName()}'],false,false);\r\n";	//validation already handled 
-	 			}
+	 			} 
 	 		}
 	 		$parentParams = '';
 	 		if ("FAccount" == $this->objects[$childObject->getForeign()]->getParentClass()) {	
@@ -676,11 +776,12 @@ class FModel {
 	 			}
 	 		}
 	 		$createSignature = $parentParams.implode(",\r\n\t\t\t\t\t",$ua);
+	 		$createSignature .= ( strlen($createSignature) > 0 ) ? ",\$objectData" : "\$objectData"; 
 	 		
 	 		// Output the function bodies
  			$r .= "\r\n\t\t// Create new '{$childObject->getName()}' object(s)\r\n"
  				. "\t\tpublic function create".self::standardizeName($childObject->getName())."(\$data=array()) {\r\n"
- 				. "\t\t\t//TODO: implement this\r\n"
+ 				. "\t\t\tif (\$this->objId == 0) { return false; } // only enabled for valid objects\r\n\r\n"
  				. "\t\t\t\$createdObjects = array();\r\n"
  				. "\t\t\tforeach (\$data as \$objectData) {\r\n"
  				. "\t\t\t\tif ( {$childObject->getForeign()}::validate(\$objectData) ) {\r\n"
@@ -695,6 +796,7 @@ class FModel {
  				. "\t\t}\r\n"
  				. "\r\n\t\t// Delete existing '{$childObject->getName()}' object(s)\r\n"
  				. "\t\tpublic function delete".self::standardizeName($childObject->getName())."(\$ids=array()) {\r\n"
+ 				. "\t\t\tif (\$this->objId == 0) { return false; } // only enabled for valid objects\r\n\r\n"
  				. "\t\t\tif (is_array(\$ids)) {\r\n"
  				. "\t\t\t\tforeach (\$ids as \$id) {\r\n"
  				. "\t\t\t\t\t{$childObject->getForeign()}::Delete(\$id);\r\n"
