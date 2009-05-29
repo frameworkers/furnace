@@ -353,7 +353,7 @@ class FModel {
  		//		-- all required parent attributes are either objects or non-zero ids
  		//		-- all required attributes are valid
  		$r .= "\t\tprivate function _validateRequired() {\r\n"
- 			. "\t\t\t// Exceptions thrown here are not caught internall. They must be handled by the callee\r\n"
+ 			. "\t\t\t// Exceptions thrown here are not caught internally. They must be handled by the callee\r\n"
  			. "\t\t\t// This is because there may not be a form to return the user to for these variables.\r\n"; 
  		if ("FAccount" == $object->getParentClass()) {
  			$r .= "\t\t\tself::ValidateUsername(\$this->username);\r\n"
