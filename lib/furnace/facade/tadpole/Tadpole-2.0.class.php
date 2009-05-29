@@ -978,6 +978,8 @@ class Tadpole {
 		switch ($attributeData['type']) {
 			case 'text':
 				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">".stripslashes($value)."</textarea>{$errorInformation}";
+			case 'password':
+				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes($value)."\" />{$errorInformation}";
 			case 'string':
 			case 'integer':
 			case 'float':
