@@ -261,11 +261,12 @@ abstract class FAccountCollection {
  	
  	protected function get_case1(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " 
+ 		$q = "SELECT *,`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` " 
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
  			.$this->filter . " ORDER BY {$k} " .(($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
+ 			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			$results[] = new $this->objectType($row);	
  		}
  		return $results;
@@ -281,11 +282,12 @@ abstract class FAccountCollection {
  		foreach ($r as $unquoted) { 
  			$quotedValues[] = (('objId' == $unquoted) ? "`{$this->objectTypeTableName}`.`objId`" : "`{$unquoted}`"); 
  		}
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` "
+ 		$q = "SELECT ".implode(",",$quotedValues) .",`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` "
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
  			.$this->filter . " ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
+ 			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			$t = array();
  			$count=0;
  			foreach ($row as $col) {
@@ -298,7 +300,7 @@ abstract class FAccountCollection {
  	
  	protected function get_case4(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectTypeTableName}` " 
+ 		$q = "SELECT *,`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` " 
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "; 
  		
  		$q .= ($this->filter) 
@@ -307,6 +309,10 @@ abstract class FAccountCollection {
  		$q .= "{$k}='{$u_v}' ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		
  		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
+ 		
+ 		if (null != $result) {
+			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
+ 		}
 
 		return ((null == $result)
 			? false
@@ -329,7 +335,7 @@ abstract class FAccountCollection {
  	 	foreach ($r as $unquoted) { 
  			$quotedValues[] = (('objId' == $unquoted) ? "`{$this->objectTypeTableName}`.`objId`" : "`{$unquoted}`"); 
  		}
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " 
+ 		$q = "SELECT ".implode(",",$quotedValues) .",`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` " 
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
  			.(($this->filter)
  				? " {$this->filter} AND "
@@ -337,6 +343,7 @@ abstract class FAccountCollection {
  			."{$k}='{$u_v}' ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->queryRow($q);
  		while ($row = $result->fetchRow()) {
+ 			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			$t = array();
  			$count=0;
  			foreach ($row as $col) {
@@ -349,7 +356,7 @@ abstract class FAccountCollection {
  	
  	protected function get_case7(&$u_v,&$k,&$s,&$r) {
  		$results = array();
- 		$q = "SELECT * FROM `{$this->objectTypeTableName}` "
+ 		$q = "SELECT *,`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` "
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
  			.(($this->filter)
  				? " {$this->filter} AND "
@@ -357,6 +364,7 @@ abstract class FAccountCollection {
 			."{$k} IN ('".implode("','",$u_v)."') ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");	
  		$result = _db()->query($q);
 		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
+			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			$results[] = new $this->objectType($row);	
  		}
  		return $results;
@@ -373,7 +381,7 @@ abstract class FAccountCollection {
  	 	foreach ($r as $unquoted) { 
  			$quotedValues[] = (('objId' == $unquoted) ? "`{$this->objectTypeTableName}`.`objId`" : "`{$unquoted}`"); 
  		}
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` "
+ 		$q = "SELECT ".implode(",",$quotedValues) .",`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` "
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` " 
  			.(($this->filter)
  				? " {$this->filter} AND "
@@ -381,6 +389,7 @@ abstract class FAccountCollection {
  			." {$k} IN ('".implode("','",$u_v)."') ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
+ 			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			$t = array();
  			$count=0;
  			foreach ($row as $col) {
@@ -392,7 +401,7 @@ abstract class FAccountCollection {
  	}
 	
  	protected function get_case10(&$u_v,&$k,&$s,&$r) {
- 		$q = "SELECT * FROM `{$this->objectTypeTableName}` "
+ 		$q = "SELECT *,`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` "
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
  			.(($this->filter)
  				? "{$this->filter} AND "
@@ -411,6 +420,7 @@ abstract class FAccountCollection {
  		$result = _db()->query($q);
 
  		while ($row = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
+ 			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			if ($k == "`{$this->objectTypeTableName}`.`objId`") {
  				$results[] = new $this->objectType($row);	
  			} else {
@@ -442,7 +452,7 @@ abstract class FAccountCollection {
  		$results = array();
  		$quotedValues = array();
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
- 		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " 
+ 		$q = "SELECT ".implode(",",$quotedValues) .",`{$this->objectTypeTableName}`.`objId` AS `realObjectId` FROM `{$this->objectTypeTableName}` " 
  			."INNER JOIN `app_accounts` ON `{$this->objectTypeTableName}`.`objId`=`app_accounts`.`objectId` "
  			.(($this->filter)
  				? "{$this->filter} AND " 
@@ -460,6 +470,7 @@ abstract class FAccountCollection {
  		$q .= " ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
+ 			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
  			$t = array();
  			$count=0;
  			foreach ($row as $col) {

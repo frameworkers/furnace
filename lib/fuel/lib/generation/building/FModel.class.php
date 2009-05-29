@@ -242,30 +242,14 @@ class FModel {
 		$r .= "\t\t\t\$this->_valid= true;\r\n";
 		
 		if ("FAccount" == $object->getParentClass()) {			
-			$r .= "\t\t\t// Initialize inherited attributes:\r\n"
-				. "\t\t\tif (\$this->objId > 0 && !isset(\$data['username'])) {\r\n"
-				. "\t\t\t\t// FAccount data was NOT provided or is incomplete, get it...\r\n"
-				. "\t\t\t\t\$faccount = FAccount::Retrieve(\$data['faccount_id']);\r\n"
-				. "\t\t\t\t\$this->username = \$faccount->getUsername();\r\n"
-				. "\t\t\t\t\$this->password = \$faccount->getPassword();\r\n"
-				. "\t\t\t\t\$this->emailAddress = \$faccount->getEmailAddress();\r\n"
-				. "\t\t\t\t\$this->created      = \$faccount->getCreated();\r\n"
-				. "\t\t\t\t\$this->modified     = \$faccount->getModified();\r\n"
-				. "\t\t\t\t\$this->lastLogin    = \$faccount->getLastLogin();\r\n"
-				. "\t\t\t\t\$this->roles    = \$faccount->getRoles();\r\n"
-				. "\t\t\t\t\$this->objectClass = \$faccount->getObjectClass();\r\n"
-				. "\t\t\t\t\$this->objectId    = \$faccount->getObjectId();\r\n\r\n"
-				. "\t\t\t} else if (\$this->objId > 0) {\r\n"
-				. "\t\t\t\t// FAccount data was provided with {$object->getName()} data...\r\n"
-				. "\t\t\t\t\$this->username = \$data['username'];\r\n"
-				. "\t\t\t\t\$this->password = \$data['password'];\r\n"
+			$r .= "\t\t\t// Initialize required inherited attributes:\r\n"
+				. "\t\t\t\t\$this->username     = \$data['username'];\r\n"
+				. "\t\t\t\t\$this->password     = \$data['password'];\r\n"
 				. "\t\t\t\t\$this->emailAddress = \$data['emailAddress'];\r\n"
-				. "\t\t\t\t\$this->created  = \$data['created'];\r\n"
-				. "\t\t\t\t\$this->modified = \$data['modified'];\r\n"
-				. "\t\t\t\t\$this->lastLogin= \$data['lastLogin'];\r\n"
-				. "\t\t\t\t\$this->objectClass = \$data['objectClass'];\r\n"
-				. "\t\t\t\t\$this->objectId    = \$data['objectId'];\r\n"
-				. "\t\t\t\t\$this->roles       = FAccount::getRolesForId(\$data['faccount_id']);\r\n"
+				. "\t\t\tif (\$this->objId > 0) {\r\n"
+				. "\t\t\t\t// This object exists in the database and should have FAccount data:\r\n"
+				. "\t\t\t\tif (!isset(\$data['faccount_id'])) {die('insufficient information provided to create {$object->getName()} object');}\r\n"
+				. "\t\t\t\tparent::__construct(\$data);\r\n"
 				. "\t\t\t}\r\n";
 		}
 		$r .= "\t\t\t// Initialize parents, peers, and children...\r\n";
@@ -369,15 +353,21 @@ class FModel {
  		//		-- all required parent attributes are either objects or non-zero ids
  		//		-- all required attributes are valid
  		$r .= "\t\tprivate function _validateRequired() {\r\n"
- 			. "\t\t\t\$validated = true;\r\n"; 
+ 			. "\t\t\t// Exceptions thrown here are not caught internall. They must be handled by the callee\r\n"
+ 			. "\t\t\t// This is because there may not be a form to return the user to for these variables.\r\n"; 
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\t\tself::ValidateUsername(\$this->username);\r\n"
+ 				. "\t\t\tself::ValidatePassword(\$this->password);\r\n"
+ 				. "\t\t\tself::ValidateEmailAddress(\$this->emailAddress);\r\n";
+ 		}
  		foreach ($object->getParents() as $s) {
  			if ($s->isRequired()) {
  				// Don't catch these errors
  				$r .= "\t\t\tif (!is_object(\$this->{$s->getName()})) { FValidator::Numericality(\$this->{$s->getName()},0,null,null,null,true,'{$s->getName()}_id'); }\r\n";
  			}
  		}
- 		//TODO: verify that all required attributes validate
- 		$r .= "\t\t\treturn \$validated;\r\n"
+ 		//TODO: verify that all required attributes, including inherited FAccount attributes if applicable, validate
+ 		$r .= "\t\t\treturn true;// An exception will have been thrown above on any error\r\n"
  			. "\t\t}\r\n\r\n";
  		
  		
@@ -386,6 +376,20 @@ class FModel {
  			. "\t\t\t\$validated = true;\r\n"
  			. "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
  			. "\t\t\t\tswitch (\$k) {\r\n";
+ 		foreach ($object->getParents() as $s) {
+ 			if ($s->isRequired() ) {
+ 				$r .= "\t\t\t\t\tcase '{$s->getName()}_id':\r\n"
+ 					. "\t\t\t\t\t\tFValidator::Numericality(\$data['{$s->getName()}_id'],0,null,null,null,true,'{$s->getName()}_id'); break;\r\n";
+ 			}
+ 		}
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\t\t\t\tcase 'username':\r\n"
+ 				. "\t\t\t\t\t\ttry { self::ValidateUsername(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
+ 			$r .= "\t\t\t\t\tcase 'password':\r\n"
+ 				. "\t\t\t\t\t\ttry { self::ValidatePassword(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
+ 			$r .= "\t\t\t\t\tcase 'emailAddress':\r\n"
+ 				. "\t\t\t\t\t\ttry { self::ValidateEmailAddress(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
+ 		}
  		foreach ($object->getAttributes() as $a) {
  			if ($a->getValidation()) {
  				$r .= "\t\t\t\t\tcase '{$a->getName()}':\r\n"
@@ -399,6 +403,17 @@ class FModel {
  			. "\t\t}\r\n\r\n";
  		
  		// Individual Validation Methods
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\tpublic static function ValidateUsername(\$value) {\r\n"
+ 				. "\t\t\tFValidator::Length(\$value,null,5,20,'username');\r\n"
+ 				. "\t\t}\r\n\r\n";
+ 			$r .= "\t\tpublic static function ValidatePassword(\$value) {\r\n"
+ 				. "\t\t\tFValidator::Length(\$value,null,5,null,'password');\r\n"
+ 				. "\t\t}\r\n\r\n";
+ 			$r .= "\t\tpublic static function ValidateEmailAddress(\$value) {\r\n"
+ 				. "\t\t\tFValidator::Length(\$value,null,1,80,'emailAddress');\r\n"
+ 				. "\t\t}\r\n\r\n";
+ 		}
  		foreach ($object->getAttributes() as $a) {
  			if ($a->getValidation()) {
  				$r .= "\t\tpublic static function Validate{$a->getFunctionName()}(\$value) {\r\n"
@@ -502,11 +517,20 @@ class FModel {
  		}
 		if ("FAccount" == $object->getParentClass()) {
  			$parentsAttrs[] = "\"`faccount_id`\"";
- 			$parentsVals[]  = "\$this->faccount_id";
+ 			$parentsVals[]  = "\$faccount_id";
+ 		}
+ 		
+		if ("FAccount" == $object->getParentClass()) {	
+ 			// Create an FAccount object
+			$r .= "\r\n"
+				. "\t\t\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
+				. "\t\t\t\t\t\$faccount_id = FAccountManager::Create(\$this->username,\$this->password,\$this->emailAddress);\r\n"
+				. "\t\t\t\t\t\$this->roles = \$faccount_id;\r\n"
+				. "\t\t\t\t\tif (false === \$faccount_id) { return false; }\r\n\r\n";
  		}
  		
  		$r .= "\t\t\t\t\t\$parentsAttrs = array( ".implode(',',$parentsAttrs)." );\r\n";
- 		$r .= "\t\t\t\t\t\$parentsVals  = array( ".implode(',',$parentsVals)." );\r\n";
+ 		$r .= "\t\t\t\t\t\$parentsVals  = array( ".implode(',',$parentsVals)." );\r\n\r\n";
  		
  		foreach ($object->getAttributes() as $attr) {
  			if ('created' == $attr->getName()) {
@@ -528,13 +552,7 @@ class FModel {
  		$values = implode(',',$vals);
  		$values .= (isset($values[1]) ? ',' : '' ) . "\".implode(',',\$parentsVals).\" ";
  		
- 		if ("FAccount" == $object->getParentClass()) {	
- 			// Create an FAccount object
-			$r .= "\r\n"
-				. "\t\t\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
-				. "\t\t\t\t\t\$faccount_id = FAccountManager::Create(\$this->username,\$this->password,\$this->emailAddress);\r\n"
-				. "\t\t\t\t\tif (false === \$faccount_id) { return false; }\r\n\r\n";
- 		}
+ 		
  		// Create the object in the database
 		$r .= "\t\t\t\t\t// Create a new {$object->getName()} object in the database\r\n";
  		$r .= "\t\t\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` ({$keys}) VALUES ({$values})\"; \r\n";
@@ -588,16 +606,17 @@ class FModel {
  				$dataua[] = "{$attr->getName()}";
  			}
  		}
- 		$parentParams = '';
  		if ("FAccount" == $object->getParentClass()) {
  			// Include 'faccount_id' as a unique attribute
 			//$ua[]    = "\$faccount_id";
-			$dataua[]= "faccount_id"; 
- 		 	
-			// Allow for specification of inherited FAccount parameters
- 			$parentParams = '$username,$password,$emailAddress';
+			$ua[]     = '$username';
+			$dataua[] = 'username';
+			$ua[]     = '$password';
+			$dataua[] = 'password';
+			$ua[]     = '$emailAddress';
+			$dataua[] = 'emailAddress';
+
  		}
- 		$createString = (strlen($parentParams) > 0) ? "{$parentParams}," : '';
  		$createString .= implode(",",$ua);
  		$createString .= (strlen($createString) > 0) ? ",\$additional_data=array()" : "\$additional_data=array()";
  		
@@ -613,8 +632,17 @@ class FModel {
  		}
  		$r .= "\r\n\t\t\t);\r\n";
  		$r .= "\r\n"
-			. "\t\t\t// Return the populated array\r\n"
-			. "\t\t\treturn new {$object->getName()}(array_merge(\$additional_data,\$data));\r\n";
+ 			. "\t\t\t\$valid_data = array_merge(\$additional_data,\$data);\r\n"
+ 			. "\t\t\t\$valid = true;\r\n"
+ 			. "\t\t\tif(count(\$valid_data) > 0) {\r\n"
+ 			. "\t\t\t\t\$valid = self::Validate(\$valid_data);\r\n"
+ 			. "\t\t\t}\r\n\r\n"
+ 			. "\t\t\tif ( \$valid ) {\r\n"
+			. "\t\t\t\t// Return a new object\r\n"
+			. "\t\t\t\treturn new {$object->getName()}(\$valid_data);\r\n"
+			. "\t\t\t} else {\r\n"
+			. "\t\t\t\treturn false;\t//validation failed\r\n"
+			. "\t\t\t}\r\n";
  		$r .= "\t\t}\r\n";
  		$r .= "\r\n";
  		
@@ -811,6 +839,12 @@ class FModel {
  		// 'Reflective' functions (give model information about attributes to the form input builder)
  		$r .= "\t\tpublic static function _getAttribute(\$name) {\r\n";
  		$r .= "\t\t\tswitch (\$name) {\r\n";
+ 		if ("FAccount" == $object->getParentClass()) {
+ 			$r .= "\t\t\t// inherited FAccount attributes:\r\n"
+ 				. "\t\t\t\tcase 'username': return array('type'=>'string','size'=>20);\r\n"
+ 				. "\t\t\t\tcase 'password': return array('type'=>'password','size'=>20);\r\n"
+ 				. "\t\t\t\tcase 'emailAddress': return array('type'=>'string','size'=>80);\r\n\r\n";
+ 		}
 		foreach ($object->getAttributes() as $attr) {
 			$components = array();
 			switch ($attr->getType()) {

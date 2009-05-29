@@ -68,8 +68,24 @@ class FAccount extends FBaseObject {
 		// The last time this account logged in
 		public $lastLogin;
 		
+		// Variable: faccount_id
+		// The objId of the app_account entry for this account
+		protected $faccount_id;
+		
 		
 		public function __construct($data) {
+			
+			$this->faccount_id = $data['faccount_id'];
+			$this->created     = $data['created'];
+			$this->modified    = $data['modified'];
+			$this->lastLogin   = $data['lastLogin'];
+			$this->objectClass = $data['objectClass'];
+			$this->objectId    = $data['objectId'];
+			$this->roles       = $data['faccount_id'];
+			
+			
+			
+			/*
 			if (isset($data['objid'])) {$data['objId'] = $data['objid'];}
 			if ($data['objId'] <= 0) {
 				throw new FException("Invalid <code>objId</code> value in object constructor.");
@@ -97,6 +113,7 @@ class FAccount extends FBaseObject {
 					$this->roles[$role] = $value;
 				}
 			}
+			*/
 		}
 		
 		public static function getRolesForId($id) {
@@ -158,7 +175,12 @@ class FAccount extends FBaseObject {
 		}
 
 		public function getRoles() {
-			return $this->roles;
+			if (is_array($this->roles)){
+				return $this->roles;
+			} else {
+				$this->roles = self::getRolesForId($this->roles);
+				return $this->roles; 
+			}
 		}
 		public function setUsername($value,$bSaveImmediately = true) {
 			$this->username = $value;
@@ -251,9 +273,9 @@ class FAccount extends FBaseObject {
 				. "`created`='{$this->created}', "
 				. "`modified`=NOW(), "
 				. "`lastLogin`='{$this->lastLogin}' ";
-				$q .= "WHERE `objId`='{$this->objId}'";
+				$q .= "WHERE `objId`='{$this->faccount_id}'";
 			} else {
-				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}', `modified`=NOW() WHERE `objId`='{$this->objId}' ";
+				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}', `modified`=NOW() WHERE `objId`='{$this->faccount_id}' ";
 			}
 			_db()->exec($q);
 		}
