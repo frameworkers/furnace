@@ -112,4 +112,19 @@
  function _furnace() {
  	return $GLOBALS['furnace'];	
  }
+ 
+// FUNCTION _storeUserInput($data)
+//   Stores the requested $data in the session variable _userform
+function _storeUserInput($data) {
+	unset($_SESSION['_userform']);
+	$_SESSION['_userform'] = $data;
+}
+	
+// FUNCTION _readUserInput($field)
+//   Reads the $field variable from the session variable _userform
+function _readUserInput($field) {
+	return isset($_SESSION['_userform'][$field])
+		? $_SESSION['_userform'][$field]
+		: null;
+}
 ?>
