@@ -8,6 +8,7 @@ class Tadpole {
 	// see also: the relativeCache variable in the ::compile() function holds
 	// relative ('@') tags that have already been processed for that iteration.
 	public $tagCache;
+	public $relativeTagCache;
 	public $conditionalCache;
 	
 	public function __construct() {
@@ -27,7 +28,7 @@ class Tadpole {
 		$outer_offset 	  = 0;		// location of the beginning of the 'outermost' tag (for nesting)
 
 		// Relative tag cache
-		$relativeCache= array();	// Keeps data for '@' tags which have already been processed
+		$this->relativeTagCache= array();	// Keeps data for '@' tags which have already been processed
 		$relativeConditionalCache = array();
 		while (1) {
 			
@@ -243,7 +244,7 @@ class Tadpole {
 						try {
 							$attributeData = call_user_func(
 								array(substr($baseObjectNeedle,1),'_getAttribute'),$attributeNeedle);
-							$output = $this->input_helper(null,$attributeNeedle,$attributeData,$commands);
+							$output = $this->input_helper(substr($baseObjectNeedle,1),$attributeNeedle,$attributeData,$commands);
 						} catch (Exception $e) {
 							$rejected = true;
 						}
@@ -423,7 +424,7 @@ class Tadpole {
 						: $blockEnd + strlen($commands['block']) + 3));
 					$contents = $before . $completeBlockContents . $after;
 					// Clear the relative cache since the block is finished
-					$relativeCache = array();
+					$this->relativeTagCache = array();
 					$relativeConditionalCache = array();
 					// Increment offset
 					$offset = (false !== $outer_offset) ? $outer_offset : ($blockStart + strlen($completeBlockContents));
@@ -478,7 +479,7 @@ class Tadpole {
 					// Determine the actual value which will replace the tag. Look in cache first.
 					// Determine whether to check the global tag cache or the relative cache:
 					if ("@" == $value[0]) {
-						$cacheToCheck =& $relativeCache; 	// relative cache
+						$cacheToCheck =& $this->relativeTagCache; 	// relative cache
 					} else {
 						$cacheToCheck =& $this->tagCache;	// global cache
 					}
@@ -836,7 +837,21 @@ class Tadpole {
 		}
 		
 		// Obtain actual value for lhs
-		$lhs = $this->get_recursively($lhs,$commands,$rejected,$iter_data);
+		
+		// First check the appropriate cache to see if the value exists, if not, update the cache
+		if ("@" == $lhs[0]) {
+			$cacheToCheck =& $this->relativeTagCache; 	// global relative tag cache
+		} else {
+			$cacheToCheck =& $this->tagCache;			// global absolute tag cache
+		}
+		if (! isset( $cacheToCheck["{$lhs}"])) {
+			// Cache Miss ... compute, and store value in the cache if it is not rejected
+			$v = $this->get_recursively($lhs,$commands,$rejected,$iter_data);
+			if (!$rejected) {
+				$cacheToCheck[$lhs] = $v;
+			}
+		}
+		$lhs = $cacheToCheck[$lhs];
 		if ($rejected) {
 			// If the user has specified alternative content, display it instead
 			if (isset($commands['else']) || isset($commands['innerelse'])) { $rejected = false; return;}
@@ -848,7 +863,22 @@ class Tadpole {
 		
 		// If needed (ie, if not already pegged to true/false above), obtain the actual value for rhs
 		if ($rhs !== true && $rhs !== false ) {
-			$rhstest = $this->get_recursively($rhs,$commands,$rejected,$iter_data);
+			
+			// First check the appropriate cache to see if the value exists, if not, update the cache
+			if ("@" == $rhs[0]) {
+				$cacheToCheck =& $this->relativeTagCache; 	// global relative tag cache
+			} else {
+				$cacheToCheck =& $this->tagCache;			// global absolute tag cache
+			}
+			if (! isset( $cacheToCheck["{$rhs}"])) {
+				// Cache Miss ... compute, and store value in the cache if it is not rejected
+				$v = $this->get_recursively($rhs,$commands,$rejected,$iter_data);
+				if (!$rejected) {
+					$cacheToCheck[$rhs] = $v;
+				}
+			}
+			$rhstest = $cacheToCheck[$rhs];
+
 			if ($rejected) {
 				// If the rhs was rejected, it means that no data is available which
 				// matches what was provided. In that case, simply interpret the value
@@ -966,9 +996,29 @@ class Tadpole {
 		
 		$errorInformation = '';
 		if ($bHasErrors) {
+			// Check for localized error strings
+			$objName = (is_object($object)) ? $object->_getObjectClassName() : $object;
+			$localStrings = (isset($this->page_data['_strings']['en-us']['model'][$objName]['errors'][$attributeName]))
+				? $this->page_data['_strings']['en-us']['model'][$objName]['errors'][$attributeName]
+				: false;
+			
+			// Build the error message
+			// subValidator is either false or a 2 element array containing:
+			//	[0] the validator ('is','min','max', etc) used
+			//	[1] the corresponding value that must be matched
 			$errorInformation = '<div class="error"><ul style="list-style:none;">';
 			foreach ($_SESSION['_validationErrors'][$attributeName] as $err) {
-				$errorInformation .= "<li>({$err[0]}) {$err[1]}</li>";
+				if ($err['subValidator'] && isset($localStrings[$err['validator'] ][$err['subValidator'][0] ])) {	
+					// if a local string for a subValidator is provided, replace any macros ({min},{max},{is}) and display
+					$message = str_replace("{{$err['subValidator'][0]}}",$err['subValidator'][1],$localStrings[$err['validator'] ][$err['subValidator'][0] ]);
+					$errorInformation .= "<li>{$message}</li>";	
+				} else if (!$err['subValidator'] && isset($localStrings[$err['validator'] ])) {	
+					// if a local string for a validator is provided
+					$errorInformation .= "<li>{$localStrings[$err['validator'] ]}</li>";
+				} else {
+					// if no local string was provided, use the default
+					$errorInformation .= "<li>({$err['validator']}) {$err['defaultMessage']}</li>";	
+				}
 			}
 			$errorInformation .= "</ul></div>";
 			unset($_SESSION['_validationErrors'][$attributeName]); 	// consume the error

@@ -147,5 +147,26 @@
 			return $user;
 		}
 	}
+	
+	public function loadStrings($namespace,$locale = null) {
+		$localeToUse = ($locale) ? $locale : $GLOBALS['furnace']->config['default_locale'];
+		$fileName    = $GLOBALS['furnace']->rootdir . "/app/i18n/{$localeToUse}/strings/{$namespace}.{$localeToUse}.yml";
+		if (false !== ($strings = $GLOBALS['furnace']->parse_yaml($fileName))) {
+			// convert the namespace to a nested array structure
+			$parts = explode('.',$namespace);
+			
+			$f =& $this->page_data['_strings'][$localeToUse];
+			$count = 0;
+			for ($count=0; $count < count($parts) - 1; $count++) {
+				if (! isset($f[$parts[$count] ])) { $f[$parts[$count] ] = array(); }
+				$f =& $f[$parts[$count] ]; 
+			}
+			$f[$parts[$count] ] = $strings;
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
  }
 ?>

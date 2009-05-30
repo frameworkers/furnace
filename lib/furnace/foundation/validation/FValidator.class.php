@@ -30,7 +30,7 @@ class FValidator {
 			$valid = preg_match($pattern,$var);
 		}
 		if (! $valid) {
-			throw new FValidationException('Format',$field,
+			throw new FValidationException('Format',null, $field,
 				"<b>{$field}</b> is not formatted correctly ".(($humanReadable) ? "({$humanReadable})" : ''));
 			return false;
 		}
@@ -40,19 +40,19 @@ class FValidator {
 	public static function Numericality($var,$is=null,$minimum=null,$maximum=null,$onlyInteger=null,$bNegate = false,$field=null) {
 
 		if ($is !== null && (($bNegate && ($var == $is)) || (!$bNegate && ($var != $is)))) {
-			throw new FValidationException('Numericality',$field,
+			throw new FValidationException('Numericality',array('is',$is), $field,
 				"<b>{$field}</b> must " . (($bNegate) ? "not" : '') . " be {$is}"); 
 			return false;
 		}
 		
 		if ($minimum !== null && $var < $minimum) {
-			throw new FValidationException('Numericality',$field,
+			throw new FValidationException('Numericality',array('min',$minimum), $field,
 				"<b>{$field}</b> must be at least {$minimum}");
 			return false;
 		}
 		
 		if ($maximum !== null && $var > $maximum) {
-			throw new FValidationException('Numericality',$field,
+			throw new FValidationException('Numericality',array('max',$maximum), $field,
 				"<b>{$field}</b> must not be larger than {$maximum}");
 			return false;
 		}
@@ -65,19 +65,19 @@ class FValidator {
 	// Test whether the length of var matches the criteria
 	public static function Length($var,$is=null,$minimum=null,$maximum=null,$field=null) {
 		if ($is !== null && (strlen($var) != $is)) {
-			throw new FValidationException('Length',$field,
+			throw new FValidationException('Length',array('is',$is), $field,
 				"<b>{$field}</b> has incorrect length. Expected {$is} character(s) but got ".strlen($var)."</b>");
 			return false;
 		}
 		
 		if ($minimum !== null && (!isset($var[$minimum-1]))) {
-			throw new FValidationException('Length',$field,
+			throw new FValidationException('Length',array('min',$minimum), $field,
 				"<b>{$field}</b> must be at least {$minimum} character(s)");
 			return false;
 		}
 		
 		if ($maximum !== null && (isset($var[$maximum]))) {
-			throw new FValidationException('Length',$field,
+			throw new FValidationException('Length',array('max',$maximum), $field,
 				"<b>{$field}</b> must be less than {$maximum} character(s)");
 			return false;
 		}
@@ -98,7 +98,7 @@ class FValidator {
 	//Test whether var evaluates to true
 	public static function Acceptance($var,$bStrict = false,$field=null) {
 		if (($bStrict && ($var !== true)) || (!$bStrict && ($var != true))) {
-			throw new FValidationException('Acceptance',$field,
+			throw new FValidationException('Acceptance',null, $field,
 				"<b>{$field}</b> did not evaluate to 'true'");
 			return false;
 		}
@@ -108,7 +108,7 @@ class FValidator {
 	// Test whether the values confirm one another
 	public static function Confirmation($var,$match,$field=null) {
 		if ($var != $match) {
-			throw new FValidationException('Confirmation',$field,
+			throw new FValidationException('Confirmation',null, $field,
 				"{$var} did not match expected value {$match}");
 			return false;
 		}
