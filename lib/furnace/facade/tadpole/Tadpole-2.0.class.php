@@ -585,6 +585,22 @@ class Tadpole {
 						case 'nicedate':
 							$value = $this->nicedate($value);
 							break;
+						case 'slashdate':
+							$value = strtotime($value);
+							$value = date('m/d/Y',$value);
+							break;
+						case 'hour':
+							$value = strtotime($value);
+							$value = date('h',$value);
+							break;
+						case 'minute':
+							$value = strtotime($value);
+							$value = date('i',$value);
+							break;
+						case 'meridiem':
+							$value = strtotime($value);
+							$value = date('a',$value);
+							break;
 						case 'usphone':
 							$value = str_pad($value,11,"1", STR_PAD_LEFT);
 							$value = "{$value[0]}-".substr($value,1,3).'-'.substr($value,4,3).'-'.substr($value,7);
