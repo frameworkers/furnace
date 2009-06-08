@@ -236,18 +236,21 @@ class Furnace {
  				}
  				
  				if ($this->config['debug_level'] > 1) {
- 					echo "REQUEST TIME: " . ($this->bm_reqend - $this->bm_reqstart) . "<br/>\r\n";
- 					echo "SETUP   TIME: " . ($this->bm_envsetupend - $this->bm_envsetupstart) . "<br/>\r\n";
- 					echo "PROCESS TIME: " . ($this->bm_processend - $this->bm_processstart) . "<br/>\r\n";
- 					echo "QUERY DELAY:  " . count($this->queries) . " queries<br/>\r\n<span style='font-size:90%;'>";
+ 					echo '<div id="ff-debug"><table>';
+ 					echo "<tr><th>TOTAL REQUEST TIME: </th><td> " . ($this->bm_reqend - $this->bm_reqstart) . " seconds</td></tr>\r\n";
+ 					echo "<tr><th>REQUEST BREAKDOWN:  </th><td><table><tr><th>SETUP TIME: </th><td>" . ($this->bm_envsetupend - $this->bm_envsetupstart) . "</td></tr>\r\n";
+ 					echo "<tr><th>PROCESS TIME: </th><td>" . ($this->bm_processend - $this->bm_processstart) . "</td></tr>\r\n";
+ 					echo "<tr><th>QUERY DELAY:  </th><td>" . count($this->queries) . " queries<br/>\r\n<span style='font-size:90%;'>";
  					$qd = 0;
  					foreach ($this->queries as $q) {
  						echo "&nbsp;&nbsp;{$q['delay']}s\t{$q['sql']}<br/>\r\n";
  						$qd += $q['delay'];
  					}
- 					echo "</span><br/>\r\n&nbsp;&nbsp;" . count($this->queries) . " queries took {$qd} seconds.<br/>\r\n";
- 					echo "<br/>\r\n";
- 					echo "RENDER  TIME: " . ($this->bm_renderend - $this->bm_renderstart) . "<br/>\r\n";
+ 					echo "</span><br/>\r\n&nbsp;&nbsp;" . count($this->queries) . " queries took {$qd} seconds.</td></tr>\r\n";
+ 					echo "<tr><th>RENDER  TIME:  </th><td>" . ($this->bm_renderend - $this->bm_renderstart) . "</td></tr>\r\n";
+ 					echo "</table></td></tr>";
+ 					echo "</table>";
+ 					echo '</div>';
  				}
  				// Clean up
  				// TODO: free memory, etc
