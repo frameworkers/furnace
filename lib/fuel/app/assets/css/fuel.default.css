@@ -1,4 +1,64 @@
 @CHARSET "UTF-8";
+
+/*
+BASE.CSS
+attempts to set all layout attributes to the absolute basics, so that 
+inbuilt browser formatting wont produce un-expected results (i.e. 
+incosistant padding values on across different browsers wont catch you 
+out, because we set them all here)
+
+/* SET BASE FONT ATTRUBUTES */
+html, body {
+font: Georgia, "Times New Roman", Times, serif 14px/1.5em;
+color: #000;
+}
+
+/* REMOVE PADDING AND MARGIN VALUES */
+html, body, h1, h2, h3, h4, h5, h6, p, ul, ol, dl, li, dd, dt, img,
+blockquote, q, table, thead, tbody, tfoot, caption, th, tr, td, a, form,
+input, textarea, fieldset, pre
+{margin: 0; padding: 0;}
+
+/* SORT OUT HEADER FORMATTING AND SIZES */
+h1, h2, h3, h4, h5 {font-weight: bold;}
+
+h1 {font-size: 2em;}
+h2 {font-size: 1.75em;}
+h3 {font-size: 1.5em;}
+h4 {font-size: 1.2em;}
+h5 {font-size: 1.1em;}
+h6 {font-size: 1em;}
+
+/* HARMONIZE LINKS, KILL BORDER ON IMG LINKS */
+a {text-decoration: underline;}
+a:link, a:visited {color: #00f;}
+a:hover {color: #33f;}
+a:active {color: #fff;}
+a img, :link img, :visited img {border: none}
+
+/* REMOVE BROWSERS DEFAULT TABLE BORDERS */
+table {border-collapse: collapse;}
+
+/* REMOVE AUTOMATIC TOP/BOTTOM MARGINS ON NESTED LISTS */
+ul ul, ul ol, ul dir, ul menu, ul dl,
+ol ul, ol ol, ol dir, ol menu, ol dl,
+dir ul, dir ol, dir dir, dir menu, dir dl,
+menu ul, menu ol, menu dir, menu menu, menu dl,
+dl ul, dl ol, dl dir, dl menu, dl dl
+{margin-top: 0; margin-bottom: 0;}
+
+/* HARMONISE LIST-BULLET TYPE */
+ul, ol, dl {list-style-type: none;}
+
+
+
+/***************************************************************/
+
+ul {
+	margin:5px;
+	margin-top:10px;	
+}
+
 body.ff {
 	background-color:#e0e0e0;
 	margin:0px;
@@ -139,4 +199,83 @@ div.modelTableDetails h3 {
 }
 div.modelTableDetails h3 a {
 	color:#00e;
+}
+
+
+
+input[type=text] {
+	border:solid 0px #888;
+	width:100%;
+	height:100%;
+	padding:3px;
+	padding-right:0px;
+	padding-left:0px;
+	background-color:#f3f3f3;
+}
+table {
+	border:solid 1px #888;
+	font-size:90%;
+}
+th {
+	border-bottom:solid 1px #888;
+	padding:3px;
+}
+td {
+	border-left:solid 1px #bbb;
+	border-bottom:solid 1px #bbb;
+	background-color:#f3f3f3;
+	padding:3px;
+}
+select {
+	width:100%;
+	border:solid 1px #888;
+}
+input[type=submit] {
+	padding:1px;
+}
+div.container {
+	width:80%;
+	margin-left:auto;
+	margin-right:auto;
+	margin-top:20px;
+	border-left:solid 1px #ccc;
+	border-bottom:solid 1px #ccc;
+	padding:5px;
+	padding-bottom:35px;
+}
+div.container div.colLeft {
+	position:relative;
+	width:33%;
+	float:left;
+}
+
+div.container div.colMain {
+	position:relative;
+	width:66%;
+	float:left;
+}
+
+div.container div.columnContent {
+	padding:10px;
+}
+
+h2 {
+	border-bottom:solid 2px #ccc;
+	margin:0px;
+	margin-top:15px;
+	margin-left:-5px;
+	padding-left:5px;
+	color:#333;
+}
+h3 {
+	border-bottom:solid 1px #468;
+	margin-bottom:2px;
+	margin-top:50px;
+	font-weight:normal;
+	color:#333;
+}
+h4 {
+	font-weight:normal;
+	margin-top:16px;
+	margin-bottom:4px;
 }
