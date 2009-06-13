@@ -143,7 +143,15 @@ class FValidationException extends FException {
 		$this->validator    = $validator;
 		$this->subvalidator = $subValidator;
 		$this->variable     = $variable;
-	
+		
+		// store error message in the session
+		$sub = ($subValidator == null || empty($subValidator)) ? false : $subValidator;
+		$_SESSION['_validationErrors'][$variable][] = array(
+			'validator'=>$validator,
+			'subValidator'=>$sub,
+			'variable'=>$variable,
+			'defaultMessage'=>$defaultMessage);
+		
 	}
 	
 	public function __toString() {
