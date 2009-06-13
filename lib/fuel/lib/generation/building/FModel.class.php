@@ -62,6 +62,14 @@ class FModel {
 					. "      default: {$attr->getDefaultValue()}\r\n"
 					. "      validation:\r\n";
 					foreach ($attr->getValidation() as $validationInstruction => $instructionParameters) {
+						if ("allowedValues" == $validationInstruction) {
+							$r .= "        allowedValues:\r\n";
+							foreach ($instructionParameters as $av) {
+								$r .= "          - value: {$av['value']}\r\n"
+									. "            label: {$av['label']}\r\n";
+							}
+							continue;
+						}
 						$r .= "        {$validationInstruction}: { ";
 						$parms = array();
 						foreach ($instructionParameters as $k=>$v) {
@@ -147,6 +155,7 @@ class FModel {
 		$compiled = "\r\n";
 		foreach ($this->objects as $object) {
 			$compiled .= self::generateObjectClass($object);
+			$compiled .= self::generateObjectValidatorClass($object);
 			$compiled .= self::generateObjectCollectionClass($object);
 		}
 		return $compiled;
@@ -168,6 +177,7 @@ class FModel {
 		// Generate the file contents
 		$contents = "<?php\r\n"  
 			. self::generateObjectClass($object) 
+			. self::generateObjectValidatorClass($object)
 			. self::generateObjectCollectionClass($object)
 			. "\r\n?>";
 		// Write the contents to the file
@@ -211,9 +221,9 @@ class FModel {
 				. "\t\t{$a->getVisibility()} \${$a->getName()};\r\n\r\n";	
  		}
  		
- 		$r .= "\t\t// Internal variable: _valid\r\n"
- 			. "\t\t// boolean flag for current object validation state\r\n"
- 			. "\t\tprivate \$_valid;";
+ 		$r .= "\t\t// Internal variable: validator\r\n"
+ 			. "\t\t// validator object\r\n"
+ 			. "\t\tpublic \$validator;\r\n\r\n";
  		
 		// add parents
  		foreach ($object->getParents() as $s) {
@@ -238,8 +248,8 @@ class FModel {
  		
  		// constructor
 		$r .= "\t\tpublic function __construct(\$data=array()) {\r\n";	
-		$r .= "\t\t\t\$this->objId = isset(\$data['objId']) ? \$data['objId'] : 0;\r\n\r\n";
-		$r .= "\t\t\t\$this->_valid= true;\r\n";
+		$r .= "\t\t\t\$this->objId     = isset(\$data['objId']) ? \$data['objId'] : 0;\r\n";
+		$r .= "\t\t\t\$this->validator = new {$object->getName()}Validator();\r\n\r\n";
 		
 		if ("FAccount" == $object->getParentClass()) {			
 			$r .= "\t\t\t// Initialize required inherited attributes:\r\n"
@@ -346,100 +356,12 @@ class FModel {
 			}
  		}
  		
- 		// Validators
- 		//
- 		// internal self validation function to ensure all required information is present and valid
- 		// Required information:
- 		//		-- all required parent attributes are either objects or non-zero ids
- 		//		-- all required attributes are valid
- 		$r .= "\t\tprivate function _validateRequired() {\r\n"
- 			. "\t\t\t// Exceptions thrown here are not caught internally. They must be handled by the callee\r\n"
- 			. "\t\t\t// This is because there may not be a form to return the user to for these variables.\r\n"; 
- 		if ("FAccount" == $object->getParentClass()) {
- 			$r .= "\t\t\tself::ValidateUsername(\$this->username);\r\n"
- 				. "\t\t\tself::ValidatePassword(\$this->password);\r\n"
- 				. "\t\t\tself::ValidateEmailAddress(\$this->emailAddress);\r\n";
- 		}
- 		foreach ($object->getParents() as $s) {
- 			if ($s->isRequired()) {
- 				// Don't catch these errors
- 				$r .= "\t\t\tif (!is_object(\$this->{$s->getName()})) { FValidator::Numericality(\$this->{$s->getName()},0,null,null,null,true,'{$s->getName()}_id'); }\r\n";
- 			}
- 		}
- 		//TODO: verify that all required attributes, including inherited FAccount attributes if applicable, validate
- 		$r .= "\t\t\treturn true;// An exception will have been thrown above on any error\r\n"
- 			. "\t\t}\r\n\r\n";
- 		
- 		
- 		
- 		$r .= "\t\tpublic static function Validate(\$data) {\r\n"
- 			. "\t\t\t\$validated = true;\r\n"
- 			. "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
- 			. "\t\t\t\tswitch (\$k) {\r\n";
- 		foreach ($object->getParents() as $s) {
- 			if ($s->isRequired() ) {
- 				$r .= "\t\t\t\t\tcase '{$s->getName()}_id':\r\n"
- 					. "\t\t\t\t\t\tFValidator::Numericality(\$data['{$s->getName()}_id'],0,null,null,null,true,'{$s->getName()}_id'); break;\r\n";
- 			}
- 		}
- 		if ("FAccount" == $object->getParentClass()) {
- 			$r .= "\t\t\t\t\tcase 'username':\r\n"
- 				. "\t\t\t\t\t\ttry { self::ValidateUsername(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
- 			$r .= "\t\t\t\t\tcase 'password':\r\n"
- 				. "\t\t\t\t\t\ttry { self::ValidatePassword(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
- 			$r .= "\t\t\t\t\tcase 'emailAddress':\r\n"
- 				. "\t\t\t\t\t\ttry { self::ValidateEmailAddress(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
- 		}
- 		foreach ($object->getAttributes() as $a) {
- 			if ($a->getValidation()) {
- 				$r .= "\t\t\t\t\tcase '{$a->getName()}':\r\n"
- 					. "\t\t\t\t\t\ttry { self::Validate{$a->getFunctionName()}(\$v); } catch (FValidationException \$e) {\$validated = false;} break;\r\n";
- 			}
- 		}	
- 		$r .= "\t\t\t\t\tdefault: break;\r\n"
- 			. "\t\t\t\t}\r\n"
- 			. "\t\t\t}\r\n"
- 			. "\t\t\treturn \$validated;\r\n"
- 			. "\t\t}\r\n\r\n";
- 		
- 		// Individual Validation Methods
- 		if ("FAccount" == $object->getParentClass()) {
- 			$r .= "\t\tpublic static function ValidateUsername(\$value) {\r\n"
- 				. "\t\t\tFValidator::Length(\$value,null,5,20,'username');\r\n"
- 				. "\t\t}\r\n\r\n";
- 			$r .= "\t\tpublic static function ValidatePassword(\$value) {\r\n"
- 				. "\t\t\tFValidator::Length(\$value,null,5,null,'password');\r\n"
- 				. "\t\t}\r\n\r\n";
- 			$r .= "\t\tpublic static function ValidateEmailAddress(\$value) {\r\n"
- 				. "\t\t\tFValidator::Length(\$value,null,1,80,'emailAddress');\r\n"
- 				. "\t\t}\r\n\r\n";
- 		}
- 		foreach ($object->getAttributes() as $a) {
- 			if ($a->getValidation()) {
- 				$r .= "\t\tpublic static function Validate{$a->getFunctionName()}(\$value) {\r\n"
- 					. "\t\t\t" . FValidator::BuildValidationCodeForAttribute("\$value",$a)
- 					. "\r\n\t\t}\r\n\r\n";
- 			}
- 		}
  		
  		// Setters
 		foreach ($object->getAttributes() as $a) {
-			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bSaveImmediately = false,\$bValidate = true) {\r\n";
-				
-			if ($a->getValidation()) {
-				$r .= "\t\t\t// Validate the provided value\r\n\t\t\t// FValidationException thrown on failure)\r\n";
-				$r .= "\t\t\tif(\$bValidate) {\r\n";
-				$r .= "\t\t\t\ttry {self::validate{$a->getFunctionName()}(\$value);} catch (FValidationException \$e) {\$this->_valid = false; return false;}\r\n";
-				$r .= "\t\t\t}\r\n";
-				$r .= "\r\n";
-			}
-			$r .= "\t\t\t// Save the provided value\r\n"
+			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value) {\r\n";
+			$r .= "\t\t\t// Set the provided value\r\n"
 				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
- 				. "\t\t\tif (\$bSaveImmediately) {\r\n"
- 				. "\t\t\t\tif (\$this->objId > 0 ) {\r\n"
- 				. "\t\t\t\t\t\$this->save(array('{$a->getName()}'=>\$this->{$a->getName()}));\r\n"
- 				. "\t\t\t\t} else { \r\n\t\t\t\t\tdie(\"tried to save attribute '{$a->getName()}' on an incomplete object\");\r\n\t\t\t\t }\r\n"
- 				. "\t\t\t}\r\n"
  				. "\t\t}\r\n\r\n";	
 		}
 		// setters to allow for 'parent' reassignment
@@ -499,11 +421,9 @@ class FModel {
 		// Save
  		$r .= "\t\tpublic function save( \$data = array() ) {\r\n"; 		
  		$r .= "\t\t\t// do nothing if this is not a valid object\r\n"
- 			. "\t\t\tif (!\$this->_valid) { return false; }\r\n\r\n";
+ 			. "\t\t\tif (!\$this->validator->valid) { return false; }\r\n\r\n";
  		// Case 1 ( objId == 0: NEW OBJECT CREATION)
- 		$r .= "\t\t\tif (\$this->objId == 0) {\r\n"
- 			. "\t\t\t\t// Creating a new object in the database...\r\n"
- 			. "\t\t\t\tif (\$this->_validateRequired() && self::Validate(\$data)) {\r\n";
+ 		$r .= "\t\t\tif (\$this->objId == 0) {\r\n";
 
  		// Build the attributes lists for the sql query
  		$attrs 	= array();			// sql keys for local attributes 
@@ -552,7 +472,16 @@ class FModel {
  		$values = implode(',',$vals);
  		$values .= (isset($values[1]) ? ',' : '' ) . "\".implode(',',\$parentsVals).\" ";
  		
- 		
+ 		// Merge the provided data in $data into the object (assume it has already been validated)
+ 	 	$r .= "\t\t\t\t\t// Merge \$data into the object (assume it has already been validated)\r\n";
+ 	 	$r .= "\t\t\t\t\tforeach (\$data as \$k => \$v) {\r\n"
+ 	 		. "\t\t\t\t\t\t\$realK = \$k;\r\n"
+ 	 		. "\t\t\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
+ 	 		. "\t\t\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
+ 	 		. "\t\t\t\t\t\t}\r\n"
+ 	 		. "\t\t\t\t\t\ttry { \$this->\$realK = \$v; } catch (Exception \$e) { /* silently ignore */ }\r\n"
+ 	 		. "\t\t\t\t\t}\r\n";
+ 	 		
  		// Create the object in the database
 		$r .= "\t\t\t\t\t// Create a new {$object->getName()} object in the database\r\n";
  		$r .= "\t\t\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` ({$keys}) VALUES ({$values})\"; \r\n";
@@ -568,25 +497,14 @@ class FModel {
 				. "\t\t\t\t\t\$r = _db()->exec(\$q);\r\n";
  	 	}
  	 	
- 	 	// Merge the data in $data into the object (it has already been validated)
- 	 	$r .= "\t\t\t\t\t// Merge \$data into the object (it has already been validated)\r\n";
- 	 	$r .= "\t\t\t\t\tforeach (\$data as \$k => \$v) {\r\n"
- 	 		. "\t\t\t\t\t\t\$realK = \$k;\r\n"
- 	 		. "\t\t\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
- 	 		. "\t\t\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
- 	 		. "\t\t\t\t\t\t}\r\n"
- 	 		. "\t\t\t\t\t\t\$this->\$realK = \$v;\r\n"
- 	 		. "\t\t\t\t\t}\r\n";
- 		$r .= "\t\t\t\t\treturn true;\r\n";	
-		$r .= "\r\n\t\t\t\t} else {\r\n"
- 			. "\t\t\t\t\t return false;\t// validation failed\r\n"
- 			. "\t\t\t\t}\r\n"
+ 	 	
+ 		$r .= "\t\t\t\t\treturn true;\r\n"
  			. "\t\t\t}";
  			
  		// Case 2 (objId > 0: UPDATE EXISTING OBJECT)
  		$r .= " else {\r\n"
  			. "\t\t\t\t// Updating an existing object in the database...\r\n"
- 			. "\t\t\t\t return \$this->update(\$data,true);\r\n"
+ 			. "\t\t\t\t return \$this->update(\$data,false);\r\n"
  			. "\t\t\t}\r\n"
  			. "\t\t}\r\n";
  		
@@ -716,7 +634,7 @@ class FModel {
 
 		
 		// Update
-		$r .= "\r\n\t\tprivate function update(\$data = null,\$bValidate = true) {\r\n"
+		$r .= "\r\n\t\tprivate function update(\$data = null,\$bValidate = false) {\r\n"
 			. "\t\t\tif (\$this->objId == 0) { die('{$object->getName()}::update(...) called on non-existent object. use {$object->getName()}::save(...) first'); }\r\n"
 			. "\t\t\t\$validated = true;\r\n\r\n";
 			
@@ -845,11 +763,37 @@ class FModel {
  				. "\t\t\t\tcase 'password': return array('type'=>'password','size'=>20);\r\n"
  				. "\t\t\t\tcase 'emailAddress': return array('type'=>'string','size'=>80);\r\n\r\n";
  		}
+ 		
 		foreach ($object->getAttributes() as $attr) {
 			$components = array();
 			switch ($attr->getType()) {
 				case "text":
 					$components[] = "'type'=>'text'";
+					// Does this attribute have a list of allowed values?
+					$validationData = $attr->getValidation();
+					
+					if (isset($validationData['allowedValues'])) {
+						$valueData = $validationData['allowedValues'];
+						$values = array();
+						foreach ($valueData as $vd) {
+							$values[] = "array('value'=>\"".addslashes($vd['value'])."\",'label'=>\"".addslashes($vd['label'])."\")";
+						}
+						$components[] = "'allowedValues'=>array(".implode(",",$values).")";
+					}
+					break;
+				case "integer":
+					$components[] = "'type'=>'integer'";
+					// Does this attribute have a list of allowed values?
+					$validationData = $attr->getValidation();
+
+					if (isset($validationData['allowedValues'])) {
+						$valueData = $validationData['allowedValues'];
+						$values = array();
+						foreach ($valueData as $vd) {
+							$values[] = "array('value'=>\"".addslashes($vd['value'])."\",'label'=>\"".addslashes($vd['label'])."\")";
+						}
+						$components[] = "'allowedValues'=>array(".implode(",",$values).")";
+					}
 					break;
 				case "string":
 					$components[] = "'type'=>'string'";
@@ -895,6 +839,57 @@ class FModel {
  		$r .= "\t} // end {$object->getName()}Collection\r\n\r\n";
  		// return the class string
  		return $r;
+	}
+	
+	private function generateObjectValidatorClass(&$object) {
+		$r .= "\r\n"
+			. "\tclass {$object->getName()}Validator extends FValidator {\r\n"
+			. "\t\t\r\n"
+			. "\t\t// Variable: valid\r\n"
+			. "\t\t// Whether or not the current (containing) object is valid\r\n"
+			. "\t\tpublic \$valid;\r\n"
+			. "\t\t// Array: errors\r\n"
+			. "\t\t// A container for error messages in the form field => message\r\n"
+			. "\t\tpublic \$errors;\r\n\r\n"
+			. "\t\t// Constructor\r\n"
+			. "\t\tpublic function __construct() {\r\n"
+			. "\t\t\t\$this->valid  = true;\r\n"
+			. "\t\t\t\$this->errors = array();\r\n"
+			. "\t\t}\r\n\r\n"
+			. "\t\t// isValid: tests the provided data for validity\r\n"
+			. "\t\tpublic function isValid(\$data) {\r\n"
+			. "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
+			. "\t\t\t\tswitch (\$k) {\r\n";
+		foreach ($object->getAttributes() as $attr) {
+			if ($attr->getName() == "objId") { continue; }
+			$r .= "\t\t\t\t\tcase '{$attr->getName()}': \$this->{$attr->getName()}(\$v); break;\r\n";
+		}
+		$r .= "\t\t\t\t}\r\n"
+			. "\t\t\t}\r\n"
+			. "\t\t\treturn \$this->valid;\r\n"
+			. "\t\t}\r\n\r\n"
+			. "\t\tpublic function getValid() {\r\n"
+			. "\t\t\treturn \$this->valid;\r\n"
+			. "\t\t}\r\n\r\n"
+			. "\t\tpublic function getErrors() {\r\n"
+			. "\t\t\treturn \$this->errors;\r\n"
+			. "\t\t}\r\n\r\n";
+		
+		foreach ($object->getAttributes() as $attr) {
+			$r .= "\t\tpublic function {$attr->getName()}(\$value) {\r\n"
+				. "\t\t\ttry {\r\n"
+				. "\t\t\t\t".FValidator::BuildValidationCodeForAttribute("\$value",$attr)
+				. "\t\t\t\treturn true;\r\n"
+				. "\t\t\t} catch (FValidationException \$fve) {\r\n"
+				. "\t\t\t\t\$this->errors['{$attr->getName()}'] = \$fve->getMessage();\r\n"
+				. "\t\t\t\t\$this->valid = false;\r\n"
+				. "\t\t\t\treturn false;\r\n"
+				. "\t\t\t}\r\n"
+				. "\t\t}\r\n";
+		}
+			
+		$r .= "\t} // end {$object->getName()}Validator\r\n\r\n";
+		return $r;
 	}
 	
 	private function determineDeleteInformationFor(&$object) {
