@@ -134,25 +134,20 @@ class MDB2_ErrorTranslator {
 class FValidationException extends FException {
 
 	//TODO: implement this class
-	protected $validator = '';
-	protected $variable  = '';
+	protected $validator    = '';
+	protected $subvalidator = '';
+	protected $variable     = '';
 	
 	public function __construct($validator,$subValidator,$variable,$defaultMessage='') {
-		parent::__construct($message,0);
-		$this->validator = $validator;
-		$this->variable  = $variable;
-		
-		// store error message in the session
-		$sub = ($subValidator == null || empty($subValidator)) ? false : $subValidator;
-		$_SESSION['_validationErrors'][$variable][] = array(
-			'validator'=>$validator,
-			'subValidator'=>$sub,
-			'variable'=>$variable,
-			'defaultMessage'=>$defaultMessage);
+		parent::__construct($defaultMessage,0);
+		$this->validator    = $validator;
+		$this->subvalidator = $subValidator;
+		$this->variable     = $variable;
+	
 	}
 	
 	public function __toString() {
-		return "<b>There was a problem with your input:</b><br/>{$this->defaultMessage} <br/><br/> Please check your values and try again.";
+		return "<b>There was a problem with your input:</b><br/>{$this->message} <br/><br/> Please check your values and try again.";
 	}
 }
 ?>
