@@ -311,7 +311,6 @@ END;
 			}
 			// Process allowed value validation data (if any)
 			$attributeData = call_user_func(array($objectType,"_getAttribute"),$attrName);
-			var_dump($attributeData);
 			if (isset($attributeData['allowedValues'])) {
 				$txt = '';
 				foreach ($attributeData['allowedValues'] as $av) {
