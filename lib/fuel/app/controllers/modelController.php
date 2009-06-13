@@ -309,6 +309,16 @@ END;
 			if (! $attribute) {
 				die("Attribute {$attrName} is not defined in object {$objectType}.");
 			}
+			// Process allowed value validation data (if any)
+			$attributeData = call_user_func(array($objectType,"_getAttribute"),$attrName);
+			var_dump($attributeData);
+			if (isset($attributeData['allowedValues'])) {
+				$txt = '';
+				foreach ($attributeData['allowedValues'] as $av) {
+					$txt .= "{$av['value']}|{$av['label']}\r\n";
+				}
+				$this->set('allowedValuesData',$txt);
+			}
 			
 			$this->set('model',$m);
 			$this->set('object',$m->objects[$objectType]);
@@ -466,6 +476,14 @@ END;
 						'min'=> (isset($this->form['lengthMin'])? $this->form['lengthMin'] : null),
 						'max'=> (isset($this->form['lengthMax'])? $this->form['lengthMax'] : null)
 					);
+				}
+				if (isset($this->form['optionAllowedValues'])) {
+					$validationData['allowedValues'] = array();
+					$values = explode("\r\n",$this->form['allowedValues']);
+					foreach ($values as $value) {
+						list($v,$l) = explode('|',$value);
+						$validationData['allowedValues'][] = array('value'=>trim($v),'label'=>trim($l));
+					}
 				}
 				
 				// Store the validation data in the attribute

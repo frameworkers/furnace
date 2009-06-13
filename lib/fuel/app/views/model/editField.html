@@ -98,6 +98,14 @@
 	    <td>Ensures that the provided value has length satisfying the criteria you choose</td>
 	  </tr>
 	  <tr>
+	    <td><input type="checkbox" name="optionAllowedValues" [if:attr.validation.allowedValues;content='checked']/>Allowed Values: </td>
+	    <td>
+	    	<textarea name="allowedValues" style="width:97%;">[allowedValuesData]</textarea>
+	    </td>
+	    <td>
+	    	Specify the allowed values, one per line<br/> <strong>Format:</strong> value|displayLabel, where<ul><li>'value' is the value to store in the db, and</li><li>'displayLabel' is what to show on the screen</li></ul>
+	    </td>
+	  <tr>
 	    <td colspan="3">
 	    	<input type="submit" value="Save Changes"/>
 	   	</td>
