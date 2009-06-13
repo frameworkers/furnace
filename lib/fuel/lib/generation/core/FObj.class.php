@@ -76,7 +76,7 @@
 		}
 		
 		// Add attributes
-		if (isset($objectData['attributes'])) {
+		if (isset($objectData['attributes']) && !empty($objectData['attributes'])) {
 			foreach ($objectData['attributes'] as $attrName => $attrData) {
 				$this->addAttribute(new FObjAttr($attrName,$attrData));
 			}
