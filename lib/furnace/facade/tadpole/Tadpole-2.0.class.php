@@ -211,11 +211,9 @@ class Tadpole {
 			}
 			
 			// Determine whether the value implies an input/error statement
-			if (isset($value[5]) && ("input:" == substr($value,0,6) || "error:" == substr($value,0,6))) {
-				list($type,$value) = explode(':',$value,2);
-				
+			if (isset($value[5]) && ("input:" == substr($value,0,6))) {
 				// Process the input statement
-				
+				$value = substr($value,6);
 				// 1. get the base object
 				$dotPosition = strrpos($value,'.');
 				if (false !== $dotPosition) {
@@ -229,50 +227,38 @@ class Tadpole {
 				if (isset($commands['style'])) {
 					$commands['style'] = str_replace('|',';',$commands['style']);
 				}
-				
-				if ("input" == $type) {
-					$output           = '';
-					// Special case for the "submit" input
-					if ("_submit" == $baseObjectNeedle) {
-						$output = "<input type=\"submit\" name=\"{$commands['name']}\" id=\"{$commands['id']}\" value=\"{$commands['value']}\" class=\"{$commands['class']}\" style=\"{$commands['style']}\"/>";
-					} else 
-					// Special case for the "reset" input
-					// Special case for the "button" input
-					
-					// If the baseObjectNeedle begins with '~', it is a class definition, not an object
-					if ('~' == $baseObjectNeedle[0]) {
-						try {
-							$attributeData = call_user_func(
-								array(substr($baseObjectNeedle,1),'_getAttribute'),$attributeNeedle);
-							$output = $this->input_helper(substr($baseObjectNeedle,1),$attributeNeedle,$attributeData,$commands);
-						} catch (Exception $e) {
-							$rejected = true;
-						}
-					} else {
-						$baseObject = $this->get_recursively($baseObjectNeedle,$commands,$rejected,$iter_data);
-						if (!$rejected && is_object($baseObject)) {
-							
-							// Special case for the 'objId' attribute:
-							if ('objId' == $attributeNeedle) {
-								// check for name override
-								$name   = (isset($commands['name'])) ? $commands['name'] : "{$baseObject->_getObjectClassName()}_id";
-								$output = "<input type=\"hidden\" name=\"{$name}\" value=\"{$baseObject->getObjId()}\"/>";
-							// All other attributes:
+
+				$output = '';
+				// If the baseObjectNeedle begins with '~', it is a class definition, not an object
+				if ('~' == $baseObjectNeedle[0]) {
+					try {
+						$attributeData = call_user_func(
+							array(substr($baseObjectNeedle,1),'_getAttribute'),$attributeNeedle);
+						$output = $this->input_helper(substr($baseObjectNeedle,1),$attributeNeedle,$attributeData,$commands);
+					} catch (Exception $e) {
+						$rejected = true;
+					}
+				} else {
+					$baseObject = $this->get_recursively($baseObjectNeedle,$commands,$rejected,$iter_data);
+					if (!$rejected && is_object($baseObject)) {
+						
+						// Special case for the 'objId' attribute:
+						if ('objId' == $attributeNeedle) {
+							// check for name override
+							$name   = (isset($commands['name'])) ? $commands['name'] : "{$baseObject->_getObjectClassName()}_id";
+							$output = "<input type=\"hidden\" name=\"{$name}\" value=\"{$baseObject->getObjId()}\"/>";
+						// All other attributes:
+						} else {
+							if (false !== ($attributeData = $baseObject->_getAttribute($attributeNeedle))) {
+								// Generate the output for the attribute input item
+								$output = $this->input_helper($baseObject,$attributeNeedle,$attributeData,$commands);
 							} else {
-								if (false !== ($attributeData = $baseObject->_getAttribute($attributeNeedle))) {
-									// Generate the output for the attribute input item
-									$output = $this->input_helper($baseObject,$attributeNeedle,$attributeData,$commands);
-								} else {
-									$rejected = true;
-								}
+								$rejected = true;
 							}
 						}
 					}
-				} else if ("error" == $type) {
-					// Get the stored error information for this attribute
-					$output = $this->error_helper($attributeNeedle,$commands);
 				}
-
+				
 				if (!$rejected ) {
 					// apply the output and update the offset
 					$before   = substr($contents,0,$tagStart);
@@ -969,24 +955,6 @@ class Tadpole {
 	    return "$difference $periods[$j] {$tense}";
 	}
 	
-	public function error_helper($attributeName,&$commands) {
-		// determine whether any validation errors exist for the attribute
-		$bHasErrors = (isset($_SESSION['_validationErrors'][$attributeName]));
-		$errorClass = ($bHasErrors) ? "inputError" : '';
-		
-		$errorInformation = '';
-		if ($bHasErrors) {
-			$errorInformation = '<div class="error"><ul style="list-style:none;">';
-			foreach ($_SESSION['_validationErrors'][$attributeName] as $err) {
-				$errorInformation .= "<li>({$err[0]}) {$err[1]}</li>";
-			}
-			$errorInformation .= "</ul></div>";
-			unset($_SESSION['_validationErrors'][$attributeName]); 	// consume the error
-		}
-		
-		return $errorInformation;
-	}
-	
 	public function input_helper($object,$attributeName,$attributeData,&$commands) {
 		
 		// prefer POSTed/submitted values over the currently stored object attribute value
@@ -1007,50 +975,44 @@ class Tadpole {
 		}
 		
 		// determine whether any validation errors exist for the attribute
-		$bHasErrors = (isset($_SESSION['_validationErrors'][$attributeName]));
+		if (isset($_SESSION['_validationErrors'][$attributeName])) { 
+			unset($_SESSION['_validationErrors'][$attributeName]);
+			$bHasErrors = true;
+		} else {
+			$bHasErrors = false;
+		}
 		$errorClass = ($bHasErrors) ? "inputError" : '';
 		
-		$errorInformation = '';
-		if ($bHasErrors) {
-			// Check for localized error strings
-			$objName = (is_object($object)) ? $object->_getObjectClassName() : $object;
-			$localStrings = (isset($this->page_data['_strings']['en-us']['model'][$objName]['errors'][$attributeName]))
-				? $this->page_data['_strings']['en-us']['model'][$objName]['errors'][$attributeName]
-				: false;
-			
-			// Build the error message
-			// subValidator is either false or a 2 element array containing:
-			//	[0] the validator ('is','min','max', etc) used
-			//	[1] the corresponding value that must be matched
-			$errorInformation = '<div class="error"><ul style="list-style:none;">';
-			foreach ($_SESSION['_validationErrors'][$attributeName] as $err) {
-				if ($err['subValidator'] && isset($localStrings[$err['validator'] ][$err['subValidator'][0] ])) {	
-					// if a local string for a subValidator is provided, replace any macros ({min},{max},{is}) and display
-					$message = str_replace("{{$err['subValidator'][0]}}",$err['subValidator'][1],$localStrings[$err['validator'] ][$err['subValidator'][0] ]);
-					$errorInformation .= "<li>{$message}</li>";	
-				} else if (!$err['subValidator'] && isset($localStrings[$err['validator'] ])) {	
-					// if a local string for a validator is provided
-					$errorInformation .= "<li>{$localStrings[$err['validator'] ]}</li>";
-				} else {
-					// if no local string was provided, use the default
-					$errorInformation .= "<li>({$err['validator']}) {$err['defaultMessage']}</li>";	
-				}
-			}
-			$errorInformation .= "</ul></div>";
-			unset($_SESSION['_validationErrors'][$attributeName]); 	// consume the error
-		}
 		
 		// determine the type of input to create
 		switch ($attributeData['type']) {
 			case 'text':
-				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">".stripslashes($value)."</textarea>{$errorInformation}";
+				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">".stripslashes($value)."</textarea>";
 			case 'password':
-				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes($value)."\" />{$errorInformation}";
+				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes($value)."\" />";
 			case 'string':
+				if (isset($attributeData['allowedValues'])) {
+					// create a select box
+					$option = '';
+					foreach ($attributeData['allowedValues'] as $opt) {
+						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
+					}
+					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
+					break;	
+				} // otherwise, just draw a normal text box:
 			case 'integer':
+				if (isset($attributeData['allowedValues'])) {
+					// create a select box
+					$option = '';
+					foreach ($attributeData['allowedValues'] as $opt) {
+						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
+					}
+					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
+					break;	
+				} // otherwise, just draw a normal text box:
 			case 'float':
 			default:
-				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes(htmlentities($value))."\" maxlen=\"{$attributeData['size']}\"/>{$errorInformation}";
+				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes(htmlentities($value))."\" maxlen=\"{$attributeData['size']}\"/>";
 		}
 	}
 	
