@@ -650,6 +650,9 @@ class Tadpole {
 				case "htmlentities":
 					$value = htmlentities($value);
 					break;
+				case "nl2br":
+					$value = nl2br($value);
+					break;
 				default:
 					break;
 			}
