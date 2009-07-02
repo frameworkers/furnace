@@ -481,7 +481,7 @@ END;
 					$values = explode("\r\n",$this->form['allowedValues']);
 					foreach ($values as $value) {
 						list($v,$l) = explode('|',$value);
-						if (!empty($v) && !empty($l)) {
+						if (!empty($l)) {
 							$validationData['allowedValues'][] = array('value'=>trim($v),'label'=>trim($l));
 						}
 					}
