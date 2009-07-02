@@ -160,7 +160,8 @@ class FValidator {
 					$min= isset($detail['min'])? $detail['min']: 'null';
 					$max= isset($detail['max'])? $detail['max']: 'null';
 					$int= isset($detail['integerOnly']) ? (($detail['integerOnly'])? 'true' : 'false') : 'null';
-					$response[] = "FValidator::Numericality({$var},{$is},{$min},{$max},{$int});";
+					$negate  = isset($detail['negate'])  ? (($detail['negate']) ? 'true' : 'false')  : 'null';
+					$response[] = "FValidator::Numericality({$var},{$is},{$min},{$max},{$int},{$negate},{$field});";
 					break;
 				case "length":
 					$is = isset($detail['is']) ? $detail['is'] : 'null';
