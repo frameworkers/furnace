@@ -224,6 +224,10 @@ class FModel {
  		$r .= "\t\t// Internal variable: validator\r\n"
  			. "\t\t// validator object\r\n"
  			. "\t\tpublic \$validator;\r\n\r\n";
+ 			
+ 		$r .= "\t\t// Internal variable: _dirtyTable\r\n"
+ 			. "\t\t// The dirty table keeps track of which fields need to be saved on update\r\n"
+ 			. "\t\tpublic \$_dirtyTable;\r\n\r\n";
  		
 		// add parents
  		foreach ($object->getParents() as $s) {
@@ -248,8 +252,9 @@ class FModel {
  		
  		// constructor
 		$r .= "\t\tpublic function __construct(\$data=array()) {\r\n";	
-		$r .= "\t\t\t\$this->objId     = isset(\$data['objId']) ? \$data['objId'] : 0;\r\n";
-		$r .= "\t\t\t\$this->validator = new {$object->getName()}Validator();\r\n\r\n";
+		$r .= "\t\t\t\$this->objId       = isset(\$data['objId']) ? \$data['objId'] : 0;\r\n";
+		$r .= "\t\t\t\$this->validator   = new {$object->getName()}Validator();\r\n";
+		$r .= "\t\t\t\$this->_dirtyTable = array();\r\n\r\n";
 		
 		if ("FAccount" == $object->getParentClass()) {			
 			$r .= "\t\t\t// Initialize required inherited attributes:\r\n"
@@ -362,6 +367,7 @@ class FModel {
 			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value) {\r\n";
 			$r .= "\t\t\t// Set the provided value\r\n"
 				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
+				. "\t\t\t\$this->_dirtyTable['{$a->getName()}'] = \$value;\r\n"
  				. "\t\t}\r\n\r\n";	
 		}
 		// setters to allow for 'parent' reassignment
@@ -423,6 +429,7 @@ class FModel {
  		$r .= "\t\t\t// do nothing if this is not a valid object\r\n"
  			. "\t\t\tif (!\$this->validator->valid) { return false; }\r\n\r\n";
  		// Case 1 ( objId == 0: NEW OBJECT CREATION)
+ 		// In this case, we want to save everything for the first time
  		$r .= "\t\t\tif (\$this->objId == 0) {\r\n";
 
  		// Build the attributes lists for the sql query
@@ -502,6 +509,7 @@ class FModel {
  			. "\t\t\t}";
  			
  		// Case 2 (objId > 0: UPDATE EXISTING OBJECT)
+ 		// In this case we only want to save those fields which have been updated 
  		$r .= " else {\r\n"
  			. "\t\t\t\t// Updating an existing object in the database...\r\n"
  			. "\t\t\t\t return \$this->update(\$data,false);\r\n"
@@ -551,18 +559,14 @@ class FModel {
  		$r .= "\r\n\t\t\t);\r\n";
  		$r .= "\r\n"
  			. "\t\t\t\$valid_data = array_merge(\$additional_data,\$data);\r\n"
- 			. "\t\t\t\$valid = true;\r\n"
- 			. "\t\t\tif(count(\$valid_data) > 0) {\r\n"
- 			. "\t\t\t\t\$valid = self::Validate(\$valid_data);\r\n"
- 			. "\t\t\t}\r\n\r\n"
- 			. "\t\t\tif ( \$valid ) {\r\n"
-			. "\t\t\t\t// Return a new object\r\n"
-			. "\t\t\t\treturn new {$object->getName()}(\$valid_data);\r\n"
-			. "\t\t\t} else {\r\n"
-			. "\t\t\t\treturn false;\t//validation failed\r\n"
-			. "\t\t\t}\r\n";
- 		$r .= "\t\t}\r\n";
- 		$r .= "\r\n";
+ 			
+ 			. "\t\t\t\$o = new {$object->getName()}(\$valid_data);\r\n"
+ 			. "\t\t\tif (\$o->validator->isValid(\$valid_data)) {\r\n"
+ 			. "\t\t\t\treturn \$o;\r\n"
+ 			. "\t\t\t} else {\r\n"
+ 			. "\t\t\t\treturn false;\r\n"
+ 			. "\t\t\t}\r\n";
+ 		$r .= "\t\t}\r\n\r\n";
  		
  		// Retrieve
  		$r .= "\t\tpublic static function Retrieve(\$uniqueValues=\"*\",\$returnType=\"object\",\$key=\"objId\",\$sortOrder=\"default\") {\r\n";
@@ -634,47 +638,42 @@ class FModel {
 
 		
 		// Update
-		$r .= "\r\n\t\tprivate function update(\$data = null,\$bValidate = false) {\r\n"
+		$r .= "\r\n\t\tprivate function update(\$data = array(),\$bValidate = false) {\r\n"
 			. "\t\t\tif (\$this->objId == 0) { die('{$object->getName()}::update(...) called on non-existent object. use {$object->getName()}::save(...) first'); }\r\n"
-			. "\t\t\t\$validated = true;\r\n\r\n";
+			. "\t\t\tif (\$bValidate && !\$this->validator->isValid(\$data))    { return false; } // Invalid data \r\n"
+			. "\t\t\tif (\$data == array() && count(\$this->_dirtyTable) == 0) { return true;  } // Nothing to do\r\n\r\n";
 			
 		if (count($object->getAttributes()) > 0) {
-			// merge the provided attribute/value data, optionally validating the data first
-			// and update the database for those fields only. if \$data == null, update all fields
+			// merge the provided attribute/value data and update the database for those fields only. 
 		
-			$r .= "\t\t\t// Merge (with optional validation) the provided attribute/value data into the object and update\r\n"
-				. "\t\t\t\$fieldsToSave = array();\r\n"
-				. "\t\t\t\$saveAll      = (\$data == array());\r\n";
+			$r .= "\t\t\t// Merge the provided attribute/value data into the object and update\r\n";
 		
 			$parentAttrStrings = array();
 			$attrStrings       = array();
 			
 			foreach ($object->getParents() as $dep) {
-					$parentAttrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['{$dep->getName()}_id'])) {try { \$this->set".self::standardizeName($dep->getName())."((isset(\$data['{$dep->getName()}_id']) ? \$data['{$dep->getName()}_id'] : (is_object(\$this->{$dep->getName()}) ? \$this->{$dep->getName()}->getObjId() : \$this->{$dep->getName()}))); } catch (FValidationException \$e) {\$validated = false;} }\r\n";
+					$parentAttrStrings[] = "\t\t\tif (isset(\$data['{$dep->getName()}_id'])) { \$this->set".self::standardizeName($dep->getName())."(\$data['{$dep->getName()}_id']); \$this->_dirtyTable['{$dep->getName()}_id'] = \$data['{$dep->getName()}_id']; }\r\n";
 			}
 			foreach ($object->getAttributes() as $attr) {
  				if ("modified" == $attr->getName()) {
  					// Special case for 'modified' attribute
- 					$attrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['modified'])) {\$this->setModified((isset(\$data['modified']) ? \$data['modified'] : \$this->modified),false,\$bValidate);\$fieldsToSave['modified'] = \$this->modified;} else {\$this->setModified(date('Y-m-d G:i:s'),false,\$bValidate);\$fieldsToSave['modified'] = \$this->modified;}\r\n";
+ 					$attrStrings[] = "\t\t\tif (isset(\$data['modified'])) {\$this->setModified(\$data['modified']); \$this->_dirtyTable['modified'] = \$data['modified']; } else {\$this->setModified(date('Y-m-d G:i:s')); \$this->_dirtyTable['modified'] = date('Y-m-d G:i:s'); }\r\n";
  				} else if ("created" == $attr->getName()) {
  					// Special case for 'created' attribute
- 					$attrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['created'])) {\$this->setCreated((isset(\$data['created']) ? \$data['created'] : \$this->created),false,\$bValidate);\$fieldsToSave['created'] = \$this->created;} \r\n";
+ 					$attrStrings[] = "\t\t\tif (isset(\$data['created'])) {\$this->setCreated(\$data['created']); \$this->_dirtyTable['created'] = \$data['created']; } \r\n";
  				} else {
- 					$attrStrings[] = "\t\t\tif (\$saveAll || isset(\$data['{$attr->getName()}'])) { if (false !== \$this->set".self::standardizeName($attr->getName())."((isset(\$data['{$attr->getName()}']) ? \$data['{$attr->getName()}'] : \$this->{$attr->getName()}),false,\$bValidate)) {\$fieldsToSave['{$attr->getName()}'] = \$this->{$attr->getName()};} else {\$validated = false;} }\r\n";
+ 					$attrStrings[] = "\t\t\tif (isset(\$data['{$attr->getName()}'])) { \$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}']); \$this->_dirtyTable['{$attr->getName()}'] = \$data['{$attr->getName()}']; }\r\n";
  				}
 	 		}
 	 		$r .= "\t\t\t//parents...\r\n";
 	 		$r .= implode("",$parentAttrStrings)."\r\n";
 	 		$r .= "\t\t\t//attributes...\r\n";
 	 		$r .= implode("",$attrStrings)."\r\n"
-	 			. "\t\t\tif (\$bValidate && !\$validated) { \r\n"
-	 			. "\t\t\t\treturn false;\t// stop now if validation was requested and failed\r\n"
-				. "\t\t\t}\r\n"
 				. "\t\t\t\$fieldsToSaveStringArray = '';\r\n"
-				. "\t\t\tforeach (\$fieldsToSave as \$fk => \$fv) {\r\n"
+				. "\t\t\tforeach (\$this->_dirtyTable as \$fk => \$fv) {\r\n"
 				. "\t\t\t\t\$fieldsToSaveStringArray[] = \"`{\$fk}`='{\$fv}'\";\r\n"
 				. "\t\t\t}\r\n"
-	 			. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET \".implode(',',\$fieldsToSaveStringArray).\" WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}' \";\r\n"; 
+	 			. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET \".implode(',',\$fieldsToSaveStringArray).\" WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}' \";\r\n";
 	 			
 			$r .= "\t\t\t_db()->exec(\$q);\r\n";
 	 		
