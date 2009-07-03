@@ -355,7 +355,7 @@ class FAccount extends FBaseObject {
 				WHERE `app_accounts`.`objId`=`app_roles`.`accountId` 
 				AND `app_roles`.`{$role}`='{$value}' 
 				AND `app_accounts`.`objectClass`='{$objectClass}'";
-			$results  = _db()->queryAll($q);
+			$results  = _db()->queryAll($q,FDATABASE_FETCHMODE_ASSOC);
 			$response = array();
 			foreach ($results as $r) {
 				$response[] = $r['objectId'];
