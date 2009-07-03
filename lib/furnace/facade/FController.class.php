@@ -23,14 +23,6 @@ class FController extends FPage {
 	
 	
 	public function redirect($url='',$external=false) {
-		// If no url provided, attempt 'return to sender'. If that fails, send to '/'
-		if ('' == $url) {
-			if (isset($_SESSION['referringPage']) && !empty($_SESSION['referringPage'])) {
-				header("Location: ".$GLOBALS['furnace']->config['url_base'] . ltrim($_SESSION['referringPage'],'/'));
-			} else {
-				header("Location ".$GLOBALS['furnace']->config['url_base']);
-			}
-		}
 		// If 'external' is indicated, don't preface with url_base
 		if (!$external) {
 			header("Location: ".$GLOBALS['furnace']->config['url_base'] . ltrim($url,'/'));
