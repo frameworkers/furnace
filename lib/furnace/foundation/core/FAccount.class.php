@@ -304,7 +304,7 @@ class FAccount extends FBaseObject {
 		}
 		
 		public function grantRole($namedRole) {
-			$q = "UPDATE `app_roles` SET `{$namedRole}`='1' WHERE `accountId`='{$this->getObjId()}' ";
+			$q = "UPDATE `app_roles` SET `{$namedRole}`='1' WHERE `accountId`='{$this->getFAccountId()}' ";
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
@@ -313,12 +313,14 @@ class FAccount extends FBaseObject {
 		}
 		
 		public function denyRole($namedRole) {
-			$q = "UPDATE `app_roles` SET `{$namedRole}`='0' WHERE `accountId`='{$this->getObjId()}' ";
+			$q = "UPDATE `app_roles` SET `{$namedRole}`='0' WHERE `accountId`='{$this->getFAccountId()}' ";
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
-			unset($this->roles[$namedRole]);
+			if (is_array($this->roles) && isset($this->roles[$namedRole])) {
+				unset($this->roles[$namedRole]);
+			}
 		}
 
 		public static function Create($username) {
