@@ -125,6 +125,7 @@
 	}
 	
 	public function flash($message,$cssClass='success',$title='') {
+		if (is_object($message)) {$message = $message->__toString();}
 		$_SESSION['flashes'][] = array(
 			'message' => $message,
 			'cssClass'=> $cssClass,
