@@ -425,11 +425,23 @@ class FModel {
 		}
 		
 		// Save
- 		$r .= "\t\tpublic function save( \$data = array() ) {\r\n"; 		
- 		$r .= "\t\t\t// do nothing if this is not a valid object\r\n"
+ 		$r .= "\t\tpublic function save( \$data = array(), \$bValidate = true ) {\r\n";
+
+ 		// Validation
+ 		$r .= "\t\t\t// If validation has been requested...\r\n"
+ 			. "\t\t\tif (\$bValidate) {\r\n"
+ 			. "\t\t\t\t// Validate all dirty attributes, and any data directly passed in\r\n"
+ 			. "\t\t\t\tif (! \$this->validator->isValid(\$this->_dirtyTable) ||\r\n"
+ 			. "\t\t\t\t\t! \$this->validator->isValid(\$data)) {\r\n"
+ 			. "\t\t\t\t\treturn false;\r\n"
+ 			. "\t\t\t\t}\r\n"
+ 			. "\t\t\t}\r\n\r\n"; 		
+ 		
+ 		$r .= "\t\t\t// In any event, do nothing if this is not a valid object\r\n"
  			. "\t\t\tif (!\$this->validator->valid) { return false; }\r\n\r\n";
  		// Case 1 ( objId == 0: NEW OBJECT CREATION)
  		// In this case, we want to save everything for the first time
+ 		$r .= "\t\t\t// Determine whether to 'create' or 'update'\r\n";
  		$r .= "\t\t\tif (\$this->objId == 0) {\r\n";
 
  		// Build the attributes lists for the sql query
@@ -482,6 +494,7 @@ class FModel {
  		// Merge the provided data in $data into the object (assume it has already been validated)
  	 	$r .= "\t\t\t\t\t// Merge \$data into the object (assume it has already been validated)\r\n";
  	 	$r .= "\t\t\t\t\tforeach (\$data as \$k => \$v) {\r\n"
+ 	 		. "\t\t\t\t\t\tif (isset(\$this->_dirtyTable[\$k])) { continue; } // don't overwrite manual changes\r\n"
  	 		. "\t\t\t\t\t\t\$realK = \$k;\r\n"
  	 		. "\t\t\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
  	 		. "\t\t\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
@@ -512,7 +525,7 @@ class FModel {
  		// In this case we only want to save those fields which have been updated 
  		$r .= " else {\r\n"
  			. "\t\t\t\t// Updating an existing object in the database...\r\n"
- 			. "\t\t\t\t return \$this->update(\$data,false);\r\n"
+ 			. "\t\t\t\t return \$this->update(\$data,false);  // Validation already handled above\r\n"
  			. "\t\t\t}\r\n"
  			. "\t\t}\r\n";
  		
@@ -662,7 +675,7 @@ class FModel {
  					// Special case for 'created' attribute
  					$attrStrings[] = "\t\t\tif (isset(\$data['created'])) {\$this->setCreated(\$data['created']); \$this->_dirtyTable['created'] = \$data['created']; } \r\n";
  				} else {
- 					$attrStrings[] = "\t\t\tif (isset(\$data['{$attr->getName()}'])) { \$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}']); \$this->_dirtyTable['{$attr->getName()}'] = \$data['{$attr->getName()}']; }\r\n";
+ 					$attrStrings[] = "\t\t\tif (isset(\$data['{$attr->getName()}']) && !isset(\$this->_dirtyTable['{$attr->getName()}'])) { \$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}']); \$this->_dirtyTable['{$attr->getName()}'] = \$data['{$attr->getName()}']; }\r\n";
  				}
 	 		}
 	 		$r .= "\t\t\t//parents...\r\n";
@@ -872,6 +885,20 @@ class FModel {
 			. "\t\t}\r\n\r\n"
 			. "\t\tpublic function getErrors() {\r\n"
 			. "\t\t\treturn \$this->errors;\r\n"
+			. "\t\t}\r\n\r\n"
+			. "\t\tpublic function getErrorsAsHTMLList() {\r\n"
+			. "\t\t\t\$li = '';\r\n"
+			. "\t\t\tforeach (\$this->errors as \$k => \$v) {\r\n"
+			. "\t\t\t\t\$li .= \"<li>{\$v}</li>\";\r\n"
+			. "\t\t\t}\r\n"
+			. "\t\t\treturn \"<ul>{\$li}</ul>\";\r\n"
+			. "\t\t}\r\n\r\n"
+			. "\t\tpublic function __toString() {\r\n"
+			. "\t\t\treturn \"Errors encountered... \" . \$this->getErrorsAsHTMLList();\r\n"
+			. "\t\t}\r\n\r\n"
+			. "\t\tpublic function addError(\$attributeName,\$errorMessage) {\r\n"
+			. "\t\t\t\$this->errors[\$attributeName] = \$errorMessage;\r\n"
+			. "\t\t\t\$this->valid = false;\r\n"
 			. "\t\t}\r\n\r\n";
 		
 		foreach ($object->getAttributes() as $attr) {
