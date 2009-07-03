@@ -503,7 +503,6 @@ class Tadpole {
 	}
 	
 	private function process_commands(&$commands,$value,&$rejected,$iter_data=array()) {
-		$foundNeverDate = false;
 		foreach ($commands as $commandKey => $commandValue) {
 			switch ($commandKey) {
 				case "empty":
@@ -523,8 +522,7 @@ class Tadpole {
 						: $value;
 					break;
 				case "ifnever":
-					if ($value == '0000-00-00 00:00:00') {
-						$foundNeverDate = true;
+					if (! strtotime($value)) {
 						$value = $commandValue;
 					}
 					break;
@@ -563,17 +561,25 @@ class Tadpole {
 				case 'type':
 					switch ($commands['type']) {
 						case 'date':
-							if ($foundNeverDate && isset($commands['ifnever'])) { break; /* handled already */}
+							$date = strtotime($value);
+							if (! $date && isset($commands['ifnever'])) {
+								$value = $commands['ifnever'];
+								break;	
+							}
 							$value = date((isset($commands['format'])
 								? $commands['format']
-								: 'Y-m-d G:i:s'),strtotime($value));
+								: 'Y-m-d G:i:s'),$date);
 							break;
 						case 'nicedate':
 							$value = $this->nicedate($value);
 							break;
 						case 'slashdate':
-							$value = strtotime($value);
-							$value = date('m/d/Y',$value);
+							$date = strtotime($value);
+							if (! $date && isset($commands['ifnever'])) {
+								$value = $commands['ifnever'];
+								break;	
+							}
+							$value = date('m/d/Y',$date);
 							break;
 						case 'hour':
 							$value = strtotime($value);
