@@ -212,8 +212,8 @@ abstract class FAccountCollection {
  		
  		// Since `objId` belongs to both tables, it must be disambiguated:
  		$fullKey = ('objId' == $key)
- 			? "`{$this->objectTypeTableName}`.`objId` "
- 			: "`{$key}` ";
+ 			? "`{$this->objectTypeTableName}`.`objId`"
+ 			: "`{$key}`";
  		
  		if ("object" == $returnType){
  			if ("*" == $uniqueValues) {
