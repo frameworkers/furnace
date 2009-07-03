@@ -42,7 +42,7 @@ class FAccountManager extends FAccount {
 		$account->setEmailAddress($em);
 		
 		//$account->save(); // why doesn't this work?
-		return $account->getObjId();
+		return $account->getFAccountId();
 	}
 	
 	public static function Delete($username) {

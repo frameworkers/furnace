@@ -182,6 +182,10 @@ class FAccount extends FBaseObject {
 				return $this->roles; 
 			}
 		}
+		
+		public function getFAccountId() {
+			return $this->faccount_id;
+		}
 		public function setUsername($value,$bSaveImmediately = true) {
 			$this->username = $value;
 			if ($bSaveImmediately) {
@@ -325,7 +329,7 @@ class FAccount extends FBaseObject {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
 			$objectId = _db()->lastInsertID("app_accounts","objId");
-			$data = array("objid"=>$objectId,"username"=>$username,"created"=>$now,"modified"=>$now);
+			$data = array("faccount_id"=>$objectId,"username"=>$username,"created"=>$now,"modified"=>$now);
 			
 			$q = "INSERT INTO `app_roles` (`accountId`) VALUES ('{$objectId}')";
 			$r = _db()->exec($q);
