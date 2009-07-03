@@ -10,7 +10,7 @@ class ImageUploader extends FPageModule {
 	}
 
 	public function fileUploadRequested() {
-		return isset( $_FILES['image_file']);
+		return isset( $_FILES['fiu-file']);
 	}
 
 	/**
@@ -26,41 +26,41 @@ class ImageUploader extends FPageModule {
 		if (!isset($_FILES) && isset($HTTP_POST_FILES)) {
 			$_FILES = $HTTP_POST_FILES;
 		}
-		if (! isset($_FILES['image_file'])) {
+		if (! isset($_FILES['fiu-file'])) {
 			return false;
 		}
 		
 		// Calculate the name + extension to use for the uploaded file
-		$base = basename($_FILES['image_file']['name']);
-		$imageExt  = substr($base,strrpos($base,'.')+1);
+		$base = basename($_FILES['fiu-file']['name']);
+		$imageExt  = strtolower(substr($base,strrpos($base,'.')+1));
 		$imageName = ('' != $forceUploadedFileName)
 			? ($forceUploadedFileName . ".{$imageExt}")
 			: $base;
 
 		// Ensure that an image name was calculated
 		if (empty($imageName)) {
-			$this->controller->flash("The name of the image was not found.","error");
+			//$this->controller->flash("The name of the image was not found.","error");
 			$this->errorsEncountered = true;
 			return false;
 		}
 			
 		// Actually upload and store the file
-		if (is_uploaded_file($_FILES['image_file']['tmp_name'])) {
+		if (is_uploaded_file($_FILES['fiu-file']['tmp_name'])) {
 			$newFile = $uploadDir . "/" . $imageName;
-			if (move_uploaded_file($_FILES['image_file']['tmp_name'],$newFile)) {
-				$this->controller->flash("Image file uploaded successfully.");
+			if (move_uploaded_file($_FILES['fiu-file']['tmp_name'],$newFile)) {
+				//$this->controller->flash("Image file uploaded successfully.");
 				return $imageName;
 			} else {
-				$this->controller->flash("Error moving uploaded file to final location.","error");
+				//$this->controller->flash("Error moving uploaded file to final location.","error");
 				$this->errorsEncountered = true;
 				return false;
 			}
 		} else {
-			$this->controller->flash("No uploaded file was detected.","error");
+			//$this->controller->flash("No uploaded file was detected.","error");
 			return false;
 		}
 	}
-
+	
 	public function getUploadForm($uploadActionURL='',$uploadFormName='',$uploadFormId='') {
 		$this->controller->set('ImageUploader_uploadActionURL',$uploadActionURL);
 		$this->controller->set('ImageUploader_uploadFormName',$uploadFormName);
@@ -69,7 +69,15 @@ class ImageUploader extends FPageModule {
 		return $this->getView('UploadForm');
 	}
 	
-	public function getUploadFormFileInputElement($bIncludeMaxFileSize,$inputName='image_file') {
+	public function getAjaxMultiUploadForm($ajaxHandlerURL,$uploadFormName='',$uploadFormId='') {
+		$this->controller->set('ImageUploader_ajaxHandlerURL',$ajaxHandlerURL);
+		$this->controller->set('ImageUploader_uploadFormName',$uploadFormName);
+		$this->controller->set('ImageUploader_uploadFormId',$uploadFormId);
+		$this->controller->set('ImageUploader_maxUploadedFileSize',$this->maxUploadedFileSizeBytes);
+		return $this->getView('AjaxMultiUploadForm');
+	}
+	
+	public function getUploadFormFileInputElement($bIncludeMaxFileSize,$inputName='fiu-file') {
 		$s = '';
 		if ($bIncludeMaxFileSize) {
 			$s .= "<!-- MAX_FILE_SIZE must precede the file input field -->";

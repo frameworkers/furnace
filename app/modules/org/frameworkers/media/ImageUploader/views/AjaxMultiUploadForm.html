@@ -1,0 +1,52 @@
+<script type="text/javascript">
+	function ajaxFileUpload()
+	{
+		$("#loading")
+			.ajaxStart(function(){
+				$(this).show();
+			})
+			.ajaxComplete(function(){
+				$(this).hide();
+			});
+
+		$.ajaxFileUpload({
+			url:'[ImageUploader_ajaxHandlerURL]',
+			secureuri:false,
+			fileElementId:'fiu-file',
+			dataType: 'json',
+			beforeSend:function() {
+				$("#loading").show();
+			},
+			complete:function() {
+				$("#loading").hide();
+			},				
+			success: function (data, status) {
+				if(typeof(data.error) != 'undefined') {
+					if(data.error != '') {
+						alert(data.error);
+					} else {
+						// Append the thumbnail
+						$("#fiu[ImageUploader_uploadFormName;prefix='-']-gallery")
+							.append('<img src="/images/view/'+data.imageName.thumbnail+'"/>')
+							.append('<input type="hidden" name="images[]" value="'+data.imageName.fullsize+'|'+data.imageName.thumbnail+'"/>');
+					}
+				}
+			},
+			error: function (data, status, e) {
+				alert(e);
+			}
+		});
+		return false;
+	}
+</script>
+
+<form class="fiu-ajax-multi-upload" name="[ImageUploader_uploadFormName]" id="[ImageUploader_uploadFormId]" enctype="multipart/form-data" action="[ImageUploader_uploadActionURL]" method="POST">
+    <!-- MAX_FILE_SIZE must precede the file input field -->
+    <input type="hidden" name="MAX_FILE_SIZE" value="[ImageUploader_maxUploadedFileSize]" />
+    <input type="file" id="fiu-file" name="fiu-file" />
+    <input type="button" class="fiu-submit" value="Upload File" onclick="return ajaxFileUpload();" />
+    <div id="loading" style="display:none;"><img src="/assets/images/busy-bar.gif" style="padding:0px;" align="middle"/> uploading...</div><br/><br/>
+    <div id="fiu[ImageUploader_uploadFormName;prefix='-']-gallery">
+    
+    </div>
+</form>
