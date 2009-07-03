@@ -406,6 +406,8 @@ abstract class FAccountCollection {
  			.(($this->filter)
  				? "{$this->filter} AND "
 				: " WHERE ");
+		$count=0;
+		$uvCount = count($u_v);
  		foreach ($u_v as $attr=>$val) {
  			$fullAttr = (('objId'==$attr)
  				?	"`{$this->objectTypeTableName}`.`objId`"
@@ -415,6 +417,7 @@ abstract class FAccountCollection {
  			} else {
  				$q .= " {$fullAttr}='{$val}' ";
  			}
+ 			if (++$count != $uvCount) { $q .= " AND "; }
  		}
  		$q .= " ORDER BY {$k} " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);

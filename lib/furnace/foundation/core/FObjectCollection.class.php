@@ -386,12 +386,15 @@
  			(($this->filter)
  				? "{$this->filter} AND "
 				: " WHERE ");
+		$count=0;
+		$uvCount = count($u_v);
  		foreach ($u_v as $attr=>$val) {
  			if( is_array($val)) { 
  				$q .= " `{$attr}` " . implode($val," '") . "' ";
  			} else {
  				$q .= " `{$attr}`='{$val}' ";
  			}
+ 			if (++$count != $uvCount) { $q .= " AND "; }
  		}
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
