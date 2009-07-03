@@ -311,7 +311,7 @@ abstract class FAccountCollection {
  		$result = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
  		
  		if (null != $result) {
-			$row['objId'] = $row['realObjectId'];	// Overcome associative name collision on objId
+			$result['objId'] = $result['realObjectId'];	// Overcome associative name collision on objId
  		}
 
 		return ((null == $result)
