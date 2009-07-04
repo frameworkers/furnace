@@ -789,6 +789,8 @@ class FModel {
 					$components[]   = "'type'=>'string'";
 					$components[]   = "'size'=>{$attr->getSize()}"; 
 					break;
+				case "date":
+					$components[]	= "'type'=>'date'";
 				default:
 					break;
 			}
