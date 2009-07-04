@@ -431,10 +431,8 @@ class FModel {
  		$r .= "\t\t\t// If validation has been requested...\r\n"
  			. "\t\t\tif (\$bValidate) {\r\n"
  			. "\t\t\t\t// Validate all dirty attributes, and any data directly passed in\r\n"
- 			. "\t\t\t\tif (! \$this->validator->isValid(\$this->_dirtyTable) ||\r\n"
- 			. "\t\t\t\t\t! \$this->validator->isValid(\$data)) {\r\n"
- 			. "\t\t\t\t\treturn false;\r\n"
- 			. "\t\t\t\t}\r\n"
+ 			. "\t\t\t\t\$this->validator->isValid(\$this->_dirtyTable);\r\n"
+ 			. "\t\t\t\t\$this->validator->isValid(\$data);\r\n"
  			. "\t\t\t}\r\n\r\n"; 		
  		
  		$r .= "\t\t\t// In any event, do nothing if this is not a valid object\r\n"
@@ -778,41 +776,34 @@ class FModel {
  		
 		foreach ($object->getAttributes() as $attr) {
 			$components = array();
+			
+			// Provide basic information
 			switch ($attr->getType()) {
 				case "text":
-					$components[] = "'type'=>'text'";
-					// Does this attribute have a list of allowed values?
-					$validationData = $attr->getValidation();
-					
-					if (isset($validationData['allowedValues'])) {
-						$valueData = $validationData['allowedValues'];
-						$values = array();
-						foreach ($valueData as $vd) {
-							$values[] = "array('value'=>\"".addslashes($vd['value'])."\",'label'=>\"".addslashes($vd['label'])."\")";
-						}
-						$components[] = "'allowedValues'=>array(".implode(",",$values).")";
-					}
+					$components[]   = "'type'=>'text'";
 					break;
 				case "integer":
-					$components[] = "'type'=>'integer'";
-					// Does this attribute have a list of allowed values?
-					$validationData = $attr->getValidation();
-
-					if (isset($validationData['allowedValues'])) {
-						$valueData = $validationData['allowedValues'];
-						$values = array();
-						foreach ($valueData as $vd) {
-							$values[] = "array('value'=>\"".addslashes($vd['value'])."\",'label'=>\"".addslashes($vd['label'])."\")";
-						}
-						$components[] = "'allowedValues'=>array(".implode(",",$values).")";
-					}
+					$components[]   = "'type'=>'integer'";
 					break;
 				case "string":
-					$components[] = "'type'=>'string'";
-					$components[] = "'size'=>{$attr->getSize()}";
+					$components[]   = "'type'=>'string'";
+					$components[]   = "'size'=>{$attr->getSize()}"; 
 					break;
-				default: break;
+				default:
+					break;
 			}
+			
+			// If the attribute has a list of allowed values, add them here
+			$validationData = $attr->getValidation();
+			if (isset($validationData['allowedValues'])) {
+				$valueData = $validationData['allowedValues'];
+				$values = array();
+				foreach ($valueData as $vd) {
+					$values[] = "array('value'=>\"".addslashes($vd['value'])."\",'label'=>\"".addslashes($vd['label'])."\")";
+				}
+				$components[] = "'allowedValues'=>array(".implode(",",$values).")";
+			}
+			
 			$r .= "\t\t\t\tcase '{$attr->getName()}':\r\n";
 			$r .= "\t\t\t\t\treturn array(".implode(',',$components).");\r\n";
 		}
@@ -894,7 +885,7 @@ class FModel {
 			. "\t\t\treturn \"<ul>{\$li}</ul>\";\r\n"
 			. "\t\t}\r\n\r\n"
 			. "\t\tpublic function __toString() {\r\n"
-			. "\t\t\treturn \"Errors encountered... \" . \$this->getErrorsAsHTMLList();\r\n"
+			. "\t\t\treturn \"<strong>Errors encountered...</strong> \" . \$this->getErrorsAsHTMLList();\r\n"
 			. "\t\t}\r\n\r\n"
 			. "\t\tpublic function addError(\$attributeName,\$errorMessage) {\r\n"
 			. "\t\t\t\$this->errors[\$attributeName] = \$errorMessage;\r\n"
