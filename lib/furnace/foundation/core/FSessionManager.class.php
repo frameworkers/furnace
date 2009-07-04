@@ -72,22 +72,22 @@ class FSessionManager {
 	}	
 
  	public static function checkLogin() {
- 		if (isset($_POST['username']) && isset($_POST['password'])) {
- 			if (self::doLogin()) {
- 				return self::getAccountObject();
- 			} else {
- 				return false;
- 			}
- 		} else {
-			if (isset($_SESSION['_fwauth'])) {
-				$now = mktime();
-				$_SESSION['_fwauth']['idleseconds'] = 
-					$now - $_SESSION['_fwauth']['activity'];
-				$_SESSION['_fwauth']['activity'] = $now;
-				return self::getAccountObject();
-			} else {
-				return false;
-			}
+ 		if (isset($_SESSION['_fwauth'])) {
+			$now = mktime();
+			$_SESSION['_fwauth']['idleseconds'] = 
+				$now - $_SESSION['_fwauth']['activity'];
+			$_SESSION['_fwauth']['activity'] = $now;
+			return self::getAccountObject();
+		} else {
+	 		if (isset($_POST['username']) && isset($_POST['password'])) {
+	 			if (self::doLogin()) {
+	 				return self::getAccountObject();
+	 			} else {
+	 				return false;
+	 			}
+	 		} else {
+	 			return false;
+	 		}
  		}
 	}
 
