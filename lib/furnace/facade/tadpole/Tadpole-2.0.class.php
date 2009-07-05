@@ -982,6 +982,8 @@ class Tadpole {
 				$value = '';
 			}
 		}
+		// determine whether or not user has overridden element name
+		$nameToUse = isset($commands['name']) ? $commands['name'] : $attributeName;
 		
 		// determine whether any validation errors exist for the attribute
 		if (isset($_SESSION['_validationErrors'][$attributeName])) { 
@@ -991,22 +993,43 @@ class Tadpole {
 			$bHasErrors = false;
 		}
 		$errorClass = ($bHasErrors) ? "inputError" : '';
+		$disabled   = (isset($commands['disabled']) && $commands['disabled']) ? ' disabled="disabled" ' : '';
 		
 		
 		// determine the type of input to create
 		switch ($attributeData['type']) {
 			case 'text':
-				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">".stripslashes($value)."</textarea>";
+				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" {$disabled} >".stripslashes($value)."</textarea>";
 			case 'password':
-				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes($value)."\" />";
+				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" {$disabled} value=\"".stripslashes($value)."\" />";
+			case 'date':
+				if ('' != $value) {	// assume standard MySQL date format (yyyy-mm-dd gg:ii:ss)
+					$value_year  = substr($value,0,4);
+					$value_month = substr($value,5,2);
+					$value_day   = substr($value,8,2);
+				} else {
+					$value_year = $value_month = $value_day = $value;
+				}
+				$s = '';
+				if (!isset($commands['timeonly'])) {
+					$s = "<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}\" class=\"FDateComponent FDateDay   {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_month\" {$disabled}  value=\"".stripslashes($value_month)."\"/> / "
+						."<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}\" class=\"FDateComponent FDateMonth {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_day\"   {$disabled}  value=\"".stripslashes($value_day)."\"/> / "
+						."<input type=\"text\" maxlen=\"4\" id=\"{$commands['id']}\" class=\"FDateComponent FDateYear  {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_year\"  {$disabled}  value=\"".stripslashes($value_year)."\"/> (mm/dd/yyyy) ";
+				}
+				if (!isset($commands['dateonly'])) {
+					// Display the time component as well
+					
+				}
+				return $s;
+				break;
 			case 'string':
 				if (isset($attributeData['allowedValues'])) {
 					// create a select box
 					$option = '';
 					foreach ($attributeData['allowedValues'] as $opt) {
-						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
+						$option .= "<option value=\"{$opt['value']}\" ".(($value == $opt['value'])? ' selected="selected" ' : '').">{$opt['label']}</option>";
 					}
-					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
+					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" {$disabled} >{$option}</select>";
 					break;	
 				} // otherwise, just draw a normal text box:
 			case 'integer':
@@ -1016,12 +1039,12 @@ class Tadpole {
 					foreach ($attributeData['allowedValues'] as $opt) {
 						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
 					}
-					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
+					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" {$disabled}>{$option}</select>";
 					break;	
 				} // otherwise, just draw a normal text box:
 			case 'float':
 			default:
-				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes(htmlentities($value))."\" maxlen=\"{$attributeData['size']}\"/>";
+				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" value=\"".stripslashes(htmlentities($value))."\" {$disabled} maxlen=\"{$attributeData['size']}\"/>";
 		}
 	}
 	
