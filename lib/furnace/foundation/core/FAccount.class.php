@@ -183,6 +183,15 @@ class FAccount extends FBaseObject {
 			}
 		}
 		
+		public function hasRole($namedRole) {
+			if (is_array($this->roles)){
+				return isset($this->roles[$namedRole]);
+			} else {
+				$this->roles = self::getRolesForId($this->roles);
+				return isset($this->roles[$namedRole]);
+			}
+		}
+		
 		public function getFAccountId() {
 			return $this->faccount_id;
 		}
@@ -310,6 +319,23 @@ class FAccount extends FBaseObject {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
 			$this->roles[$namedRole] = true;
+		}
+		
+		public function grantRoles($namedRoles) {
+			if (array() == $namedRoles) {return false;}
+			$roles = array();
+			foreach ($namedRoles as $role) {
+				$roles[] = " `{$role}`='1' ";
+			}
+			
+			$q = "UPDATE `app_roles` SET " . implode(",",$roles) 
+			  . " WHERE `accountId`='{$this->getFAccountId()}' ";
+			$r = _db()->exec($q);
+			if (is_array($this->roles)) {
+				foreach ($namedRoles as $role) {
+					$this->roles[$role] = true;
+				}
+			}
 		}
 		
 		public function denyRole($namedRole) {
