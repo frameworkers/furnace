@@ -37,12 +37,25 @@ class FAccountManager extends FAccount {
 	public static function Create($un,$pw,$em) {
 		$encrypted = md5($pw);
 		
-		$account = FAccount::Create($un);
-		$account->setPassword($encrypted);
-		$account->setEmailAddress($em);
 		
-		//$account->save(); // why doesn't this work?
-		return $account->getFAccountId();
+		$now = date('Y-m-d G:i:s');
+		
+		// Add entry in app_accounts
+		$q = "INSERT INTO `app_accounts` (`username`,`password`,`emailAddress`,`created`,`modified`) "
+			."VALUES ('{$un}','{$encrypted}','{$em}','{$now}','{$now}')"; 
+		$r = _db()->exec($q);
+		if (MDB2::isError($r)) {
+			FDatabaseErrorTranslator::translate($r->getCode());
+		}
+		$faccountId = _db()->lastInsertID("app_accounts","objId");
+				
+		// Add entry in app_roles
+		$q = "INSERT INTO `app_roles` (`accountId`) VALUES ('{$faccountId}')";
+		$r = _db()->exec($q);
+		if (MDB2::isError($r)) {
+			FDatabaseErrorTranslator::translate($r->getCode());
+		}
+		return array("faccount_id"=>$faccountId,"encryptedPassword"=>$encrypted);
 	}
 	
 	public static function Delete($username) {
