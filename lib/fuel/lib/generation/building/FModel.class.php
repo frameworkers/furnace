@@ -437,6 +437,18 @@ class FModel {
  		
  		$r .= "\t\t\t// In any event, do nothing if this is not a valid object\r\n"
  			. "\t\t\tif (!\$this->validator->valid) { return false; }\r\n\r\n";
+ 			
+ 		// Merge the provided data in $data into the object
+ 	 	$r .= "\t\t\t// Merge \$data into the object\r\n";
+ 	 	$r .= "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
+ 	 		. "\t\t\t\tif (isset(\$this->_dirtyTable[\$k])) { continue; } // don't overwrite manual changes\r\n"
+ 	 		. "\t\t\t\t\$realK = \$k;\r\n"
+ 	 		. "\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
+ 	 		. "\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
+ 	 		. "\t\t\t\t}\r\n"
+ 	 		. "\t\t\t\ttry { \$this->\$realK = \$v; } catch (Exception \$e) { /* silently ignore */ }\r\n"
+ 	 		. "\t\t\t}\r\n\r\n";
+ 	 		
  		// Case 1 ( objId == 0: NEW OBJECT CREATION)
  		// In this case, we want to save everything for the first time
  		$r .= "\t\t\t// Determine whether to 'create' or 'update'\r\n";
@@ -461,8 +473,11 @@ class FModel {
  			// Create an FAccount object
 			$r .= "\r\n"
 				. "\t\t\t\t\t// Create an 'FAccount' (app_accounts + app_roles) for this object\r\n"
-				. "\t\t\t\t\t\$faccount_id = FAccountManager::Create(\$this->username,\$this->password,\$this->emailAddress);\r\n"
-				. "\t\t\t\t\t\$this->roles = \$faccount_id;\r\n"
+				. "\t\t\t\t\t\$accountInfo = FAccountManager::Create(\$this->username,\$this->password,\$this->emailAddress);\r\n"
+				. "\t\t\t\t\t\$this->faccount_id = \$accountInfo['faccount_id'];\r\n"
+				. "\t\t\t\t\t\$this->roles       = \$accountInfo['faccount_id'];\r\n" 
+				. "\t\t\t\t\t\$faccount_id       = \$accountInfo['faccount_id'];\r\n"
+				. "\t\t\t\t\t\$this->password    = \$accountInfo['encryptedPassword'];\r\n"
 				. "\t\t\t\t\tif (false === \$faccount_id) { return false; }\r\n\r\n";
  		}
  		
@@ -488,17 +503,6 @@ class FModel {
  		
  		$values = implode(',',$vals);
  		$values .= (isset($values[1]) ? ',' : '' ) . "\".implode(',',\$parentsVals).\" ";
- 		
- 		// Merge the provided data in $data into the object (assume it has already been validated)
- 	 	$r .= "\t\t\t\t\t// Merge \$data into the object (assume it has already been validated)\r\n";
- 	 	$r .= "\t\t\t\t\tforeach (\$data as \$k => \$v) {\r\n"
- 	 		. "\t\t\t\t\t\tif (isset(\$this->_dirtyTable[\$k])) { continue; } // don't overwrite manual changes\r\n"
- 	 		. "\t\t\t\t\t\t\$realK = \$k;\r\n"
- 	 		. "\t\t\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
- 	 		. "\t\t\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
- 	 		. "\t\t\t\t\t\t}\r\n"
- 	 		. "\t\t\t\t\t\ttry { \$this->\$realK = \$v; } catch (Exception \$e) { /* silently ignore */ }\r\n"
- 	 		. "\t\t\t\t\t}\r\n";
  	 		
  		// Create the object in the database
 		$r .= "\t\t\t\t\t// Create a new {$object->getName()} object in the database\r\n";
@@ -510,6 +514,8 @@ class FModel {
 		// If the object extends FAccount, set the reverse link
  	 	if ("FAccount" == $object->getParentClass()) {
 			// Set the reverse link (object,id)
+			$r .= "\t\t\t\t\t\$this->objectClass= \"{$object->getName()}\";\r\n"
+				. "\t\t\t\t\t\$this->objectId   = \$this->objId;\r\n";
 			$r .= "\t\t\t\t\t\$q = \"UPDATE `app_accounts` SET `objectClass`='{$object->getName()}', "
 				. "`objectId`='{\$this->objId}' WHERE `app_accounts`.`objId`='{\$faccount_id}'\";\r\n"
 				. "\t\t\t\t\t\$r = _db()->exec(\$q);\r\n";
