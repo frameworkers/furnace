@@ -22,16 +22,16 @@ class ImageUploader extends FPageModule {
 	 * @param string $forceUploadedFileName the desired name (w/o extension) for the uploaded file
 	 * @return unknown_type
 	 */
-	public function processUploadedFile($uploadDir,$forceUploadedFileName='') {
+	public function processUploadedFile($fileInputElementName,$uploadDir,$forceUploadedFileName='') {
 		if (!isset($_FILES) && isset($HTTP_POST_FILES)) {
 			$_FILES = $HTTP_POST_FILES;
 		}
-		if (! isset($_FILES['fiu-file'])) {
+		if (! isset($_FILES[$fileInputElementName])) {
 			return false;
 		}
-		
+
 		// Calculate the name + extension to use for the uploaded file
-		$base = basename($_FILES['fiu-file']['name']);
+		$base = basename($_FILES[$fileInputElementName]['name']);
 		$imageExt  = strtolower(substr($base,strrpos($base,'.')+1));
 		$imageName = ('' != $forceUploadedFileName)
 			? ($forceUploadedFileName . ".{$imageExt}")
@@ -45,9 +45,9 @@ class ImageUploader extends FPageModule {
 		}
 			
 		// Actually upload and store the file
-		if (is_uploaded_file($_FILES['fiu-file']['tmp_name'])) {
+		if (is_uploaded_file($_FILES[$fileInputElementName]['tmp_name'])) {
 			$newFile = $uploadDir . "/" . $imageName;
-			if (move_uploaded_file($_FILES['fiu-file']['tmp_name'],$newFile)) {
+			if (move_uploaded_file($_FILES[$fileInputElementName]['tmp_name'],$newFile)) {
 				//$this->controller->flash("Image file uploaded successfully.");
 				return $imageName;
 			} else {
@@ -61,29 +61,31 @@ class ImageUploader extends FPageModule {
 		}
 	}
 	
-	public function getUploadForm($uploadActionURL='',$uploadFormName='',$uploadFormId='') {
+	public function getUploadForm($uploadActionURL='',$uploadFormName='',$uploadFormId='',$fileInputElementName='fiu-file') {
 		$this->controller->set('ImageUploader_uploadActionURL',$uploadActionURL);
 		$this->controller->set('ImageUploader_uploadFormName',$uploadFormName);
 		$this->controller->set('ImageUploader_uploadFormId',$uploadFormId);
+		$this->controller->set('ImageUploader_fileInputElementName',$fileInputElementName);
 		$this->controller->set('ImageUploader_maxUploadedFileSize',$this->maxUploadedFileSizeBytes);
 		return $this->getView('UploadForm');
 	}
 	
-	public function getAjaxMultiUploadForm($ajaxHandlerURL,$uploadFormName='',$uploadFormId='') {
+	public function getAjaxMultiUploadForm($ajaxHandlerURL,$uploadFormName='',$uploadFormId='',$fileInputElementName='fiu-file') {
 		$this->controller->set('ImageUploader_ajaxHandlerURL',$ajaxHandlerURL);
 		$this->controller->set('ImageUploader_uploadFormName',$uploadFormName);
 		$this->controller->set('ImageUploader_uploadFormId',$uploadFormId);
+		$this->controller->set('ImageUploader_fileInputElementName',$fileInputElementName);
 		$this->controller->set('ImageUploader_maxUploadedFileSize',$this->maxUploadedFileSizeBytes);
 		return $this->getView('AjaxMultiUploadForm');
 	}
 	
-	public function getUploadFormFileInputElement($bIncludeMaxFileSize,$inputName='fiu-file') {
+	public function getUploadFormFileInputElement($bIncludeMaxFileSize,$fileInputElementName='fiu-file') {
 		$s = '';
 		if ($bIncludeMaxFileSize) {
 			$s .= "<!-- MAX_FILE_SIZE must precede the file input field -->";
     		$s .= '<input type="hidden" name="MAX_FILE_SIZE" value="'.$this->maxUploadedFileSizeBytes.'" />';
 		}
-   		$s .= '<input name="'.$inputName.'" type="file" />';
+   		$s .= '<input name="'.$fileInputElementName.'" type="file" />';
    		
    		return $s;
 	}
