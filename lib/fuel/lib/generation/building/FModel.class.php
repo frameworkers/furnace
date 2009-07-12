@@ -364,10 +364,13 @@ class FModel {
  		
  		// Setters
 		foreach ($object->getAttributes() as $a) {
-			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value) {\r\n";
+			$r .= "\t\tpublic function set{$a->getFunctionName()}(\$value,\$bValidate = false) {\r\n";
 			$r .= "\t\t\t// Set the provided value\r\n"
 				. "\t\t\t\$this->{$a->getName()} = \$value;\r\n"
 				. "\t\t\t\$this->_dirtyTable['{$a->getName()}'] = \$value;\r\n"
+				. "\t\t\tif (\$bValidate) {\r\n"
+				. "\t\t\t\t\$this->validator->{$a->getName()}(\$this->{$a->getName()});\r\n"
+				. "\t\t\t}\r\n"
  				. "\t\t}\r\n\r\n";	
 		}
 		// setters to allow for 'parent' reassignment
