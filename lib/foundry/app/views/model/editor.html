@@ -1,0 +1,25 @@
+<style type="text/css">
+	textarea#ff_modelEditor {
+		margin:15px;
+		margin-top:5px;
+		width:85%;	
+		height:500px;
+	}
+</style>
+
+<ul class="ff-breadcrumbs">
+  <li><a href="[_app.url_base]">App</a> :: </li>
+  <li><a href="[_app.url_base]_furnace/">Furnace</a> :: </li>
+  <li><a href="[_app.url_base]_furnace/model/summary">Data Modeling</a> :: </li>
+  <li>Edit Model File (YAML):</li>
+</ul>
+
+<form method="POST" action="[_app.url_base]_furnace/model/saveModel/">
+	<textarea id="ff_modelEditor" name="contents">[modelcontents]</textarea><br/>
+	<span style="margin-left:15px;">
+		<input type="submit" value="Save Changes"/>&nbsp;
+		<a style="border:0;" href="[_app.url_base]_furnace/">
+			<input type="button" value="Return Without Saving"/>
+		</a>
+	</span>
+</form>

@@ -1,0 +1,107 @@
+
+<ul class="ff-breadcrumbs">
+  <li><a href="[_app.url_base]">App</a> :: </li>
+  <li><a href="[_app.url_base]fuel/">Furnace</a> :: </li>
+  <li><a href="[_app.url_base]_furnace/model/">Data Modeling</a> :: </li>
+  <li><a href="[_app.url_base]_furnace/model/editObject/[object.name]">Edit Object: [object.name]</a> :: </li>
+  <li>Edit Attribute: [attr.name] </li>
+</ul>
+
+
+
+<div class="container">
+
+<h2>[object.name] :: [attr.name]</h2>
+<form action="[_app.url_base]_furnace/model/editAttribute" method="POST" >
+	<input type="hidden" name="objectType" value="[object.name]"/>
+	<input type="hidden" name="attrName"   value="[attr.name]"/>
+	<input type="hidden" name="action"     value="rename"/>
+	<table>
+	  <tr>
+	    <th>Name:</th>
+	    <td><input type="text" name="attrNewName" value="[attr.name]"/></td>
+	    <td><input type="submit" value="Rename Attribute"/></td>
+	  </tr>
+	</table>
+</form>
+
+<h3>Validation Options</h3>
+<form action="[_app.url_base]_furnace/model/editAttribute" method="POST" >
+	<input type="hidden" name="objectType" value="[object.name]"/>
+	<input type="hidden" name="attrName"   value="[attr.name]"/>
+	<input type="hidden" name="action"     value="validation"/>
+	<table>
+	  <tr> <th>Name</th><th>Description</th><th>Usage Hint</th></tr>
+	  <tr>
+	    <td><input type="checkbox" name="validator"/>Present: </td>
+	    <td>Whether or not this attribute must always appear in the submitted form data</td>
+	    <td>Useful for 'I understand this agreement' type check-boxes</td>
+	  </tr>
+	  <tr>
+	    <td><input type="checkbox" name="optionFormat" [if:attr.validation.format;content='checked']/>Format: </td>
+	    <td><table>
+	    	  <tr>
+	    	    <td>Pattern:</td>
+	    	    <td><input type="text" name="formatPattern" value="[attr.validation.format.pattern;default='/.*/']"/></td>
+	    	  </tr>
+	    	  <tr>
+	    	    <td>Negate Expression:</td>
+	    	    <td><input type="checkbox" name="formatNegate" [if:attr.validation.format.negate;content='checked']/></td>
+	    	  </tr>
+	    	</table>
+	    </td>
+	    <td>
+	    	Validates the submitted value against the provided regular expression. If 'negate'
+	    	is checked, validates the submitted value against the logical inverse of the expression.</td>
+	  </tr>
+	  <tr>
+	    <td><input type="checkbox" name="optionNumeric" [if:attr.validation.numeric;content='checked']/>Number: </td>
+	    <td><table>
+	    	  <tr>
+	    	    <td>Exact Value:</td>
+	    	    <td><input type="text" name="numericIs" value="[attr.validation.numeric.is;default='']"/></td>
+	    	  </tr>
+	    	  <tr>
+	    	    <td>Minimum Value:</td>
+	    	    <td><input type="text" name="numericMin" value="[attr.validation.numeric.min;default='']"/></td>
+	    	  </tr>
+	    	  <tr>
+	    	    <td>Maximum Value:</td>
+	    	    <td><input type="text" name="numericMax" value="[attr.validation.numeric.max;default='']"/></td>
+	    	  </tr>
+	    	</table>
+	   </td>
+	    <td>Ensures that the provided value is a number satisfying the criteria you choose</td>
+	  </tr>
+	  <tr>
+	    <td><input type="checkbox" name="optionLength" [if:attr.validation.length;content='checked']/>Length: </td>
+	    <td><table>
+	    	  <tr>
+	    	    <td>Exact Length:</td>
+	    	    <td><input type="text" name="lengthIs"/ value="[attr.validation.length.is;default='']"></td>
+	    	  </tr>
+	    	  <tr>
+	    	    <td>Minimum Length:</td>
+	    	    <td><input type="text" name="lengthMin" value="[attr.validation.length.min;default='']"/></td>
+	    	  </tr>
+	    	  <tr>
+	    	    <td>Maximum Length:</td>
+	    	    <td><input type="text" name="lengthMax" value="[attr.validation.length.max;default='']"/></td>
+	    	  </tr>
+	    	</table>
+	   </td>
+	    <td>Ensures that the provided value has length satisfying the criteria you choose</td>
+	  </tr>
+	  <tr>
+	    <td colspan="3">
+	    	<input type="submit" value="Save Changes"/>
+	   	</td>
+	  </tr>
+	  
+	</table>
+
+
+</form>
+<p>&nbsp;</p>
+
+</div>
