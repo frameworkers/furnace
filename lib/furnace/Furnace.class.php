@@ -44,6 +44,10 @@ class Furnace {
  	// Array: queries
 	// Internal storage of queries executed
 	public $queries = array();
+	
+	// Variable: route
+	// The route information (controller + view) for this request
+	public $route   = array();
  	
  	// Benchmarking variables
  	private $bm_renderstart = 0;
@@ -110,10 +114,10 @@ class Furnace {
  		$templateFilePath = '';
  		
  		// Determine the route to take
- 		$routeData = self::route($request,$this->routes);
+ 		$this->route = self::route($request,$this->routes);
  		
  		// Does the requested controller file exist?
- 		$controllerClassName  = $routeData['controller'] . 'Controller';
+ 		$controllerClassName  = $this->route['controller'] . 'Controller';
  		$controllerFileExists = file_exists(
  			$controllerFilePath = $this->controllerBasePath .  "/{$controllerClassName}.php");
 
@@ -172,13 +176,13 @@ class Furnace {
  			}
  			
  			// Does the requested controller function exist?
- 			$handlerExists = is_callable(array($controller,$routeData['view']));
+ 			$handlerExists = is_callable(array($controller,$this->route['view']));
  			
  			if ($handlerExists) {
  				
  				// Set the default template file content
  				$templateFilePath = $this->viewBasePath 
- 					. "/{$routeData['controller']}/{$routeData['view']}.html";
+ 					. "/{$this->route['controller']}/{$this->route['view']}.html";
  				
  				// Call the handler
  				if ($this->config['debug_level'] > 0) {
@@ -186,7 +190,7 @@ class Furnace {
  				}
  				
  				try {
- 					call_user_func_array(array($controller,$routeData['view']),$routeData['parameters']);
+ 					call_user_func_array(array($controller,$this->route['view']),$this->route['parameters']);
  				} catch (FDatabaseException $fde) {
  					$_SESSION['_exception'] = $fde;
  					$this->process('/_error/exception');
@@ -256,14 +260,14 @@ class Furnace {
  				// TODO: free memory, etc
  			} else {
  				if ($this->config['debug_level'] > 0) {
- 					die("No handler function '{$routeData['view']}' defined in {$controllerFilePath}");	
+ 					die("No handler function '{$this->route['view']}' defined in {$controllerFilePath}");	
  				} else {
  					$this->process("/_error/http404");
  				}
  			}
  		} else {
  			if ($this->config['debug_level'] > 0) {
- 				die("No controller file {$routeData['controller']}");
+ 				die("No controller file {$this->route['controller']}");
  			} else {
  				$this->process("/_error/http404");	
  			}
