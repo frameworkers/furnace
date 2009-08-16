@@ -800,6 +800,10 @@ class FModel {
 					break;
 				case "date":
 					$components[]	= "'type'=>'date'";
+					break;
+				case "datetime":
+					$components[]	= "'type'=>'datetime'";
+					break;
 				default:
 					break;
 			}
