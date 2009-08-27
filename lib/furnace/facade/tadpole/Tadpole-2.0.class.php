@@ -356,7 +356,7 @@ class Tadpole {
 					} else {
 						if (isset($commands['innerelse']) && $commands['block'] != "self") {
 							// Replace the block interior with $commands['innerelse']
-							$before   = substr($contents, 0, $blockStart +  (strpos($contents, ">",$blockStart) - $blockStart));
+							$before   = substr($contents, 0, $blockStart +  (strpos($contents, ">",$blockStart) - $blockStart + 1));
 							$after    = substr($contents,$blockEnd);
 							$contents = $before . ((false !== strpos($commands['innerelse'],'[')) ? $this->compile($commands['innerelse'],$iter_data) : $commands['innerelse']) . $after;
 							$offset   = (false !== $outer_offset) ? $outer_offset : $offset;
