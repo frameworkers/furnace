@@ -864,12 +864,7 @@ class Tadpole {
 		}
 		$lhs = $cacheToCheck[$lhs];
 		if ($rejected) {
-			// If the user has specified alternative content, display it instead
-			if (isset($commands['else']) || isset($commands['innerelse'])) { $rejected = false; return;}
-			
-			// Set to false as it does not exist
-			$rejected = false;	// this idea of rejected is causing major headaches. is there a better way?
-			$lhs = false;
+			return;
 		}
 		
 		// If needed (ie, if not already pegged to true/false above), obtain the actual value for rhs
