@@ -1003,22 +1003,28 @@ class Tadpole {
 			case 'password':
 				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" {$disabled} value=\"".stripslashes($value)."\" />";
 			case 'date':
+			case 'datetime':
 				if ('' != $value) {	// assume standard MySQL date format (yyyy-mm-dd gg:ii:ss)
 					$value_year  = substr($value,0,4);
 					$value_month = substr($value,5,2);
 					$value_day   = substr($value,8,2);
+					$value_hour  = substr($value,11,2);
+					$value_min   = substr($value,14,2);
+					$value_sec   = substr($value,17,2);
 				} else {
-					$value_year = $value_month = $value_day = $value;
+					$value_year = $value_month = $value_day = $value_hour = $value_min = $value_sec = $value;
 				}
 				$s = '';
 				if (!isset($commands['timeonly'])) {
-					$s = "<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}\" class=\"FDateComponent FDateDay   {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_month\" {$disabled}  value=\"".stripslashes($value_month)."\"/> / "
-						."<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}\" class=\"FDateComponent FDateMonth {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_day\"   {$disabled}  value=\"".stripslashes($value_day)."\"/> / "
-						."<input type=\"text\" maxlen=\"4\" id=\"{$commands['id']}\" class=\"FDateComponent FDateYear  {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_year\"  {$disabled}  value=\"".stripslashes($value_year)."\"/> (mm/dd/yyyy) ";
+					$s = "<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}_day\"   class=\"FDateComponent FDateDay   {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_month\" {$disabled}  value=\"".stripslashes($value_month)."\"/> / "
+						."<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}_month\" class=\"FDateComponent FDateMonth {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_day\"   {$disabled}  value=\"".stripslashes($value_day)."\"/> / "
+						."<input type=\"text\" maxlen=\"4\" id=\"{$commands['id']}_year\"  class=\"FDateComponent FDateYear  {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_year\"  {$disabled}  value=\"".stripslashes($value_year)."\"/> (mm/dd/yyyy) ";
 				}
 				if (!isset($commands['dateonly'])) {
 					// Display the time component as well
-					
+					$s .= "&nbsp;<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}_hour\"  class=\"FDateComponent FDateHour    {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_hour\" {$disabled}   value=\"".stripslashes($value_hour)."\"/> : "
+						."<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}_min\"   class=\"FDateComponent FDateMinute  {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_min\"  {$disabled}   value=\"".stripslashes($value_min)."\"/> : "
+						."<input type=\"text\" maxlen=\"2\" id=\"{$commands['id']}_sec\"   class=\"FDateComponent FDateSecond  {$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}_sec\"  {$disabled}   value=\"".stripslashes($value_sec)."\"/> (hh:mm:ss) ";
 				}
 				return $s;
 				break;
