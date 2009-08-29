@@ -13,6 +13,9 @@
 			// Set the URI to navigate to on successful login
 			$this->successURI = $successURI;
 			
+			// Start out with a clean slate
+			$this->controller->set('loginError',false);
+			
 			// Process any POSTed data
 			if ($this->controller->form) {
 				$this->processLogin();
