@@ -138,8 +138,9 @@ class Tadpole {
 							? $secondOffset + $bracketOffset + 1   // swallow the ]
 							: false;
 						if (false === $secondOffset) {
-							//var_dump(substr($contents,$temp,($signalOffset - $temp)));
-							die("TADPOLE: confused, bailing out.");
+							$err = substr($contents,$temp,($signalOffset - $temp));
+							
+							die("TADPOLE: confused, bailing out. (clue: {$err} )");
 						}
 						// Look through the substring to determine if there is yet another nested tag
 						$temp = $bracketOffset + 1;
