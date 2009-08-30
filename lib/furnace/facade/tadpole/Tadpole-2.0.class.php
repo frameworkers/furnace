@@ -208,7 +208,8 @@ class Tadpole {
 			if (isset($value[6]) && "assert:" == substr($value,0,7)) {
 				$conditional = true;				// mark the tag conditional
 				$value = "if:" . substr($value,7);	// Internally Rewrite as an "if" tag
-				$commands['else'] = '';				// Hide the content on failure	
+				$commands['else']    = '';			// Hide the content on failure
+				$commands['noerror'] = true;		// Hide the content on rejection	
 			}
 			
 			// Determine whether the value implies an input/error statement
@@ -343,11 +344,17 @@ class Tadpole {
 					} 
 					$conditionHeld = $cacheToCheck[$value];
 					
-					// Skip this tag if it was rejected
-					if ($rejected) {
+					// Skip this tag if it was rejected and 'noerror' was not requested
+					if ($rejected && !isset($commands['noerror'])) {
 						$offset = (false !== $outer_offset) ? $outer_offset : ($tagEnd + 1);	// Increment the offset
 						continue;				// Move on to the next tag
 					}
+					
+					// If the tag was rejected and 'noerror' was requested, treat the block as 'false' 
+					if ($rejected && isset($commands['noerror'])) {
+						//$conditionHeld = false;
+					}
+					
 					if ($conditionHeld) {
 						// Replace the tag with "" 
 						$before   = substr($contents,0,$tagStart);
@@ -391,10 +398,15 @@ class Tadpole {
 					$block_data = $this->get_recursively($value,$commands,$rejected,$iter_data);
 
 					
-					// Skip this tag if it was rejected
-					if ($rejected) {
+					// Skip this tag if it was rejected and 'noerror' was not requested
+					if ($rejected && !isset($this->commands['noerror'])) {
 						$offset = (false !== $outer_offset) ? $outer_offset : $tagEnd + 1;	// Increment the offset
 						continue;				// Move on to the next tag
+					}
+					
+					// If the tag was rejected, and 'noerror' has been requested, simply remove the tag
+					if ($rejected && isset($commands['noerror'])) {
+						//TODO: handle 'noerror' for unconditional block
 					}
 					
 					// Generate as many copies of "compiledBlockContents" as there are elements in "block_data", one
@@ -481,8 +493,8 @@ class Tadpole {
 					$actual_value = $this->process_commands($commands,$cacheToCheck[$value],$rejected,$iter_data);
 					//echo "ACTUAL_VALUE {$actual_value} ";
 						
-					// Skip this tag if it was rejected
-					if ($rejected) {
+					// Skip this tag if it was rejected and 'noerror' was not requested
+					if ($rejected && !isset($commands['noerror'])) {
 						$offset = (false !== $outer_offset) ? $outer_offset : ($tagEnd + 1);	// Increment the offset
 						continue;				// Move on to the next tag
 					}
@@ -656,6 +668,9 @@ class Tadpole {
 					break;
 				case "htmlentities":
 					$value = htmlentities($value);
+					break;
+				case "urlencode":
+					$value = urlencode($value);
 					break;
 				case "nl2br":
 					$value = nl2br($value);
@@ -865,7 +880,11 @@ class Tadpole {
 		}
 		$lhs = $cacheToCheck[$lhs];
 		if ($rejected) {
-			return;
+			if (isset($commands['noerror']) ) {
+				$rejected = false;
+			} else {
+				return;
+			}
 		}
 		
 		// If needed (ie, if not already pegged to true/false above), obtain the actual value for rhs
@@ -974,8 +993,16 @@ class Tadpole {
 				$fn = "get{$attributeName}";
 				$value = $object->$fn();
 			} else {
-				// No value provided
-				$value = '';
+				if (isset($commands['value'])) {
+					// use the (compiled) value stored in the command string
+					if (false !== strpos($commands['value'],'[')) {
+						$commands['value'] = $this->compile($commands['value'],array());
+					}
+					$value = $commands['value'];
+				} else {
+					// No value provided
+					$value = '';
+				}
 			}
 		}
 		// determine whether or not user has overridden element name
