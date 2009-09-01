@@ -10,11 +10,11 @@
 	</ul>
 </div>
 <div class="ff_message error">
-	[if:errorTableExists;block=div]
+	[if:errorTableExists;noerror;block=div]
 	Error: Table Exists!
 </div>
 <div class="ff_message error">
-	[if:errorNoTableSpecified;block=div]
+	[if:errorNoTableSpecified;noerror;block=div]
 	Error: No Table Specified
 </div>
 <div>
