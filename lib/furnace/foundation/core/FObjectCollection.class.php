@@ -210,11 +210,11 @@
  			if ("*" == $uniqueValues) {
  				return $this->get_case1($uniqueValues,$key,$sortOrder,$returnType);
  			} else if (is_array($uniqueValues)) {
- 				if ($this->is_assoc($uniqueValues)) {
- 					return $this->get_case10($uniqueValues,$key,$sortOrder,$returnType);		
+ 				if (isset($uniqueValues[0]) && is_object($uniqueValues[0])) {
+ 					return $this->get_case10($uniqueValues,$key,$sortOrder,$returnType);
  				} else {
  					return $this->get_case7($uniqueValues,$key,$sortOrder,$returnType);
- 				}	
+ 				}
  			} else {
  				return $this->get_case4($uniqueValues,$key,$sortOrder,$returnType);
  			}
@@ -224,10 +224,10 @@
  			if ("*" == $uniqueValues) {
  				return $this->get_case2($uniqueValues,$key,$sortOrder,$returnType);
  			} else if (is_array($uniqueValues)) {
- 				if ($this->is_assoc($uniqueValues)) {
- 					return $this->get_case11($uniqueValues,$key,$sortOrder,$returnType);	
+ 				if (isset($uniqueValues[0]) && is_object($uniqueValues[0])) {
+ 					return $this->get_case11($uniqueValues,$key,$sortOrder,$returnType);
  				} else {
- 					return $this->get_case8($uniqueValues,$key,$sortOrder,$returnType);	
+ 					return $this->get_case8($uniqueValues,$key,$sortOrder,$returnType);
  				}
  			} else {
  				return $this->get_case5($uniqueValues,$key,$sortOrder,$returnType);	
@@ -238,10 +238,10 @@
  			if ("*" == $uniqueValues) {
  				return $this->get_case3($uniqueValues,$key,$sortOrder,$returnType);
  			} else if (is_array($uniqueValues)) {
- 				if ($this->is_assoc($uniqueValues)) {
- 					return $this->get_case12($uniqueValues,$key,$sortOrder,$returnType);	
+ 				if (isset($uniqueValues[0]) && is_object($uniqueValues[0])) {
+ 					return $this->get_case12($uniqueValues,$key,$sortOrder,$returnType);
  				} else {
- 					return $this->get_case9($uniqueValues,$key,$sortOrder,$returnType);	
+ 					return $this->get_case9($uniqueValues,$key,$sortOrder,$returnType);
  				}
  			} else {
  				return $this->get_case6($uniqueValues,$key,$sortOrder,$returnType);	
@@ -382,20 +382,15 @@
  	}
 	
  	protected function get_case10(&$u_v,&$k,&$s,&$r) {
+ 		
  		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
  				? "{$this->filter} AND "
 				: " WHERE ");
-		$count=0;
-		$uvCount = count($u_v);
- 		foreach ($u_v as $attr=>$val) {
- 			if( is_array($val)) { 
- 				$q .= " `{$attr}` " . implode($val," '") . "' ";
- 			} else {
- 				$q .= " `{$attr}`='{$val}' ";
- 			}
- 			if (++$count != $uvCount) { $q .= " AND "; }
- 		}
+				
+		// Process the query criterion
+		$q .= implode(' ',$u_v);
+		
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
 
@@ -411,16 +406,11 @@
  	
  	protected function get_case11(&$u_v,&$k,&$s,&$r) {
  		$cn = "{$this->objectType}Collection";
- 		$filter_parts = array();
- 		foreach ($u_v as $attr=>$val) {
- 			if( is_array($val)) { 
- 				$filter_parts[] = " `{$attr}` " . implode($val," '") . "' ";
- 			} else {
- 				$filter_parts[] = " `{$attr}`='{$val}' ";
- 			}
- 		}
+
  		$filter = ($this->filter) ? " {$this->filter} AND " : " WHERE ";
- 		$filter .= implode(" AND ",$filter_parts);
+ 		
+ 		// Process the query criterion
+ 		$filter .= implode(' ',$u_v);
  		return new $cn($this->lookupTable,$filter);
  	}
  	
@@ -432,13 +422,10 @@
  			(($this->filter)
  				? "{$this->filter} AND " 
  				: " WHERE ");
- 		foreach ($u_v as $attr=>$val) {
- 			if( is_array($val)) { 
- 				$q .= " `{$attr}` " . implode($val," '") . "' ";
- 			} else {
- 				$q .= " `{$attr}`='{$val}' ";
- 			}
- 		}
+ 		
+ 		// Process the query criterion
+ 		$q .= implode(' ',$u_v);
+ 				
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
  		while ($row = $result->fetchRow()) {
@@ -488,5 +475,42 @@
  	}
  	
  	
+ }
+ 
+ class FCriteria {
+
+ 	public $prior_op = null;
+ 	public $field    = null;
+ 	public $value    = null;
+ 	public $comp     = '=';
+ 	
+ 	/**
+ 	 * 
+ 	 * @param $prior_op: the boolean ('AND', 'OR', 'AND NOT', etc) to preceed this criteria
+ 	 * @param $field: the object attribute that this criteria applies to
+ 	 * @param $value: the value to use for comparison. If $value is an array, IN becomes the default comparison operator
+ 	 * @param $comp: the comparison operator (<,<=,=,>=,>,!=,NOT,IN) to use
+ 	 * @return unknown_type
+ 	 */
+ 	
+ 	public function __construct($prior_op = null,$field,$value,$comp='=') {
+ 		$this->prior_op = $prior_op;
+ 		$this->field    = $field;
+ 		$this->value    = $value;
+ 		$this->comp     = ('=' == $comp && is_array($value))
+ 			? "IN"
+ 			: strtoupper($comp);
+ 	}
+ 	
+ 	public function __toString() {
+		switch ($this->comp) {
+			
+			default:
+ 				$s = " {$this->prior_op} `{$this->field}` {$this->comp} '{$this->value}' ";
+ 				break;
+		}
+		
+		return $s;
+ 	}
  }
 ?>
