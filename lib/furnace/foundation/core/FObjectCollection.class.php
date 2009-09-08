@@ -315,7 +315,7 @@
  		$cn = "{$this->objectType}Collection";
  		$newFilter = 
  			($this->filter)
- 				? " {$this->filter} AND ".(('objId' == $k)? "`{$this->objectTypeTableName}`.`objId` " : "`{$k}` ")."`{$k}`='{$u_v}' "
+ 				? " {$this->filter} AND ".(('objId' == $k)? "`{$this->objectTypeTableName}`.`objId` " : "`{$k}` ")."='{$u_v}' "
 				: " WHERE `{$k}`='{$u_v}' ";
  		return new $cn($this->lookupTable, $newFilter);
  	}
