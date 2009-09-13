@@ -73,7 +73,7 @@
     <td>[@.min]</td>
     <td>[@.max]</td>
     <td>[@.defaultValue;map=0|False,1|True]</td>
-    <td style="text-align:center;">[if:@.isUnique;content=`Yes`;else=`No`]</td>
+    <td style="text-align:center;">[if:@.isUnique;content=`Yes`;else=`No`;noerror]</td>
     <td style="text-align:center;"><a href="[_app.url_base]fuel/model/deleteAttribute/[object.name]/[@.name]" onclick="return confirm('This action can not be undone. Continue?');">Delete</a></td>
   </tr>
   <tr>
