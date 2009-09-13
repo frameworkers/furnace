@@ -447,8 +447,8 @@ class Tadpole {
 					}
 					$conditionHeld = $cacheToCheck[$value];
 					
-					// Skip this tag if it was rejected
-					if ($rejected) {
+					// Skip this tag if it was rejected and 'noerror' not requested
+					if ($rejected && !isset($commands['noerror'])) {
 						$offset = (false !== $outer_offset) ? $outer_offset : ($tagEnd + 1);	// Increment the offset
 						continue;				// Move on to the next tag
 					}
