@@ -92,7 +92,7 @@
 		$this->setMax($data['max']);
 		$this->setIsUnique($data['unique'] === true);
 		$this->setDefaultValue($data['default']);
-		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "private");
+		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "protected");
 		$this->setValidation(isset($data['validation']) ? $data['validation'] : array());
   	}
   	

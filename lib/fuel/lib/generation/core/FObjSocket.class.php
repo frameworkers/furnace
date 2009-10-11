@@ -80,7 +80,7 @@
 		$this->setDescription($data['desc']);
 		$this->setQuantity($data['quantity']);
 		$this->setReflection(isset($data['reflects']),$data['reflects']);
-		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "private");
+		$this->setVisibility(isset($data['visibility']) ? $data['visibility'] : "protected");
 		$this->setRequired(("yes" == $data['required']) ? true : false);
  	}
  	

@@ -89,6 +89,8 @@ class FModel {
 						$r .= "      unique: yes\r\n";
 					}
 			}
+			// pretty id 
+			$r .= "  prettyId: {$object->getPrettyId()}\r\n";
 			
 			// sort parents by object type
 			$parentsByType = array();
@@ -153,6 +155,8 @@ class FModel {
 	
 	public function compilePhp() {
 		$compiled = "\r\n";
+		$compiled .= $this->generateApplicationModelClass();
+		$compiled .= "\r\n";
 		foreach ($this->objects as $object) {
 			$compiled .= self::generateObjectClass($object);
 			$compiled .= self::generateObjectValidatorClass($object);
@@ -171,17 +175,79 @@ class FModel {
 		return $sql;
 	}
 	
-	public function generatePhpFile($objectName,$path) {
+	public function generateUserPhpFile($objectName,$path) {
 		$object =& $this->objects[self::standardizeName($objectName)];
 		if (!$object) { die("Object {$objectName} not found in model."); }
 		// Generate the file contents
 		$contents = "<?php\r\n"  
-			. self::generateObjectClass($object) 
-			. self::generateObjectValidatorClass($object)
-			. self::generateObjectCollectionClass($object)
+			. self::generateObjectClassShell($object) 
+			. self::generateObjectValidatorClassShell($object)
+			. self::generateObjectCollectionClassShell($object)
 			. "\r\n?>";
 		// Write the contents to the file
 		file_put_contents($path,$contents);
+	}
+	
+	private function generateApplicationModelClass() {
+		$r .= "\tclass ApplicationModel {\r\n";
+		
+		foreach ($this->objects as $o) {
+			$r .= "\t\tpublic \${$o->getName()} = array(\r\n"
+				. "\t\t\t\"attributes\" => array(\r\n";
+			// ATTRIBUTES
+			foreach ($o->getAttributes() as $a) {
+				$r .= "\t\t\t\t\"{$a->getName()}\" => array(\"name\" => '{$a->getName()}',\"sqlname\" => '".$this->standardizeAttributeName($a->getName())."'),\r\n";
+			}
+			$r .= "\t\t\t),\r\n";
+			// PRETTY_ID
+			$r .= "\t\t\t\"prettyId\" => '{$o->getPrettyId()}',\r\n";
+			// PARENTS
+			$r .= "\t\t\t\"parents\" => array(\r\n";
+			foreach ($o->getParents() as $p) {
+				$sqlName = strtolower($p->getName()) . '_id';
+				$prettyId= $this->objects[$p->getForeign()]->getPrettyId();
+				$r .= "\t\t\t\t\"{$p->getName()}\" => array(\"name\" => '{$p->getName()}',\"sqlname\" => '{$sqlName}',\"prettyId\" => '{$prettyId}'),\r\n";
+			}
+			$r .= "\t\t\t),\r\n";
+			//TODO: Peers
+			// CHILDREN
+			$r .= "\t\t\t\"children\" => array(\r\n";
+			foreach ($o->getChildren() as $c) {
+				$prettyId= $this->objects[$c->getForeign()]->getPrettyId();
+				$r .= "\t\t\t\t\"{$c->getName()}\" => array(\"name\" => '{$c->getName()}',\"class\" => '{$c->getForeign()}',\"prettyId\" =>'{$prettyId}'),\r\n";
+			}
+			$r .= "\t\t\t),\r\n";
+			$delete_info = $this->determineDeleteInformationFor($o);
+			$s = "array( \r\n";
+			foreach ($delete_info as $info) {
+				$s .= "\t\t\t  array("
+					. "'type' => '{$info['type']}',"
+					. "'required' => '{$info['required']}',"
+					. "'class' => '{$info['class']}',"
+					. "'sqlcol' => '{$info['sqlcol']}',"
+					. "'sqltable' => '{$info['sqltable']}'";
+				if (isset($info['sqlcol2'])) {
+					$s .= ",\r\n'sqlcol2' => '{$info['sqlcol2']}'";
+				}
+				$s .= "),\r\n";
+			}
+			$s .= "\t\t\t),\r\n";
+			$r .= "\t\t\t\"delete_info\" => {$s}";
+			$r .= "\t\t);\r\n";
+		}
+		
+		// GETTER
+		$r .= "\t\tpublic function getAttributes(\$objectName) {\r\n"
+			. "\t\t\treturn isset(\$this->\$objectName) ? \$this->\$objectName['attributes'] : false;\r\n"
+			. "\t\t}\r\n";
+		$r .= "\t\tpublic function getParents(\$objectName) {\r\n"
+			. "\t\t\treturn isset(\$this->\$objectName) ? \$this->\$objectName['parents'] : false;\r\n"
+			. "\t\t}\r\n";
+		$r .= "\t\tpublic function getDeleteInfo(\$objectName) {\r\n"
+			. "\t\t\treturn isset(\$this->\$objectName) ? \$this->\$objectName['delete_info'] : false;\r\n"
+			. "\t\t}\r\n";
+		$r .= "\t}\r\n\r\n";
+		return $r;
 	}
 	
 	/*
@@ -198,8 +264,14 @@ class FModel {
  	 *  
  	 *  (string) - The generated php class
  	 */
+	private function generateObjectClassShell(&$object) {
+		$r .= "\tclass {$object->getName()} extends F{$object->getName()} {\r\n";
+		$r .= "\t\t// User extensions to the F{$object->getName()} class go here\r\n\r\n";
+		$r .= "\t}\r\n\r\n";
+		return $r;
+	}
 	private function generateObjectClass(&$object) {
-		$r .= "\tclass {$object->getName()} extends {$object->getParentClass()} {\r\n";
+		$r .= "\tclass F{$object->getName()} extends {$object->getParentClass()} {\r\n";
 		
 		// add inherited attributes
 		if ("FAccount" == $object->getParentClass()) {
@@ -220,14 +292,6 @@ class FModel {
  			$r .= "\t\t// {$a->getDescription()}\r\n"
 				. "\t\t{$a->getVisibility()} \${$a->getName()};\r\n\r\n";	
  		}
- 		
- 		$r .= "\t\t// Internal variable: validator\r\n"
- 			. "\t\t// validator object\r\n"
- 			. "\t\tpublic \$validator;\r\n\r\n";
- 			
- 		$r .= "\t\t// Internal variable: _dirtyTable\r\n"
- 			. "\t\t// The dirty table keeps track of which fields need to be saved on update\r\n"
- 			. "\t\tpublic \$_dirtyTable;\r\n\r\n";
  		
 		// add parents
  		foreach ($object->getParents() as $s) {
@@ -255,30 +319,37 @@ class FModel {
 		$r .= "\t\t\t\$this->objId       = isset(\$data['objId']) ? \$data['objId'] : 0;\r\n";
 		$r .= "\t\t\t\$this->validator   = new {$object->getName()}Validator();\r\n";
 		$r .= "\t\t\t\$this->_dirtyTable = array();\r\n\r\n";
+
+		
 		
 		if ("FAccount" == $object->getParentClass()) {			
 			$r .= "\t\t\t// Initialize required inherited attributes:\r\n"
-				. "\t\t\t\t\$this->username     = \$data['username'];\r\n"
-				. "\t\t\t\t\$this->password     = \$data['password'];\r\n"
-				. "\t\t\t\t\$this->emailAddress = \$data['emailAddress'];\r\n"
+				. "\t\t\t\$this->username     = \$data['username'];\r\n"
+				. "\t\t\t\$this->password     = \$data['password'];\r\n"
+				. "\t\t\t\$this->emailAddress = \$data['emailAddress'];\r\n"
 				. "\t\t\tif (\$this->objId > 0) {\r\n"
 				. "\t\t\t\t// This object exists in the database and should have FAccount data:\r\n"
 				. "\t\t\t\tif (!isset(\$data['faccount_id'])) {die('insufficient information provided to create {$object->getName()} object');}\r\n"
 				. "\t\t\t\tparent::__construct(\$data);\r\n"
 				. "\t\t\t}\r\n";
 		}
+		
+		$r .= "\t\t\t\$this->fObjectType      =  '{$object->getName()}';\r\n";
+		$r .= "\t\t\t\$this->fObjectTableName =  '".FModel::standardizeTableName($object->getName())."';\r\n";
+		$r .= "\t\t\t\$this->fObjectModelData =& \$GLOBALS['fApplicationModel']->{$object->getName()};\r\n";
+		
 		$r .= "\t\t\t// Initialize parents, peers, and children...\r\n";
 		$r .= "\t\t\t\$this->_initNonlocalAttributes(\$data);\r\n"
  			. "\t\t\t// Initialize local attributes...\r\n";
  		foreach ($object->getAttributes() as $a) {
- 			$r .= "\t\t\tif (isset(\$data['{$a->getName()}'])) {\$this->{$a->getName()} = \$data['{$a->getName()}'];}\r\n";
+ 			$r .= "\t\t\t\$this->{$a->getName()} = isset(\$data['{$a->getName()}']) ? \$data['{$a->getName()}'] : null;\r\n";
  		}
 
  		$r .= "\t\t} // end constructor\r\n\r\n";
  		
  		$r .= "\t\tprivate function _initNonlocalAttributes(\$data) {\r\n";
 		foreach ($object->getParents() as $s) {
- 			$r .= "\t\t\tif (isset(\$data['{$s->getName()}_id'])) {\$this->{$s->getName()} = \$data['{$s->getName()}_id'];} else {\$this->{$s->getName()} = 0; }\r\n";
+			$r .= "\t\t\t\$this->{$s->getName()} = isset(\$data['{$s->getName()}_id']) ? \$data['{$s->getName()}_id'] : 0;\r\n";
  		}
  		$r .= "\t\t\tif (\$this->objId > 0) {\r\n";
  		foreach ($object->getPeers() as $s) {
@@ -376,20 +447,13 @@ class FModel {
 		// setters to allow for 'parent' reassignment
 		foreach ($object->getParents() as $s) {
 			$r .= "\t\tpublic function set{$s->getFunctionName()}(\$value) {\r\n";
-			
-			$r .= "\t\t\tif (is_object(\$value)) {\r\n";
+			$r .= "\t\t\t\$rawValue = (is_object(\$value)) ? \$value->getObjId() : \$value;\r\n";
 			if ($s->isRequired()) {
 				// Verify that the value being set is not '0' for required parent attributes
-				$r .= "\t\t\t\tFValidator::Numericality(\$value->getObjId(),0,null,null,null,true,'{$s->getName()}_id');\r\n";
-			}
-			$r .= "\t\t\t\t\$this->{$s->getName()} = \$value;\r\n"
-				. "\t\t\t} else {\r\n";
-			if ($s->isRequired()) {
-				// Verify that the value being set is not '0' for required parent attributes
-				$r .= "\t\t\t\tFValidator::Numericality(\$value,0,null,null,null,true,'{$s->getName()}_id');\r\n";
-			}
-			$r .= "\t\t\t\t\$this->{$s->getName()} = (is_object(\$this->{$s->getName()}) ? {$s->getForeign()}::Retrieve(\$value) : \$value);\r\n"
-				. "\t\t\t}\r\n"
+				$r .= "\t\t\tFValidator::Numericality(\$rawValue,0,null,null,null,true,'{$s->getName()}_id');\r\n";
+			}			
+			$r .= "\t\t\t\$this->{$s->getName()} = (is_object(\$this->{$s->getName()}) ? {$s->getForeign()}::Retrieve(\$rawValue) : \$rawValue);\r\n"
+				. "\t\t\t\$this->_dirtyTable['".strtolower(substr($s->getName(),0,1)).substr($s->getName(),1)."_id'] = \$rawValue;\r\n"
 				. "\t\t}\r\n\r\n";
 		}
 		// adders and removers (for peer relationships)
@@ -429,7 +493,11 @@ class FModel {
 		
 		// Save
  		$r .= "\t\tpublic function save( \$data = array(), \$bValidate = true ) {\r\n";
-
+ 		
+ 		$r .= "\t\t\treturn parent::save(\$data,\$bValidate); \r\n";
+		$r .= "\t\t}\r\n\r\n";
+ 		
+ 		/*
  		// Validation
  		$r .= "\t\t\t// If validation has been requested...\r\n"
  			. "\t\t\tif (\$bValidate) {\r\n"
@@ -449,7 +517,7 @@ class FModel {
  	 		. "\t\t\t\tif (false !== (\$underscorePos = strpos(\$k,'_'))) {\r\n"
  	 		. "\t\t\t\t\t\$realK = substr(\$k,0,\$underscorePos);\r\n"
  	 		. "\t\t\t\t}\r\n"
- 	 		. "\t\t\t\ttry { \$this->\$realK = \$v; } catch (Exception \$e) { /* silently ignore */ }\r\n"
+ 	 		. "\t\t\t\ttry { \$this->\$realK = \$v; } catch (Exception \$e) { /* silently ignore *//* }\r\n"
  	 		. "\t\t\t}\r\n\r\n";
  	 		
  		// Case 1 ( objId == 0: NEW OBJECT CREATION)
@@ -502,14 +570,18 @@ class FModel {
  		
  		// Build Keys and Values strings for query
  		$keys = implode(',',$attrs);
- 		$keys .= (isset($keys[1]) ? ',' : '' ) . "\".implode(',',\$parentsAttrs).\" ";
+ 		$extkeys = $keys . (isset($keys[1]) ? ',' : '' ) . "\".implode(',',\$parentsAttrs).\" ";
  		
  		$values = implode(',',$vals);
- 		$values .= (isset($values[1]) ? ',' : '' ) . "\".implode(',',\$parentsVals).\" ";
+ 		$extvalues = $values . (isset($values[1]) ? ',' : '' ) . "\".implode(',',\$parentsVals).\" ";
  	 		
  		// Create the object in the database
 		$r .= "\t\t\t\t\t// Create a new {$object->getName()} object in the database\r\n";
- 		$r .= "\t\t\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` ({$keys}) VALUES ({$values})\"; \r\n";
+		$r .= "\t\t\t\t\tif (empty(\$parentsAttrs)) {\r\n"
+			. "\t\t\t\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` ({$keys}) VALUES ({$values})\"; \r\n"
+			. "\t\t\t\t\t} else {\r\n"
+			. "\t\t\t\t\t\t\$q = \"INSERT INTO `".self::standardizeTableName($object->getName())."` ({$extkeys}) VALUES ({$extvalues})\"; \r\n"
+			. "\t\t\t\t\t}\r\n";
  		$r .= "\t\t\t\t\t\$r = _db()->exec(\$q);\r\n";
  		$r .= "\t\t\t\t\t\$this->objId    = _db()->lastInsertID(\"{$object->getName()}\",\"objId\");\r\n";
  		$r .= "\t\t\t\t\t\$this->created  = \$this->modified = date('Y-m-d G:i:s',mktime());\r\n";
@@ -535,7 +607,7 @@ class FModel {
  			. "\t\t\t\t return \$this->update(\$data,false);  // Validation already handled above\r\n"
  			. "\t\t\t}\r\n"
  			. "\t\t}\r\n";
- 		
+ 		*/
  			
  		// Create
  		$ua = array();
@@ -568,7 +640,16 @@ class FModel {
  		
  		$r .= "\r\n";
  		$r .= "\t\tpublic static function Create({$createString}) {\r\n";	
- 			
+ 		$r .= "\t\t\t\$requiredAttributes = array( ";
+ 		$arrayComponents = array();
+ 		for ($i = 0; $i < count($dataua); $i++) {
+ 			$arrayComponents[] = "'{$dataua[$i]}'=>{$ua[$i]}";
+ 		}
+ 		$r .= implode(',',$arrayComponents);
+ 		$r .= ");\r\n";
+ 		$r .= "\t\t\treturn FBaseObject::Create('{$object->getName()}',\$requiredAttributes,\$additional_data);\r\n";
+ 		/*
+ 		$r .= "\t\t\t/***\r\n";	
  		$r .= "\r\n"
 			. "\t\t\t// Build the data array to pass to the constructor\r\n";
  		
@@ -586,6 +667,7 @@ class FModel {
  			. "\t\t\t} else {\r\n"
  			. "\t\t\t\treturn false;\r\n"
  			. "\t\t\t}\r\n";
+ 		*/
  		$r .= "\t\t}\r\n\r\n";
  		
  		// Retrieve
@@ -615,99 +697,20 @@ class FModel {
  		
  		// Delete 
 		$r .= "\t\tpublic static function Delete(\$objId) {\r\n";
-		
+
 		if ("FAccount" == $object->getParentClass()) {
 			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
 			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId` = '{\$objId}'\"; \r\n";
 			$r .= "\t\t\t\$acct_id = _db()->queryOne(\$q);\r\n";
-			$r .= "\t\t\tFAccountManager::DeleteByAccountId(\$acct_id);\r\n\r\n";
+			$r .= "\t\t\treturn parent::Delete(\$objId,\$acct_id);\r\n\r\n";
+		} else {
+			$r .= "\t\t\t// Delete the object and all dependencies. Further, clear (reset) all references to the object.\r\n";
+			$r .= "\t\t\treturn parent::Delete(\$objId);\r\n\r\n";
 		}
 		
-		$delete_info = $this->determineDeleteInformationFor($object);
-		foreach ($delete_info as $info ) {
-			if ("parent" == $info['type']) {
-				if ("yes" == $info['required']) {
-					// Delete objects that depend on this object
-					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
-					$r .= "\t\t\t\$q= \"SELECT `{$info['sqltable']}`.`objId` FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}'\";\r\n";
-					$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
-					$r .= "\t\t\twhile (\$data = \$r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {\r\n"
-						. "\t\t\t\t{$info['class']}::Delete(\$data['objId']);\r\n"
-						. "\t\t\t}\r\n\r\n";
-				} else {
-					// Clear references to this object for objects with a non-required parent relationship to this object
-					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that have an optional parent relationship to this object\r\n";
-					$r .= "\t\t\t\$q= \"UPDATE `{$info['sqltable']}` SET `{$info['sqltable']}`.`{$info['sqlcol']}`='0' WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
-					$r .= "\t\t\t_db()->exec(\$q);\r\n";
-				}
-			} else if ("lookup" == $info['type']) {
-				// Clear entries in all lookup tables with references to this object
-				$r .= "\r\n\t\t\t// Delete entries in {$info['sqltable']} containing this object\r\n";
-				if ($object->getName() == $info['class']) {
-					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
-				} else {
-					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}'\";\r\n";
-				}
-				$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";	
-			}
-		}
-		$r .= "\r\n\t\t\t// Delete the object itself\r\n"
-			. "\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$objId}'\";\r\n"
-			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
-		$r .= "\t\t}\r\n";
-
-		
-		// Update
-		$r .= "\r\n\t\tprivate function update(\$data = array(),\$bValidate = false) {\r\n"
-			. "\t\t\tif (\$this->objId == 0) { die('{$object->getName()}::update(...) called on non-existent object. use {$object->getName()}::save(...) first'); }\r\n"
-			. "\t\t\tif (\$bValidate && !\$this->validator->isValid(\$data))    { return false; } // Invalid data \r\n"
-			. "\t\t\tif (\$data == array() && count(\$this->_dirtyTable) == 0) { return true;  } // Nothing to do\r\n\r\n";
-			
-		if (count($object->getAttributes()) > 0) {
-			// merge the provided attribute/value data and update the database for those fields only. 
-		
-			$r .= "\t\t\t// Merge the provided attribute/value data into the object and update\r\n";
-		
-			$parentAttrStrings = array();
-			$attrStrings       = array();
-			
-			foreach ($object->getParents() as $dep) {
-					$parentAttrStrings[] = "\t\t\tif (isset(\$data['{$dep->getName()}_id'])) { \$this->set".self::standardizeName($dep->getName())."(\$data['{$dep->getName()}_id']); \$this->_dirtyTable['{$dep->getName()}_id'] = \$data['{$dep->getName()}_id']; }\r\n";
-			}
-			foreach ($object->getAttributes() as $attr) {
- 				if ("modified" == $attr->getName()) {
- 					// Special case for 'modified' attribute
- 					$attrStrings[] = "\t\t\tif (isset(\$data['modified'])) {\$this->setModified(\$data['modified']); \$this->_dirtyTable['modified'] = \$data['modified']; } else {\$this->setModified(date('Y-m-d G:i:s')); \$this->_dirtyTable['modified'] = date('Y-m-d G:i:s'); }\r\n";
- 				} else if ("created" == $attr->getName()) {
- 					// Special case for 'created' attribute
- 					$attrStrings[] = "\t\t\tif (isset(\$data['created'])) {\$this->setCreated(\$data['created']); \$this->_dirtyTable['created'] = \$data['created']; } \r\n";
- 				} else {
- 					$attrStrings[] = "\t\t\tif (isset(\$data['{$attr->getName()}']) && !isset(\$this->_dirtyTable['{$attr->getName()}'])) { \$this->set".self::standardizeName($attr->getName())."(\$data['{$attr->getName()}']); \$this->_dirtyTable['{$attr->getName()}'] = \$data['{$attr->getName()}']; }\r\n";
- 				}
-	 		}
-	 		$r .= "\t\t\t//parents...\r\n";
-	 		$r .= implode("",$parentAttrStrings)."\r\n";
-	 		$r .= "\t\t\t//attributes...\r\n";
-	 		$r .= implode("",$attrStrings)."\r\n"
-				. "\t\t\t\$fieldsToSaveStringArray = '';\r\n"
-				. "\t\t\tforeach (\$this->_dirtyTable as \$fk => \$fv) {\r\n"
-				. "\t\t\t\t\$fieldsToSaveStringArray[] = \"`{\$fk}`='{\$fv}'\";\r\n"
-				. "\t\t\t}\r\n"
-	 			. "\t\t\t\$q = \"UPDATE `".self::standardizeTableName($object->getName())."` SET \".implode(',',\$fieldsToSaveStringArray).\" WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$this->objId}' \";\r\n";
-	 			
-			$r .= "\t\t\t_db()->exec(\$q);\r\n";
-	 		
-			// Update the object in the database
-			if ("FAccount" == $object->getParentClass()) {
-	 			$r .= "\t\t\tparent::faccount_save();\r\n";
-	 		}
-		} // end if count($object->getAttributes() > 0)
-		else {
-			$r .= "\t\t\t// No attributes defined\r\n";
-		}
-		$r .= "\t\t\treturn true;\r\n";
 		$r .= "\t\t}\r\n\r\n";
-
+		
+		
 		
 		/*
 		 * Create/Delete functions for 'child' relationships
@@ -832,11 +835,17 @@ class FModel {
 		return $r;
 	}
 	
+	private function generateObjectCollectionClassShell(&$object) {
+		$r .= "\tclass {$object->getName()}Collection extends F{$object->getName()}Collection {\r\n";
+		$r .= "\t\t// User extensions to the F{$object->getName()}Collection class go here\r\n\r\n";
+		$r .= "\t}\r\n\r\n";
+		return $r;
+	}
 	private function generateObjectCollectionClass(&$object) {
 		if ("FAccount" == $object->getParentClass()) {
-			$r = "\tclass {$object->getName()}Collection extends FAccountCollection {\r\n";
+			$r = "\tclass F{$object->getName()}Collection extends FAccountCollection {\r\n";
 		} else {
-			$r = "\tclass {$object->getName()}Collection extends FObjectCollection {\r\n";
+			$r = "\tclass F{$object->getName()}Collection extends FObjectCollection {\r\n";
 		}
  		
  		// Add Constructor
@@ -859,9 +868,15 @@ class FModel {
  		return $r;
 	}
 	
+	private function generateObjectValidatorClassShell(&$object) {
+		$r .= "\tclass {$object->getName()}Validator extends F{$object->getName()}Validator {\r\n";
+		$r .= "\t\t// User extensions to the F{$object->getName()}Validator class go here\r\n\r\n";
+		$r .= "\t}\r\n\r\n";
+		return $r;
+	}
 	private function generateObjectValidatorClass(&$object) {
 		$r .= "\r\n"
-			. "\tclass {$object->getName()}Validator extends FValidator {\r\n"
+			. "\tclass F{$object->getName()}Validator extends FValidator {\r\n"
 			. "\t\t\r\n"
 			. "\t\t// Variable: valid\r\n"
 			. "\t\t// Whether or not the current (containing) object is valid\r\n"

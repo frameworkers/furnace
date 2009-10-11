@@ -76,6 +76,7 @@ class DataController extends Controller {
 				}
 			}
 		}
+		
 		/*
 		foreach ($object->getSockets() as $sock) {
 			if ($sock->getQuantity() == "1" && $sock->getRequired()) {
@@ -94,6 +95,7 @@ class DataController extends Controller {
 		$this->set('headers',$headers);
 		$this->set('obj_data',$object_datas);
 		$this->set('objectClass',$object);
+		$this->set('objects',$objects);
 		
 		
 		// Register pagination details
@@ -127,6 +129,7 @@ class DataController extends Controller {
 		
 		$this->set('objectClass',$object);
 		$this->set('object',$the_object);
+		
 
 	}
 	
@@ -170,21 +173,23 @@ class DataController extends Controller {
 			 */
 			foreach ($object->getParents() as $parent) {
 				if ($parent->isRequired()) {
-					$params[] = $this->form[$parent->getName()."_id"];
+					$params["{$parent->getName()}_id"] = $this->form[$parent->getName()."_id"];
 				}
 			}
 			$obj = call_user_func_array(array($objectType,"Create"),$params);
+
 			foreach ($object->getAttributes() as $attr) {
 				$set = "set{$attr->getName()}";
 				$obj->$set($this->form[$attr->getName()],false);
 			}
 			foreach ($object->getParents() as $parents) {
 				if (! $parent->isRequired()) {
-					$set = "set{$parent->getName()}Id";
+					$set = "set{$parent->getName()}";
 					$obj->$set($this->form[$parent->getName()."_id"]);
 				}
 			}
-			$obj->save();
+			
+			$obj->save($params);
 			
 			
 			$this->flash("Created new {$objectType} object!");
@@ -207,14 +212,14 @@ class DataController extends Controller {
 			$object = call_user_func(array($objectClass,"Retrieve"),$objectId);
 			
 			foreach ($this->form as $attr => $value) {
-				list($prefix,$attrName) = explode("_",$attr);
+				list($prefix,$attrName,$id) = explode("_",$attr);
 				
 				if ("attr" == $prefix) {
 					$func = "set".FModel::standardizeAttributeName($attrName);
 					$object->$func($value,false);
 				}
 				if ("parent" == $prefix) {
-					$func = "set".FModel::standardizeName($attrName)."Id";
+					$func = "set".FModel::standardizeName($attrName);
 					$object->$func($value,false);
 				}
 			}

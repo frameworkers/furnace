@@ -26,6 +26,10 @@
  	// An array of <FObjAttr> objects for this object.
  	private $attributes;
  	
+ 	// Variable: prettyId
+ 	// The attribute to use as the default human-readable identifier for the object
+ 	private $prettyId;
+ 	
  	// Array: sockets
  	// An array of <FObjSocket> objects representing parents
  	private $parents;
@@ -69,6 +73,9 @@
  		
  		// Store the model data
 		$objectData =& $modelData[$name];
+		
+		// PrettyId
+ 		$this->prettyId    = isset($objectData['prettyId']) ? $objectData['prettyId'] : 'objId';
 		
 		// Handle non-default inheritance
 		if (isset($objectData['extends'])) {
@@ -203,6 +210,10 @@
  				return $a;
  			}
  		}
+ 	}
+ 	
+ 	public function getPrettyId() {
+ 		return $this->prettyId;
  	}
  	
  	public function deleteAttribute($name) {

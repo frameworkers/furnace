@@ -95,11 +95,20 @@ class ModelController extends Controller {
 		 $output[] =  "<h4>Generating PHP Object Code</h4><ul>";
 		 foreach ($model->objects as $obj) {
 		 	$output[] = "<li>Writing class file: {$obj->getName()}</li>";
-		 	$model->generatePhpFile($obj->getName(),_furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php");
+		 	$outputFilePath = _furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php";
+		 	// Only if the file DOES NOT ALREADY EXIST:
+		 	if (!file_exists($outputFilePath)) {
+		 		$model->generateUserPhpFile($obj->getName(),_furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php");
+		 	}
 		 }
-		 $output[] =  "<li> == creating composite file (compiled.php) == </li>";
+		 $output[] =  "<li> == creating base class file (model.php) == </li>";
+		 $compiledOutput = "<?php\r\n{$model->compilePhp()}\r\n\r\n";
+		 foreach ($model->objects as $o) {
+		 	$compiledOutput .= "require('objects/{$o->getName()}.class.php');\r\n";	
+		 }
+		 $compiledOutput .="\r\n?>";
 		 file_put_contents(_furnace()->rootdir 
-		 	. "/app/model/objects/compiled.php","<?php\r\n{$model->compilePhp()}\r\n?>");
+		 	. "/app/model/model.php",$compiledOutput);
 		 $output[] =  "</ul>";
 		 $output[] =  "<h4>Generating SQL Schema File</h4><ul>";
 		 
@@ -126,6 +135,9 @@ CREATE TABLE `app_accounts` (
   `secretAnswer` varchar(160) NOT NULL COMMENT 'The secret answer for the secret question',
   `objectClass` varchar(50) NOT NULL COMMENT 'The class of the primary object associated with this account',
   `objectId` int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
+  `created` datetime NOT NULL COMMENT 'When this account was created',
+  `modified` datetime NOT NULL COMMENT 'When this account was last modified',
+  'lastLogin' datetime NOT NULL COMMENT 'The last time this account logged in',
   PRIMARY KEY  (`objId`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
@@ -229,6 +241,9 @@ CREATE TABLE `app_accounts` (
   `secretAnswer` varchar(160) NOT NULL COMMENT 'The secret answer for the secret question',
   `objectClass` varchar(50) NOT NULL COMMENT 'The class of the primary object associated with this account',
   `objectId` int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
+  `created` datetime NOT NULL COMMENT 'When this account was created',
+  `modified` datetime NOT NULL COMMENT 'When this account was last modified',
+  'lastLogin' datetime NOT NULL COMMENT 'The last time this account logged in',
   PRIMARY KEY  (`objId`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;

@@ -124,7 +124,6 @@
 </div>
 <div id="ff_content">
 <h2>Browse Application Data: [object.name]</h2>
-
 <table cellspacing="0" cellpadding="3">
 <tr>
   <th>objId</th>
@@ -132,7 +131,10 @@
   <th>[object.parents;block=th][assert:@.required;block=th][@.name]</th>
   <th>&nbsp;</th>
 </tr>
-<tr>
+<tr><!--
+  <td>[objects;block=tr][@.objId]</td>
+  <td>[_model.[object.name].attributes;block=td][@.name]</td>
+  <td>[_model.[object.name].parents;block=td]<a href="[_app.url_base]fuel/data/object/[@.name]/[@.objId]">[@.objId]</a></td>-->
   <td>[obj_data;block=tr][@;glue=</td><td>]</td>
 </tr>
 </table>

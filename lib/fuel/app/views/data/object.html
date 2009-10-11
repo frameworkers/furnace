@@ -107,9 +107,14 @@
     </td>
   </tr>
   <tr>
-    <th>[objectClass.parents;block=tr][[@.foreign]] [@.name]</th>
+    <th>[_model.[objectClass.name].parents;block=tr][@.name]</th>
    	<td><span><input type="text" name="parent_[@.name]" value="[object.[@.name].objId;error='']"/></span></td>
+   	<td>([object.[@.name].[@.prettyId];noerror])</td>
   </tr>
+  <!--<tr>
+    <th>[_model.[objectClass.name].parents;block=tr][@.name]</th>
+    <td><span><input type="text" name="parent_[@.name]" value="[object.[@.name].[@.prettyId];noerror]"/></span></td>
+  </tr>-->
   <tr>
     <td>save changes:</td>
     <td><input type="submit" value="Save"/></td>
