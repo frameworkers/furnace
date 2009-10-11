@@ -385,11 +385,13 @@
  		
  		$q = "SELECT * FROM `{$this->objectTypeTableName}` " . 
  			(($this->filter)
- 				? "{$this->filter} AND "
-				: " WHERE ");
+ 				? "{$this->filter} AND ( "
+				: " WHERE ( ");
 				
 		// Process the query criterion
 		$q .= implode(' ',$u_v);
+		
+		$q .= " ) ";
 		
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);
@@ -420,11 +422,13 @@
  		foreach ($r as $unquoted) { $quotedValues[] = "`{$unquoted}`"; }
  		$q = "SELECT ".implode(",",$quotedValues) ." FROM `{$this->objectTypeTableName}` " .
  			(($this->filter)
- 				? "{$this->filter} AND " 
- 				: " WHERE ");
+ 				? "{$this->filter} AND ( " 
+ 				: " WHERE ( ");
  		
  		// Process the query criterion
  		$q .= implode(' ',$u_v);
+ 		
+ 		$q .= " ) ";
  				
  		$q .= " ORDER BY `{$k}` " . (($s == "desc") ? " DESC " : " ASC ");
  		$result = _db()->query($q);

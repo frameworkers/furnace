@@ -272,8 +272,22 @@ class FAccount extends FBaseObject {
 			}
 		}
 
-		public function faccount_save($attribute = '') {
-			if('' == $attribute) {
+		public function save($data = array(), $bValidate = true) {
+			
+ 			if ($this->objId == 0) {
+ 				
+				// Create an 'FAccount' (app_accounts + app_roles) for this object
+				$newAccount  = true;
+				$accountInfo = FAccountManager::Create($this->username,$this->password,$this->emailAddress);
+				$this->faccount_id  = $accountInfo['faccount_id'];
+				$this->roles        = $accountInfo['faccount_id'];
+				$faccount_id        = $accountInfo['faccount_id'];
+				$this->password     = $accountInfo['encryptedPassword'];
+				if (false === $faccount_id) { return false; }	
+				
+			} else {
+				
+				// Update the FAccount attributes for this object
 				$q = "UPDATE `app_accounts` SET " 
 				. "`username`='{$this->username}', "
 				. "`password`='{$this->password}', "
@@ -287,11 +301,25 @@ class FAccount extends FBaseObject {
 				. "`modified`=NOW(), "
 				. "`lastLogin`='{$this->lastLogin}' ";
 				$q .= "WHERE `objId`='{$this->faccount_id}'";
-			} else {
-				$q = "UPDATE `app_accounts` SET `{$attribute}`='{$this->$attribute}', `modified`=NOW() WHERE `objId`='{$this->faccount_id}' ";
+				_db()->exec($q);
+				
+			}			
+			
+			// Call FBaseObject::save to handle everything else
+			parent::save($data,$bValidate);
+			
+			if ($newAccount) {
+				// If this was a *new* account, store (associate) the faccount_id with the specific object 
+				$this->faccount_id = $accountInfo['faccount_id'];
+				$this->objectClass = $this->fObjectType;
+				$this->objectId    = $this->objId;
+				$q = "UPDATE `{$this->fObjectTableName}` SET `faccount_id`={$this->faccount_id} WHERE `objId`={$this->objId} LIMIT 1";
+				_db()->exec($q);
+				$q = "UPDATE `app_accounts` SET `objectClass`='{$this->fObjectType}', `objectId`={$this->objId} WHERE `objId`={$this->faccount_id} LIMIT 1";
+				_db()->exec($q);
 			}
-			_db()->exec($q);
 		}
+		
 		
 		public function requireRole($namedRole,$failPage='/') {
 			if (isset($this->roles[$namedRole])) {
@@ -349,8 +377,12 @@ class FAccount extends FBaseObject {
 			}
 		}
 
-		public static function Create($username) {
-			$now = date('Y-m-d G:i:s');
+		public static function Create($username,$password,$data) {
+
+			/**
+			 * DEPRECATED
+			 */
+			/*$now = date('Y-m-d G:i:s');
 			$q = "INSERT INTO `app_accounts` (`username`,`created`,`modified`) VALUES ('{$username}','{$now}','{$now}')"; 
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
@@ -366,6 +398,7 @@ class FAccount extends FBaseObject {
 				FDatabaseErrorTranslator::translate($r->getCode());
 			}
 			return new FAccount($data);
+			*/
 		}
 		
 		public static function Retrieve($objId) {
@@ -392,11 +425,19 @@ class FAccount extends FBaseObject {
 		}
 		
 		public static function Delete($objId) {
+			
+			$q = "SELECT `objId` FROM `app_accounts` WHERE `objectId`='{$objId}' AND `objectClass`='{$this->fObjectType}' LIMIT 1";
+			$fAccountId = _db()->queryOne($q);
+			
+			
+			// Call FBaseObject::Delete
+			parent::Delete($objId);
+			
 			// Delete the `app_roles` entry associated with this account
-			$q = "DELETE FROM `app_roles` WHERE `accountId`='{$objId}' ";
+			$q = "DELETE FROM `app_roles` WHERE `accountId`='{$fAccountId}' ";
 			$r = _db()->exec($q);
 			// Delete the `app_accounts` entry itself
-			$q = "DELETE FROM `app_accounts` WHERE `objId`='{$objId}' ";
+			$q = "DELETE FROM `app_accounts` WHERE  `objId`='{$fAccountId}' ";
 			$r = _db()->exec($q);
 		}
 		
@@ -414,6 +455,7 @@ class FAccount extends FBaseObject {
 			$q = "ALTER TABLE `app_roles` DROP COLUMN `{$name}` ";
 			$r = _db()->exec($q);
 		}
+		
 	}
 /*
 	class FAccountCollection extends FObjectCollection {

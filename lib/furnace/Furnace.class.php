@@ -13,7 +13,16 @@ class Furnace {
  	
  	// Variable: useFuel
 	// Whether or not the current request should be treated as a FUEL request
-	public $useFuel = false;
+	public $useFuel    = false;
+	
+	// Variable: foundtrydir
+	// The path to the Foundry application. This value is automatically
+	// computued from the value of {rootdir}
+	public $foundrydir;
+	
+	// Variable: useFoundry
+	// Whether or not the current request should be treated as a Foundry request
+	public $useFoundry = false;
  	
  	// Array: config
  	// Project configuration variables as read from {$rootdir}/app/config/app.yml
@@ -60,30 +69,40 @@ class Furnace {
  	private $bm_processend    = 0;
  	
  	
- 	public function __construct($useFuel = false) {
+ 	public function __construct($type = 'app') {
  		
  		// Compute the project root directory
  		$this->rootdir = dirname(dirname(dirname(__FILE__)));
  		
- 		if ($useFuel) {
- 			$this->useFuel = true;
- 			// Compute the fuel root directory
-			$this->fueldir = $this->rootdir . '/lib/fuel';
-
-			// Store the path to the controller and view directories
-			$this->controllerBasePath = $this->fueldir . '/app/controllers';
-			$this->viewBasePath       = $this->fueldir . '/app/views';
-			$this->layoutBasePath     = $this->fueldir . '/app/layouts';
-			
- 		} else {
- 			// Store the path to the controller and view directories
- 			$this->controllerBasePath = $this->rootdir . '/app/controllers';
- 			$this->viewBasePath       = $this->rootdir . '/app/views';
- 			$this->layoutBasePath     = $this->rootdir . '/app/layouts';
+ 		switch ($type) {
+ 			case 'fuel':
+ 				// FUEL Request
+ 				// Store the path to the controller and view directories
+ 				$this->useFuel            = true;
+ 				$this->fueldir            = $this->rootdir . '/lib/fuel';
+				$this->controllerBasePath = $this->fueldir . '/app/controllers';
+				$this->viewBasePath       = $this->fueldir . '/app/views';
+				$this->layoutBasePath     = $this->fueldir . '/app/layouts';
+ 				break;
+ 			case 'foundry':
+ 				// Foundry Request
+ 				// Store the path to the controller and view directories
+ 				$this->useFoundry         = true;
+				$this->foundrydir         = $this->rootdir . '/lib/foundry';
+				$this->controllerBasePath = $this->foundrydir . '/app/controllers';
+				$this->viewBasePath       = $this->foundrydir . '/app/views';
+				$this->layoutBasePath     = $this->foundrydir . '/app/layouts';
+				break;
+ 			default:
+ 				// Default Application Request
+ 				// Store the path to the controller and view directories
+ 				$this->controllerBasePath = $this->rootdir . '/app/controllers';
+ 				$this->viewBasePath       = $this->rootdir . '/app/views';
+ 				$this->layoutBasePath     = $this->rootdir . '/app/layouts';
+ 				break;
  		}
- 		
+
  		//Include the yml parser
-		//include($this->rootdir . '/lib/yaml/spyc-0.2.5.php5');
 		include($this->rootdir . '/lib/yaml/spyc-0.4.1.php');
 		
 		// Load the YML route definitions
@@ -91,13 +110,6 @@ class Furnace {
 		
 		// Load the YML application configuration file
 		$this->config = self::yaml($this->rootdir . '/app/config/app.yml');
-		
-		// Compute the Subversion revision number for fuel
-		if (file_exists($this->fueldir . '/.svn/entries')) {
-			$data = explode("\n",file_get_contents(
-				$this->rootdir . '/.svn/entries',0,null,0,256));
-			$this->config['svn_revision'] = trim($data[3]);
-		}
 		
  		// Initialize the session
  		session_start();
@@ -117,9 +129,9 @@ class Furnace {
  		$this->route = self::route($request,$this->routes);
  		
  		// Does the requested controller file exist?
- 		$controllerClassName  = $this->route['controller'] . 'Controller';
+ 		$controllerClassName  = "{$this->route['controller']}Controller";
  		$controllerFileExists = file_exists(
- 			$controllerFilePath = $this->controllerBasePath .  "/{$controllerClassName}.php");
+ 			$controllerFilePath = "{$this->controllerBasePath}/{$controllerClassName}.php");
 
  			
  		if ($controllerFileExists) {
@@ -138,22 +150,24 @@ class Furnace {
  			
  			// Include the custom controller base file
 			if ($this->useFuel) {
-				include_once($this->fueldir . '/app/controllers/_base/Controller.class.php');
+				include_once($this->fueldir    . '/app/controllers/_base/Controller.class.php');
+			} else if ($this->useFoundry) {
+				include_once($this->foundrydir . '/app/controllers/_base/Controller.class.php');
 			} else {
- 				include_once($this->rootdir . '/app/controllers/_base/Controller.class.php');
+ 				include_once($this->rootdir    . '/app/controllers/_base/Controller.class.php');
 			}
+
+ 			// Include application model data
+ 			include_once($this->rootdir . "/app/model/model.php");
  			
- 			// Include compiled model data, if available
- 			@include_once($this->rootdir . "/app/model/objects/compiled.php");
+ 			// Instantiate the global model data structure
+ 			$GLOBALS['fApplicationModel'] = new ApplicationModel();
  			
  			// Include the controller file
  			include_once($controllerFilePath);
  			if ($this->config['debug_level'] > 0) {
  				$this->bm_envsetupend = microtime(true);
  			}
- 			
- 			
- 		
  			
  			// Does the requested controller class exist?
  			// TODO: Check for the existence of the class within the file
@@ -226,9 +240,10 @@ class Furnace {
 				// the location from which they were called.
 				$_SESSION['referringPage'] = $request;
  				
- 				// Provide access to Furnace & application config vars
+ 				// Provide view access to Furnace, Application, and Model config vars
  				$controller->ref('_furnace',$this);
- 				$controller->ref('_app',$this->config);
+ 				$controller->ref('_app',    $this->config);
+ 				$controller->ref('_model',  $GLOBALS['fApplicationModel']);
  				
  				// Send the rendered content out over the wire
  				if ($this->config['debug_level'] > 0) {

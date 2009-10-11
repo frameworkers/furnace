@@ -66,6 +66,7 @@ class FAccountManager extends FAccount {
 	
 	public static function DeleteByAccountId($id) {
 		FAccount::Delete($id);
+		//TODO: this no longer matches with the method signature!
 	}
 }
 ?>
