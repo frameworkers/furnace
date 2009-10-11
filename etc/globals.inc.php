@@ -1,69 +1,27 @@
 <?php
-/*
- * frameworkers_furnace
- * 
- * fuel.php
- * Created on Oct 18, 2008
- * 
- * Based on and replaces:
- * AppEntrance.php
- * Created on Jul 24, 2008
- *
- * Copyright 2008 Frameworkers.org. 
- * http://www.frameworkers.org
- */
+/* GLOBAL UTILITY FUNCTIONS  ************************************************/
+
  
- /* INITIALIZE FURNACE */
- include('../lib/furnace/Furnace.class.php');
- $furnace = new Furnace(true);
- 
- /* PROCESS A REQUEST  */
-if (checkFuelLogin()) {
- 	$furnace->process($_SERVER['REQUEST_URI']);
-} else {
-	$furnace->process("/fuel/login");
-}
- 
- /* CLEAN UP */
- unset($furnace);
- 
- /* EXIT */
- exit();
- 
- /* GLOBAL UTILITY FUNCTIONS ****************************************************/
- 
- function _read_flashes($bReset = true) {
- 	if (isset($_SESSION['flashes'])) {
- 		$flashes = $_SESSION['flashes'];
- 		if ($bReset) {
- 			$_SESSION['flashes'] = array();	
- 		}
- 		return $flashes;
- 	} else {
- 		return array();
- 	}	
- }
  // FUNCTION: _db()
  //  Provides shorthand notation for accessing the database, and also
  //  insulates against API changes that will probably come as a result
  //  of a future need to support additional database connection mechanisms.
  //
  function _db() {
- 	if ($GLOBALS['fconfig_debug_level'] > 0) {
- 		return FDatabase::singleton($GLOBALS['fconfig_debug_dsn']);
+ 	if (_furnace()->config['debug_level'] > 0) {
+ 		return FDatabase::singleton(_furnace()->config['debug_dsn']);
  	} else {
- 		return FDatabase::singleton($GLOBALS['fconfig_production_dsn']);
+ 		return FDatabase::singleton(_furnace()->config['production_dsn']);
  	}
  }
-
  
  // FUNCTION: _user()
  //  Provides shorthand notation for accessing the currently logged
  //  in user.
  //
  function _user($failPage = '/') {
- 	if (FSessionManager::checkLogin()) {
- 		return true;
+ 	if (false !== ($user = FSessionManager::checkLogin())) {
+ 		return $user;
  	} else {
  		_err('You must be logged in to continue...');
  		header("Location: {$failPage}");
@@ -76,7 +34,7 @@ if (checkFuelLogin()) {
  	// display the error to the user
  	// if debugging, display the debug message, if defined, else the production message
  	// if not debugging, display the production message
- 	if (0 == $GLOBALS['fconfig_debug_level']) {
+ 	if (0 == _furnace()->config['debug_level']) {
  		// Production Mode
  		if ('' != $productionMessage) {
  			// Display the production message
@@ -89,7 +47,7 @@ if (checkFuelLogin()) {
  	} else {
  		// Debug Mode
 		$_SESSION['flashes'][] = array(
-			'message' => (($GLOBALS['fconfig_debug_level'] > 0) 
+			'message' => ((_furnace()->config['debug_level'] > 0) 
 					? (('' == $debugMessage)
 						? $productionMessage 
 						: $debugMessage) 
@@ -100,10 +58,9 @@ if (checkFuelLogin()) {
  	}
  	// log the error (and email?) if fatal
  	
- 	// redirect if fatal
+ 	
  	if ($isFatal) {
- 		_start_request("/_error/{$handler}");
- 		exit();
+ 		die("FATAL ERROR");
  	}
  }
  
@@ -120,19 +77,31 @@ if (checkFuelLogin()) {
  	}
  }
  
- // FUNCTION: _furnace()
- //  Provides shorthand notation for accessing the furnace object.
+// FUNCTION: _furnace()
+//  Provides shorthand notation for accessing the furnace object.
  
- function _furnace() {
+function _furnace() {
  	return $GLOBALS['furnace'];	
- }
+}
 
+// FUNCTION: _model()
+//  Provides shorthand notation for accessing the application model
+function _model() {
+	return $GLOBALS['fApplicationModel'];
+}
  
- function checkFuelLogin() {
- 	if (isset($_SESSION['fuel']['loggedin']) && $_SESSION['fuel']['loggedin']) {
- 		return true;
- 	} else {
- 		return false;
- 	}
- }
+// FUNCTION _storeUserInput($data)
+//   Stores the requested $data in the session variable _userform
+function _storeUserInput($data) {
+	unset($_SESSION['_userform']);
+	$_SESSION['_userform'] = $data;
+}
+	
+// FUNCTION _readUserInput($field)
+//   Reads the $field variable from the session variable _userform
+function _readUserInput($field) {
+	return isset($_SESSION['_userform'][$field])
+		? $_SESSION['_userform'][$field]
+		: null;
+}
 ?>
