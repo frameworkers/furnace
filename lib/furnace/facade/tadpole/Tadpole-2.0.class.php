@@ -627,6 +627,13 @@ class Tadpole {
 							$value = str_pad($value,11,"1", STR_PAD_LEFT);
 							$value = "{$value[0]}-".substr($value,1,3).'-'.substr($value,4,3).'-'.substr($value,7);
 							break;
+						case 'usmoney':
+							list($whole,$decimal) = explode('.',$value);
+							if (empty($decimal)) { $value .= '.00'; }
+							else {
+								$value = $whole .'.'. str_pad($decimal,2,'0',STR_PAD_RIGHT);
+							}
+							break;
 						default:
 								
 					}
