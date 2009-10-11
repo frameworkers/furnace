@@ -224,6 +224,8 @@
  			. " WHERE `{$this->FObjectTableName}`.`objId` = {$this->objId} LIMIT 1";
  		_db()->exec($q);
  		
+ 		return true;
+ 		
  		//TODO: FAccountSave
  		/** 
  		 * HANDLE FACCOUNT_SAVE by duplicating this method in FAccount.class.php

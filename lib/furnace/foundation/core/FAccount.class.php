@@ -306,17 +306,23 @@ class FAccount extends FBaseObject {
 			}			
 			
 			// Call FBaseObject::save to handle everything else
-			parent::save($data,$bValidate);
-			
-			if ($newAccount) {
-				// If this was a *new* account, store (associate) the faccount_id with the specific object 
-				$this->faccount_id = $accountInfo['faccount_id'];
-				$this->objectClass = $this->fObjectType;
-				$this->objectId    = $this->objId;
-				$q = "UPDATE `{$this->fObjectTableName}` SET `faccount_id`={$this->faccount_id} WHERE `objId`={$this->objId} LIMIT 1";
-				_db()->exec($q);
-				$q = "UPDATE `app_accounts` SET `objectClass`='{$this->fObjectType}', `objectId`={$this->objId} WHERE `objId`={$this->faccount_id} LIMIT 1";
-				_db()->exec($q);
+			if (parent::save($data,$bValidate) ) {
+				
+				if ($newAccount) {
+					// If this was a *new* account, store (associate) the faccount_id with the specific object 
+					$this->faccount_id = $accountInfo['faccount_id'];
+					$this->objectClass = $this->fObjectType;
+					$this->objectId    = $this->objId;
+					$q = "UPDATE `{$this->fObjectTableName}` SET `faccount_id`={$this->faccount_id} WHERE `objId`={$this->objId} LIMIT 1";
+					_db()->exec($q);
+					$q = "UPDATE `app_accounts` SET `objectClass`='{$this->fObjectType}', `objectId`={$this->objId} WHERE `objId`={$this->faccount_id} LIMIT 1";
+					_db()->exec($q);
+				}
+				// All set. Return true
+				return true;
+			} else {
+				// Something went wrong in the underlying ::save call
+				return false;
 			}
 		}
 		
