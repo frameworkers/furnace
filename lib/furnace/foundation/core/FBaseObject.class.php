@@ -180,7 +180,6 @@
 			$q  = "INSERT INTO `{$this->fObjectTableName}` ";
 			$q .= "({$this->buildSqlUniqueAttributeList()}) ";
 			$q .= "VALUES ({$this->buildSqlUniqueAttributeValueList()}) ";
-			echo $q;
 			$r = _db()->exec($q);
 			$this->objId   = _db()->lastInsertID($this->FObjectTableName,"objId");
 			return true; 
