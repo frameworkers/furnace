@@ -1083,7 +1083,7 @@ class Tadpole {
 					// create a select box
 					$option = '';
 					foreach ($attributeData['allowedValues'] as $opt) {
-						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
+						$option .= "<option value=\"{$opt['value']}\" ".(($value == $opt['value'])? ' selected="selected" ' : '') .">{$opt['label']}</option>";
 					}
 					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$nameToUse}\" {$disabled}>{$option}</select>";
 					break;	
