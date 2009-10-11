@@ -702,10 +702,20 @@ class FModel {
 			$r .= "\t\t\t// Delete the FAccount associated with this object\r\n";
 			$r .= "\t\t\t\$q = \"SELECT `faccount_id` FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId` = '{\$objId}'\"; \r\n";
 			$r .= "\t\t\t\$acct_id = _db()->queryOne(\$q);\r\n";
-			$r .= "\t\t\treturn parent::Delete(\$objId,\$acct_id);\r\n\r\n";
+			$r .= "\t\t\tif ( parent::Delete(\$objId,\$acct_id,'{$object->getName()}') ) {\r\n"
+				. "\t\t\t\t// Delete the object itself\r\n"
+				. "\t\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$objId}'\";\r\n"
+ 				. "\t\t\t\t_db()->exec(\$q);\r\n"
+ 				. "\t\t\t\treturn true;\r\n"
+ 				. "\t\t\t} else { return false; }\r\n\r\n";
 		} else {
 			$r .= "\t\t\t// Delete the object and all dependencies. Further, clear (reset) all references to the object.\r\n";
-			$r .= "\t\t\treturn parent::Delete(\$objId);\r\n\r\n";
+			$r .= "\t\t\tif ( parent::Delete(\$objId,'{$object->getName()}') ) {\r\n"
+				. "\t\t\t\t// Delete the object itself\r\n"
+				. "\t\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$objId}'\";\r\n"
+ 				. "\t\t\t\t_db()->exec(\$q);\r\n"
+ 				. "\t\t\t\treturn true;\r\n"
+ 				. "\t\t\t} else { return false; }\r\n\r\n";
 		}
 		
 		$r .= "\t\t}\r\n\r\n";

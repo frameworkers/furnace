@@ -430,14 +430,15 @@ class FAccount extends FBaseObject {
 			return $response;
 		}
 		
-		public static function Delete($objId) {
+		public static function Delete($objId,$acctId,$class) {
 			
-			$q = "SELECT `objId` FROM `app_accounts` WHERE `objectId`='{$objId}' AND `objectClass`='{$this->fObjectType}' LIMIT 1";
-			$fAccountId = _db()->queryOne($q);
+			//$q = "SELECT `objId` FROM `app_accounts` WHERE `objectId`='{$objId}' AND `objectClass`='{$this->fObjectType}' LIMIT 1";
+			//$fAccountId = _db()->queryOne($q);
+			$fAccountId   = $acctId;
 			
 			
 			// Call FBaseObject::Delete
-			parent::Delete($objId);
+			parent::Delete($objId,$class);
 			
 			// Delete the `app_roles` entry associated with this account
 			$q = "DELETE FROM `app_roles` WHERE `accountId`='{$fAccountId}' ";

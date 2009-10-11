@@ -61,10 +61,9 @@
  	}
  	
  	
- 	public static function Delete($ids) {
+ 	public static function Delete($id,$class) {
  		
  		// Delete objects that depend on this object
- 		$class = $this->fObjectType;
  		$modelInfo =& _model()->$class;
  		foreach ($modelInfo['delete_info'] as $info) {
  			switch ($info['type']) {
@@ -72,7 +71,7 @@
  					if ('yes' == $info['required']) {
  						// Delete objects of type $info['class'] that depend on this object
  						$q = "SELECT `{$info['sqltable']}`.`objId` FROM `{$info['sqltable']}` WHERE "
- 							."`{$info['sqltable']}`.`{$info['sqlcol']}`={$this->objId} ";
+ 							."`{$info['sqltable']}`.`{$info['sqlcol']}`={$id} ";
  						$r = _db()->query($q);
  						while ($data = $r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
  							call_user_func(array($info['class'],"Delete"),$data['objId']);
@@ -80,29 +79,26 @@
  					} else {
  						// Clear references to this object for objects with a non-required parent relationship to this object
  						$q = "UPDATE `{$info['sqltable']}` SET `{$info['sqltable']}`.`{$info['sqlcol']}`='0' WHERE "
- 							."`{$info['sqltable']}`.`{$info['sqlcol']}`={$this->objId} ";
+ 							."`{$info['sqltable']}`.`{$info['sqlcol']}`={$id} ";
  						_db()->exec($q);
  					}
  					break;
  				case 'lookup':
  					// Clear entries in all lookup tables with references to this object
  					if ($this->fObjectType == $info['class']) {
- 						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$this->objId}' OR `{$info['sqlcol2']}`='{$this->objId}'";
+ 						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$id}' OR `{$info['sqlcol2']}`='{$id}'";
  					} else {
- 						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$this->objId}'";
+ 						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$id}'";
  					}
  					_db()->exec($q);
  					break;
  				default:
  					die('Non-standard delete information encountered. FBaseObject');
  			}
- 			
- 			// Delete the object itself
- 			$q = "DELETE FROM `{$this->FObjectTableName}` WHERE `{$this->FObjectTableName}`.`objId`='{$this->objId}'";
- 			_db()->exec($q);
- 			
- 			return true;
  		}
+ 		
+ 			
+ 		return true;
  		// Delete objects that depend on this object
  		
  		/*
