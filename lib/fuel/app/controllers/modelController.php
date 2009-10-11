@@ -243,7 +243,7 @@ CREATE TABLE `app_accounts` (
   `objectId`       int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
   `created`        datetime NOT NULL COMMENT 'When this account was created',
   `modified`       datetime NOT NULL COMMENT 'When this account was last modified',
-  `lastLogin'      datetime NOT NULL COMMENT 'The last time this account logged in',
+  `lastLogin`      datetime NOT NULL COMMENT 'The last time this account logged in',
   PRIMARY KEY  (`objId`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
