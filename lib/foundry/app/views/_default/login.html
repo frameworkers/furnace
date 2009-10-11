@@ -5,16 +5,21 @@
 		Web-based management of this application has been disabled because
 		the root password has not been set.
 	</div>
-	<h2>Log In to Edit your Application</h2>
+	<div class="loginBox">
+	<h2 class="login">Log In to Edit your Application</h2>
 	<form action="[_app.url_base]_furnace/_default/doRootLogin" method="POST">
 		<table>
 		  <tr>
 		    <th>Username:</th><td>Root</td>
 		  </tr>
 		  <tr>
-		    <th>Password:</th><td><input type="password" name="rootpass" [if:!_app.root_password;content=`disabled="disabled"`] /></td>
-		    <td>&nbsp;</td><td><input type="submit" [if:!_app.root_password;content=`disabled="disabled"`] value="Submit"/></td>
+		    <th>Password:</th>
+		    <td>
+		       <input type="password" name="rootpass" [if:!_app.root_password;content=`disabled="disabled"`] />
+		       <input type="submit" [if:!_app.root_password;content=`disabled="disabled"`] value="Submit"/>
+		    </td>
 		  </tr>
 		</table>
 	</form>
+	</div>
 </center>

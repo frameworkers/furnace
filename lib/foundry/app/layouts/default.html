@@ -5,23 +5,17 @@
 <title>[_title_]</title>
 <!-- CSS Stylesheet Includes -->
 <link rel="stylesheet" type="text/css" href="[_app.url_base]_furnace/assets/css/foundry.css"/>
-<link rel="stylesheet" type="text/css" href="[_app.url_base]app/assets/css/[_css_;block=self][@].css"/>
+<link rel="stylesheet" type="text/css" href="[_app.url_base]_furnace/assets/css/[_css_;block=self][@].css"/>
 <!-- Javascript Includes -->
-<script type="text/javascript" src="[_app.url_base]assets/js/[_js_;block=script][@].js"></script>
+<script type="text/javascript" src="[_app.url_base]_furnace/assets/js/[_js_;block=script][@].js"></script>
 </head>
 <body>
-<div class="ff_messages">
-	<div class="ff_message [_flashes_;block=div][@.cssClass]">
-		<h1>[if:@.title;block=h1][@.title]</h1>
-		[@.message]
-	</div>
-</div>
 <div id="ff-banner">
-<img id="ff-logo" src="/assets/images/_furnace/furnace-logo-big.png"/>
+<img id="ff-logo" src="[_app.url_base]_furnace/assets/images/furnace-logo-big.png"/>
 <div id="ff-page-content">
 	<div class="ff-column-container">
 		<div class="ff-column-left">
-			<div class="ff-column-content">
+			<div class="ff-column-content ff-leftnav">
 				<h2>Quick Links:</h2>
 				Application:
 				<ul>
@@ -53,9 +47,15 @@
 		<div class="ff-column-main">
 			<div class="ff-column-content">
 			<div class="ff-foundryLoginDetails">
-				[if:_session.foundry.loggedin;block=div]
+				[if:_session.foundry.loggedin;noerror;block=div]
 				Logged in as Root. <a href="[_app.url_base]_furnace/_default/logout"/>Log Out</a>
 			</div>
+			<div class="ff_messages">
+				<div class="ff_message [_flashes_;block=div][@.cssClass]">
+				<h1>[if:@.title;block=h1][@.title]</h1>
+				[@.message]
+				</div>
+</div>
 [_content_]
 			</div>
 		</div>

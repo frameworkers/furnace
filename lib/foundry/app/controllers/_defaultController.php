@@ -21,7 +21,7 @@ class _defaultController extends Controller {
 			if (md5($pw) == md5($GLOBALS['furnace']->config['root_password'])) {
 				$_SESSION['foundry']['loggedin']  = true;
 				$_SESSION['foundry']['timestamp'] = mktime();
-				$this->redirect("/_furnace");
+				$this->redirect("/_furnace/");
 			} else {
 				$this->flash("Invalid login data provided. Please try again...","error");
 				$this->redirect("/_furnace/login");

@@ -34,8 +34,30 @@ div.ff-column-content {
 	padding:10px;	
 }
 div.ff-column-content ul{
+	list-style:none;
+	list-style-position:outside;
 	line-height:2em;
+	margin:0px;
+	padding:0px;
 }
+div.ff-column-content ul li ul {
+}
+
+div.ff-leftnav ul {
+		
+}
+div.ff-leftnav ul li {
+	
+}
+div.ff-leftnav ul li a {
+
+	padding:2px;	
+}
+div.ff-leftnav ul li ul li a {
+	padding-left:15px;
+	width:137px;
+}
+
 div.ff-column-left {
 	position:relative;
 	float:left;
@@ -192,4 +214,53 @@ div.modelTableDetails h3 a {
 
 table {
 	width:100%;
+}
+
+div.error {
+	border:solid 1px #e88;
+	background-color:#fcc;
+	color:#a33;
+	padding:5px;
+	margin-top:3px;
+	margin-bottom:3px;
+}
+
+div.error h1 {
+	font-size:110%;
+	margin:0px;
+	color:#911;
+}
+
+div.error pre {
+	display:inline;
+	font-weight:bold;
+	padding-left:5px;
+	padding-right:5px;
+}
+
+div.loginBox {
+	background-color:#dea;
+	padding:5px;
+	border:solid 1px #896;	
+	font-size:110%;
+	color:#464;
+}
+div.loginBox h2 {
+	border-bottom:solid 1px #896;
+	background-color:#bfcf8f;
+	color:#464;
+	padding:3px;
+	padding-bottom:5px;
+	margin:0px 0px 3px;
+}
+div.loginBox table {
+	width:100%;	
+}
+div.loginBox input[type=password] {
+	padding:5px;
+	border:solid 1px #896;
+	color:#131;
+}
+div.loginBox input[type=submit] {
+	padding:3px;
 }
