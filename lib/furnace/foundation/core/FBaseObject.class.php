@@ -156,7 +156,12 @@
 			if (false !== ($underscorePos = strpos($k,'_'))) {
 				$realK = substr($k,0,$underscorePos);
 			}
-			try { $this->$realK = $v; } catch (Exception $e) { /* silently ignore */ }
+			try {
+				if (isset($this->$realK)) { 
+					$this->$realK = $v;
+					$this->_dirtyTable[$realK] = $v;
+				} 
+			} catch (Exception $e) { /* silently ignore */ }
 		}
 		
 		// Determine whether to 'create' or 'update'
@@ -194,16 +199,6 @@
  		if ($this->objId == 0) { die("{$this->fObjectType}::update(...) called on non-existent object. Use {$this->fObjectType}::save(...) first"); }
  		if ($bValidate && !$this->validator->isValid($data)) { return false; }  // Invalid data
  		if (empty($data) && empty($this->_dirtyTable)) { return true; }         // Nothing to do
- 		
- 		// Merge the provided attribute/value data ($data) into the object 
- 		foreach ($data as $attr => $val) {
- 			$realAttr = $attr;
-			if (false !== ($underscorePos = strpos($attr,'_'))) {
-				$realAttr = substr($attr,0,$underscorePos);
-			}
-			$fn = "set{$realAttr}";
-			$this->$fn($val);
- 		}
  		
  		// Update the 'modified' attribute if it has been defined
  		if (isset($this->fObjectModelData['attributes']['modified'])) {
