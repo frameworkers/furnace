@@ -212,7 +212,7 @@
  		}
  		$q = "UPDATE `{$this->fObjectTableName}` SET"
  			. implode(',',$fieldsToSave)
- 			. " WHERE `{$this->FObjectTableName}`.`objId` = {$this->objId} LIMIT 1";
+ 			. " WHERE `{$this->fObjectTableName}`.`objId` = {$this->objId} LIMIT 1";
  		_db()->exec($q);
  		
  		return true;

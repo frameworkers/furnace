@@ -303,6 +303,18 @@ class FAccount extends FBaseObject {
 				$q .= "WHERE `objId`='{$this->faccount_id}'";
 				_db()->exec($q);
 				
+				// unset the entries in the dirty table
+				unset($this->_dirtyTable['username']);
+				unset($this->_dirtyTable['password']);
+				unset($this->_dirtyTable['emailAddress']);
+				unset($this->_dirtyTable['status']);
+				//...more as necessary
+				// unset the entries in the data array
+				unset($data['username']);
+				unset($data['password']);
+				unset($data['emailAddress']);
+				unset($data['status']);
+				//...more as necessary
 			}			
 			
 			// Call FBaseObject::save to handle everything else
