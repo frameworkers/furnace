@@ -116,8 +116,8 @@ class FValidator {
 	}
 	
 	public static function Email($var) {
+		//TODO: implement this function. To do so,
 		// call the ::Format function with an email regex	
-		//TODO: implement this function
 		return true;
 	}
 	
@@ -176,6 +176,115 @@ class FValidator {
 			}
 		}
 		return implode("\r\n\t\t\t\t",$response) . "\r\n";
+	}
+	
+	
+	/**
+	 * This class also represents the base class for all model object
+	 * validators, including FAccount, for which special functions are 
+	 * defined.
+	 */
+	
+	public $valid;
+	
+	public $errors;
+	
+	public function __construct() {
+		$this->valid  = true;
+		$this->errors = array();
+	}
+	
+	public function getValid() {
+		return $this->valid();
+	}
+	
+	public function getErrors() {
+		return $this->errors;
+	}
+	
+	public function getErrorsAsHTMLList() {
+		$li = '';
+		foreach ($this->errors as $k => $v) {
+			$li .= "<li>{$v}</li>";
+		}
+		return "<ul>{$li}</ul>";
+	}
+
+	public function __toString() {
+		return "<strong>Errors encountered...</strong> " . $this->getErrorsAsHTMLList();
+	}
+	
+	public function addError($attributeName,$errorMessage) {
+		$this->errors[$attributeName] = $errorMessage;
+		$this->valid = false;
+	}
+	
+	
+	protected function fAccountUsername($value) {
+		try {
+			FValidator::Length($value,null,3);
+			return true;
+		} catch (FValidationException $fve) {
+			$this->errors['username'] = $fve->getMessage();
+			$this->valid = false;
+			return false;
+		}
+	}
+	
+	protected function fAccountPassword($value) {
+		try {
+			FValidator::Length($value,null,4);
+			return true;
+		} catch (FValidationException $fve) {
+			$this->errors['password'] = $fve->getMessage();
+			$this->valid = false;
+			return false;
+		}
+	}
+	
+	protected function fAccountEmailAddress($value) {
+		try {
+			FValidator::Email($value);
+			return true;
+		} catch (FValidationException $fve) {
+			$this->errors['emailAddress'] = $fve->getMessage();
+			$this->valid = false;
+			return false;
+		}
+	}
+	
+	//TODO: Functions below need to be implemented
+	
+	protected function fAccountStatus($value) {
+		return true;
+	}
+	
+	protected function fAccountSecretQuestion($value) {
+		return true;
+	}
+	
+	protected function fAccountSecretAnswer($value) {
+		return true;
+	}
+	
+	protected function fAccountObjectClass($value) {
+		return true;
+	}
+	
+	protected function fAccountObjectId($value) {
+		return true;
+	}
+	
+	protected function fAccountCreated($value) {
+		return true;
+	}
+	
+	protected function fAccountModified($value) {
+		return true;
+	}
+
+	protected function fAccountLastLogin($value) {
+		return true;
 	}
 }
 ?>
