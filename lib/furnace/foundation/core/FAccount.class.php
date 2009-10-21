@@ -195,80 +195,102 @@ class FAccount extends FBaseObject {
 		public function getFAccountId() {
 			return $this->faccount_id;
 		}
-		public function setUsername($value,$bSaveImmediately = true) {
+		public function setUsername($value,$bValidate = false) {
+			// Set the provided value
 			$this->username = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('username');
+			$this->_dirtyTable['username'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountUsername($this->username);
 			}
 		}
 
-		public function setPassword($value,$bSaveImmediately = true) {
+		public function setPassword($value,$bValidate = false) {
+			// Set the provided value
 			$this->password = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('password');
+			$this->_dirtyTable['password'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountPassword($this->password);
 			}
 		}
 
-		public function setEmailAddress($value,$bSaveImmediately = true) {
+		public function setEmailAddress($value,$bValidate = false) {
+			// Set the provided value
 			$this->emailAddress = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('emailAddress');
+			$this->_dirtyTable['emailAddress'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountEmailAddress($this->emailAddress);
 			}
 		}
 
-		public function setStatus($value,$bSaveImmediately = true) {
+		public function setStatus($value,$bValidate = false) {
+			// Set the provided value
 			$this->status = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('status');
+			$this->_dirtyTable['status'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountStatus($this->status);
 			}
 		}
-
-		public function setSecretQuestion($value,$bSaveImmediately = true) {
+		
+		public function setSecretQuestion($value,$bValidate = false) {
+			// Set the provided value
 			$this->secretQuestion = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('secretQuestion');
+			$this->_dirtyTable['secretQuestion'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountSecretQuestion($this->secretQuestion);
 			}
 		}
 
-		public function setSecretAnswer($value,$bSaveImmediately = true) {
+		public function setSecretAnswer($value,$bValidate = false) {
+			// Set the provided value
 			$this->secretAnswer = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('secretAnswer');
+			$this->_dirtyTable['secretAnswer'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountSecretAnswer($this->secretAnswer);
 			}
 		}
 
-		public function setObjectClass($value,$bSaveImmediately = true) {
+		public function setObjectClass($value,$bValidate = false) {
+			// Set the provided value
 			$this->objectClass = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('objectClass');
+			$this->_dirtyTable['objectClass'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountObjectClass($this->objectClass);
 			}
 		}
 
-		public function setObjectId($value,$bSaveImmediately = true) {
+		public function setObjectId($value,$bValidate = false) {
+			// Set the provided value
 			$this->objectId = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('objectId');
+			$this->_dirtyTable['objectId'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountObjectId($this->objectId);
 			}
 		}
 		
-		public function setCreated($value,$bSaveImmediately = true) {
+		public function setCreated($value,$bValidate = false) {
+			// Set the provided value
 			$this->created = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('created');
+			$this->_dirtyTable['created'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountCreated($this->created);
 			}
 		}
 		
-		public function setModified($value,$bSaveImmediately = true) {
+		public function setModified($value,$bValidate = false) {
+			// Set the provided value
 			$this->created = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('modified');
+			$this->_dirtyTable['modified'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountModified($this->modified);
 			}
 		}
 		
-		public function setLastLogin($value,$bSaveImmediately = true) {
+		public function setLastLogin($value,$bValidate = false) {
+			// Set the provided value
 			$this->created = $value;
-			if ($bSaveImmediately) {
-				$this->faccount_save('lastLogin');
+			$this->_dirtyTable['lastLogin'] = $value;
+			if ($bValidate) {
+				$this->validator->fAccountLastLogin($this->lastLogin);
 			}
 		}
 
@@ -308,13 +330,26 @@ class FAccount extends FBaseObject {
 				unset($this->_dirtyTable['password']);
 				unset($this->_dirtyTable['emailAddress']);
 				unset($this->_dirtyTable['status']);
-				//...more as necessary
+				unset($this->_dirtyTable['secretQuestion']);
+				unset($this->_dirtyTable['secretAnswer']);
+				unset($this->_dirtyTable['objectClass']);
+				unset($this->_dirtyTable['objectId']);
+				unset($this->_dirtyTable['created']);
+				unset($this->_dirtyTable['modified']);
+				unset($this->_dirtyTable['lastLogin']);
+				
 				// unset the entries in the data array
 				unset($data['username']);
 				unset($data['password']);
 				unset($data['emailAddress']);
 				unset($data['status']);
-				//...more as necessary
+				unset($data['secretQuestion']);
+				unset($data['secretAnswer']);
+				unset($data['objectClass']);
+				unset($data['objectId']);
+				unset($data['created']);
+				unset($data['modified']);
+				unset($data['lastLogin']);
 			}			
 			
 			// Call FBaseObject::save to handle everything else
