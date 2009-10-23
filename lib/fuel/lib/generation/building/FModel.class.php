@@ -196,8 +196,22 @@ class FModel {
 				. "\t\t\t\"attributes\" => array(\r\n";
 			// ATTRIBUTES
 			foreach ($o->getAttributes() as $a) {
-				$r .= "\t\t\t\t\"{$a->getName()}\" => array(\"name\" => '{$a->getName()}',\"sqlname\" => '".$this->standardizeAttributeName($a->getName())."'),\r\n";
+				$r .= "\t\t\t\t\"{$a->getName()}\" => array("
+					. "\"name\" => '{$a->getName()}',"
+					. "\"sqlname\" => '".$this->standardizeAttributeName($a->getName())."',"
+					. "\"allowedValues\" => array(";
+				$v = $a->getValidation();
+				if (isset($v['allowedValues'])) {
+					$components = array();
+					foreach ($v['allowedValues'] as $av) {
+						$components[] = "array('label' => \"{$av['label']}\", 'value' => \"{$av['value']}\")";	
+					}
+					$r .= implode(',',$components);	
+				}
+									
+				$r .= ")),\r\n";
 			}
+
 			$r .= "\t\t\t),\r\n";
 			// PRETTY_ID
 			$r .= "\t\t\t\"prettyId\" => '{$o->getPrettyId()}',\r\n";
