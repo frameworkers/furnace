@@ -210,9 +210,9 @@
  		// Update the database for the dirty values
  		$fieldsToSave = array();
  		foreach ($this->_dirtyTable as $attr => $val) {
- 			$fieldsToSave[] = isset($this->fObjectModelData['parents'][$attr])
- 			    ? "`{$attr}_id` = '{$val}' "
- 				: "`{$attr}` = '{$val}' ";
+ 		    $fieldsToSave[] = isset($this->fObjectModelData['parents'][$attr])
+ 		        ? "`{$attr}_id` = '".mysql_real_escape_string($val)."' "
+ 		        : "`{$attr}`    = '".mysql_real_escape_string($val)."' ";
  		}
  		$q = "UPDATE `{$this->fObjectTableName}` SET "
  			. implode(',',$fieldsToSave)
@@ -264,23 +264,17 @@
  	}
  	
  	
- 	private function buildSqlUniqueAttributeValueList() {
+     private function buildSqlUniqueAttributeValueList() {
  		
  		$s = "'";
  		$arrayComponents = array();
  		foreach ($this->fObjectModelData['parents'] as $p) {
- 			$arrayComponents[] = "{$this->$p['name']}"; 
+ 			$arrayComponents[] = mysql_real_escape_string($this->$p['name']); 
  		}
  		foreach ($this->fObjectModelData['attributes'] as $a) {
- 			$arrayComponents[] = "{$this->$a['name']}";
+ 			$arrayComponents[] = mysql_real_escape_string($this->$a['name']);
  		}
- 		// Handle 'created' and 'modified'
- 		//if (isset($this->fObjectModelData['attributes']['created'])) {
- 		//	$arrayComponents[] = date('Y-m-d G:i:s'); 
- 		//}
- 		//if (isset($this->fObjectModelData['attributes']['modified'])) {
- 		//	$arrayComponents[] = date('Y-m-d G:i:s'); 
- 		//}
+ 		
  		$s .= implode("','",$arrayComponents);
  		$s .= "'";
  		return $s;
