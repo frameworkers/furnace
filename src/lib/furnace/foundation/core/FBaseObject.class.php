@@ -251,13 +251,7 @@
  		foreach ($this->fObjectModelData['attributes'] as $a) {
  			$arrayComponents[] = "{$a['sqlname']}";
  		}
- 		// Handle 'created' and 'modified'
- 		//if (isset($this->fObjectModelData['attributes']['created'])) {
- 		//	$arrayComponents[] = "created"; 
- 		//}
- 		//if (isset($this->fObjectModelData['attributes']['modified'])) {
- 		//	$arrayComponents[] = "modified"; 
- 		//}
+
  		$s .= implode('`,`',$arrayComponents);
  		$s .= '`';
  		return $s;
