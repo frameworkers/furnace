@@ -467,7 +467,7 @@ class FModel {
 				$r .= "\t\t\tFValidator::Numericality(\$rawValue,0,null,null,null,true,'{$s->getName()}_id');\r\n";
 			}			
 			$r .= "\t\t\t\$this->{$s->getName()} = (is_object(\$this->{$s->getName()}) ? {$s->getForeign()}::Retrieve(\$rawValue) : \$rawValue);\r\n"
-				. "\t\t\t\$this->_dirtyTable['".strtolower(substr($s->getName(),0,1)).substr($s->getName(),1)."_id'] = \$rawValue;\r\n"
+				. "\t\t\t\$this->_dirtyTable['{$s->getName()}'] = \$rawValue;\r\n"
 				. "\t\t}\r\n\r\n";
 		}
 		// adders and removers (for peer relationships)

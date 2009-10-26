@@ -149,7 +149,9 @@
  		// In any event, do nothing if this is not a valid object
 		if (!$this->validator->valid) { return false; }
 		
+		
  		// Merge $data into the object
+ 		$properties = get_object_vars($this);
 		foreach ($data as $k => $v) {
 			if (isset($this->_dirtyTable[$k])) { continue; } // don't overwrite manual changes
 			$realK = $k;
@@ -157,7 +159,7 @@
 				$realK = substr($k,0,$underscorePos);
 			}
 			try {
-				if (isset($this->$realK)) { 
+				if (isset($properties[$realK])) { 
 					$this->$realK = $v;
 					$this->_dirtyTable[$realK] = $v;
 				} 
@@ -208,11 +210,14 @@
  		// Update the database for the dirty values
  		$fieldsToSave = array();
  		foreach ($this->_dirtyTable as $attr => $val) {
- 			$fieldsToSave[] = "`{$attr}` = '{$val}' ";
+ 			$fieldsToSave[] = isset($this->fObjectModelData['parents'][$attr])
+ 			    ? "`{$attr}_id` = '{$val}' "
+ 				: "`{$attr}` = '{$val}' ";
  		}
- 		$q = "UPDATE `{$this->fObjectTableName}` SET"
+ 		$q = "UPDATE `{$this->fObjectTableName}` SET "
  			. implode(',',$fieldsToSave)
  			. " WHERE `{$this->fObjectTableName}`.`objId` = {$this->objId} LIMIT 1";
+ 			
  		_db()->exec($q);
  		
  		return true;
