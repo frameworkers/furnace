@@ -159,7 +159,7 @@
 				$realK = substr($k,0,$underscorePos);
 			}
 			try {
-				if (isset($properties[$realK])) { 
+				if (array_key_exists($realK,$properties)) { 
 					$this->$realK = $v;
 					$this->_dirtyTable[$realK] = $v;
 				} 
