@@ -100,8 +100,12 @@ function _storeUserInput($data) {
 // FUNCTION _readUserInput($field)
 //   Reads the $field variable from the session variable _userform
 function _readUserInput($field) {
-	return isset($_SESSION['_userform'][$field])
-		? $_SESSION['_userform'][$field]
-		: null;
+    $data = isset($_SESSION['_userform'][$field])
+        ? $_SESSION['_userform'][$field]
+        : null;
+    if ($data) {
+        unset($_SESSION['_userform'][$field]);
+    }
+	return $data;
 }
 ?>
