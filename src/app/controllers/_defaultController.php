@@ -24,5 +24,10 @@
  		$this->set('loginbox',$lb->getContents());
  	}
  	
+ 	public function logout() {
+ 	    FSessionManager::dologout();
+ 	    $this->redirect("/");
+ 	}
+ 	
  }
 ?>

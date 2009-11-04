@@ -23,6 +23,10 @@
 login:
   url: /login
   map: { controller: _default, view: login }
+  
+logout:
+  url: /logout
+  map: { controller: _default, view: logout }
 
 ###########################################################
 ## SITEWIDE DEFAULT ROUTES
