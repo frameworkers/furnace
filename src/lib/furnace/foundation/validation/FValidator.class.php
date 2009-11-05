@@ -34,6 +34,8 @@ class FValidator {
 				"<b>{$field}</b> is not formatted correctly ".(($humanReadable) ? "({$humanReadable})" : ''));
 			return false;
 		}
+		
+		return true;
 	}
 	
 	// Test whether var is a number, according to the criteria
@@ -117,8 +119,9 @@ class FValidator {
 	
 	public static function Email($var) {
 		//TODO: implement this function. To do so,
-		// call the ::Format function with an email regex	
-		return true;
+		// call the ::Format function with an email regex
+			
+		return self::Format($var,"/[a-zA-Z0-9\._-]+@[a-zA-Z0-9\._-]+\.([a-zA-Z]{2,4})");
 	}
 	
 	public static function Custom($var,$function) {
