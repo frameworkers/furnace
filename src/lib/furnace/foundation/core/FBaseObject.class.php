@@ -52,12 +52,7 @@
  		$data = array_merge($additionalData,$requiredAttributes);	// Prefer values in requiredAttributes
  		$data['objId'] = 0;
  		
- 		$o = new $objectType($data);
- 		if ($o->validator->isValid($data)) {
- 			return $o;
- 		} else {
- 			return false;
- 		}
+ 		return new $objectType($data);
  	}
  	
  	
