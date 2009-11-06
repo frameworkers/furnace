@@ -1,8 +1,8 @@
 <?php
 /**
- * This is the main furnace class
+ * This is the main Furnace class
  * 
- * This class provides the high-level functionality needed to direct the
+ * Provides the high-level functionality needed to direct the
  * handling of a Furnace application request. It handles the set-up and
  * tear-down of the Furnace environment, including benchmarking if necessary,
  * and manages the transfer of control between lower elements of the Furnace
