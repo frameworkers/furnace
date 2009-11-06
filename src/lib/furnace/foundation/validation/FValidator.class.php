@@ -121,7 +121,7 @@ class FValidator {
 		//TODO: implement this function. To do so,
 		// call the ::Format function with an email regex
 			
-		return self::Format($var,"/[a-zA-Z0-9\._-]+@[a-zA-Z0-9\._-]+\.([a-zA-Z]{2,4})");
+		return self::Format($var,"/[a-zA-Z0-9\._-]+@[a-zA-Z0-9\._-]+\.([a-zA-Z]{2,4})/");
 	}
 	
 	public static function Custom($var,$function) {
@@ -225,7 +225,7 @@ class FValidator {
 	
 	protected function fAccountUsername($value) {
 		try {
-			FValidator::Length($value,null,3);
+			FValidator::Length($value,null,3,null,"username");
 			return true;
 		} catch (FValidationException $fve) {
 			$this->errors['username'] = $fve->getMessage();
@@ -236,7 +236,7 @@ class FValidator {
 	
 	protected function fAccountPassword($value) {
 		try {
-			FValidator::Length($value,null,4);
+			FValidator::Length($value,null,4,null,"password");
 			return true;
 		} catch (FValidationException $fve) {
 			$this->errors['password'] = $fve->getMessage();
@@ -247,7 +247,7 @@ class FValidator {
 	
 	protected function fAccountEmailAddress($value) {
 		try {
-			FValidator::Email($value);
+			FValidator::Email($value,"Email address");
 			return true;
 		} catch (FValidationException $fve) {
 			$this->errors['emailAddress'] = $fve->getMessage();
