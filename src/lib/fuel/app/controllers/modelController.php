@@ -467,6 +467,20 @@ END;
 				$this->flash("Renamed attribute");
 			}
 			
+			if ($this->form['action'] == "setDefaultValue") {
+			    // SET THE DEFAULT VALUE FOR AN ATTRIBUTE
+			    $tableName = FModel::standardizeTableName($objectType);
+			    $attribute->setDefaultValue($this->form['attrNewDefaultValue']);
+			    $column->setDefaultValue($this->form['attrNewDefaultValue']);
+			    try {
+			        $query = "ALTER TABLE `{$tableName}` CHANGE COLUMN `{$column->getName()}` {$column->toSqlString()}";
+			        _db()->exec($query);
+			    } catch (FDatabaseException $e) {
+			        echo $e;
+			        exit();
+			    }
+			}
+			
 			if ($this->form['action'] == "validation") {
 				
 				// Process selected validation options

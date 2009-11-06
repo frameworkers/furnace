@@ -155,10 +155,10 @@
   	}
 	
   	public function toSqlString() {
-  		$null   = (($this->isNull())? "NULL " : "NOT NULL ");
-  		$comment = (("" == $this->getComment())? "" : "COMMENT '".str_replace("'","''",$this->getComment())."' ");
-  		$default = (("" == $this->getDefaultValue())? "" : "DEFAULT \"{$this->getDefaultValue()}\" ");
-  		$autoinc = (($this->isAutoinc())? "auto_increment " : "");
+  		$null   = (($this->bIsNull)? "NULL " : "NOT NULL ");
+  		$comment = (("" == $this->comment)? "" : "COMMENT '".str_replace("'","''",$this->getComment())."' ");
+  		$default = (("" == $this->defaultValue)? "" : "DEFAULT \"{$this->getDefaultValue()}\" ");
+  		$autoinc = (($this->bIisAutoinc)? "auto_increment " : "");
   		return "`{$this->getName()}` {$this->getColType()} {$null} {$default} {$autoinc} {$comment} ";
   	}  
 }
