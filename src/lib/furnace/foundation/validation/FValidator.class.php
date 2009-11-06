@@ -117,11 +117,11 @@ class FValidator {
 		return true;
 	}
 	
-	public static function Email($var) {
+    public static function Email($var,$field) {
 		//TODO: implement this function. To do so,
 		// call the ::Format function with an email regex
 			
-		return self::Format($var,"/[a-zA-Z0-9\._-]+@[a-zA-Z0-9\._-]+\.([a-zA-Z]{2,4})/");
+		return self::Format($var,"/[a-zA-Z0-9\._-]+@[a-zA-Z0-9\._-]+\.([a-zA-Z]{2,4})/",false,$field);
 	}
 	
 	public static function Custom($var,$function) {
