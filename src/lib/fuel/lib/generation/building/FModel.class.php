@@ -910,6 +910,11 @@ class FModel {
 			. "\t\tpublic function isValid(\$data) {\r\n"
 			. "\t\t\tforeach (\$data as \$k => \$v) {\r\n"
 			. "\t\t\t\tswitch (\$k) {\r\n";
+		if ("FAccount" == $object->getParentClass()) {
+		    $r .= "\t\t\t\t\tcase 'username':     \$this->fAccountUsername(\$v); break;\r\n"
+			    . "\t\t\t\t\tcase 'password':     \$this->fAccountPassword(\$v); break;\r\n"
+			    . "\t\t\t\t\tcase 'emailAddress': \$this->fAccountEmailAddress(\$v); break;\r\n";
+		}
 		foreach ($object->getAttributes() as $attr) {
 			if ($attr->getName() == "objId") { continue; }
 			$r .= "\t\t\t\t\tcase '{$attr->getName()}': \$this->{$attr->getName()}(\$v); break;\r\n";
