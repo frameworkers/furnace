@@ -94,19 +94,19 @@ class Furnace {
     public $route   = array();
 
     // Benchmarking variables
-    private $bm_renderstart = 0;
-    private $bm_renderend   = 0;
-    private $bm_reqstart    = 0;
-    private $bm_reqend      = 0;
-    private $bm_envsetupstart = 0;
-    private $bm_envsetupend   = 0;
-    private $bm_processstart  = 0;
-    private $bm_processend    = 0;
-
+    public $bm_renderstart = 0;
+    public $bm_renderend   = 0;
+    public $bm_reqstart    = 0;
+    public $bm_reqend      = 0;
+    public $bm_envsetupstart = 0;
+    public $bm_envsetupend   = 0;
+    public $bm_processstart  = 0;
+    public $bm_processend    = 0;
 
     public function __construct($type = 'app') {
         	
         // Compute the project root directory
+        $startTime = microtime(true);
         $this->rootdir = dirname(dirname(dirname(__FILE__)));
         	
         switch ($type) {
@@ -148,12 +148,17 @@ class Furnace {
 
         // Initialize the session
         session_start();
+        	
+        // If benchmarking, set the start time
+        if ($this->config['debug_level'] > 0) {
+            $this->bm_reqstart = $startTime;
+        }
     }
 
     public function process($request) {
         	
         if ($this->config['debug_level'] > 0) {
-            $this->bm_reqstart = microtime(true);
+            $this->bm_envsetupstart = microtime(true);
         }
         // Controller
         $controller = null;
@@ -170,9 +175,7 @@ class Furnace {
 
 
         if ($controllerFileExists) {
-            if ($this->config['debug_level'] > 0) {
-                $this->bm_envsetupstart = microtime(true);
-            }
+
             // Include Furnace Foundation classes
             set_include_path(get_include_path() . PATH_SEPARATOR .
             $this->rootdir . '/lib/furnace/foundation');
@@ -201,7 +204,7 @@ class Furnace {
             // Include the controller file
             include_once($controllerFilePath);
             if ($this->config['debug_level'] > 0) {
-                $this->bm_envsetupend = microtime(true);
+                $this->bm_envsetupend = $this->bm_processstart = microtime(true);
             }
 
             // Does the requested controller class exist?
@@ -234,9 +237,6 @@ class Furnace {
                 . "/{$this->route['controller']}/{$this->route['view']}.html";
                 	
                 // Call the handler
-                if ($this->config['debug_level'] > 0) {
-                    $this->bm_processstart = microtime(true);
-                }
                 	
                 try {
                     call_user_func_array(array($controller,$this->route['view']),$this->route['parameters']);
