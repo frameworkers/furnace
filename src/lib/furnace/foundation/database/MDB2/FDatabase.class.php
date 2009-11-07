@@ -18,38 +18,24 @@
   require_once("MDB2.php");
   
   //CONSTANT DEFINITIONS
-  define("FDATABASE_FETCHMODE_ASSOC",MDB2_FETCHMODE_ASSOC);
+  define("FDATABASE_FETCHMODE_ASSOC",  MDB2_FETCHMODE_ASSOC);
   define("FDATABASE_FETCHMODE_NUMERIC",MDB2_FETCHMODE_NUMERIC);
   
   //DATABASE WRAPPER
   class FDatabase  {
   	
-  	private $mdb2;
+  	public $mdb2;
   	
-  	private function __construct() {
-  		if (_furnace()->config['debug_level'] > 0) {
-  			$this->mdb2 = MDB2::singleton(_furnace()->config['debug_dsn']);
-  		} else {
-  			$this->mdb2 = MDB2::singleton(_furnace()->config['production_dsn']);
-  		}
+  	public function __construct($dsn) {
+  		$this->mdb2 =& MDB2::factory($dsn);
+
   		if (MDB2::isError($this->mdb2)) {
   			die('<b>Furnace: </b>Could not connect to the database.');
   		}
   		// Turn off case-fixing portability switch
-		$this->mdb2->setOption('portability',MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);
+		$this->mdb2->setOption('portability', MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);
   	}
-	
-	public static function singleton() {
-		static $db;
-		
-		if (!isset($db)) {
-			$c  = __CLASS__;
-			$db = new $c();	
-		}	
-		
-		return $db;
-	}
-		
+			
 	public function query($q) {
 		if (_furnace()->config['debug_level'] == 2) {
 			$bm_start = microtime(true);	

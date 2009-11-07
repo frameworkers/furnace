@@ -19,13 +19,32 @@ db_engine: MDB2
 #   0: No errors or warnings, suitable for a production environment.
 debug_level: 2
 
-# Debug DSN: 
-#   This DSN will be used if debug_level is greater than zero
-debug_dsn: "driver://user:pass@server/dbname"
-
-# Production DSN:
-#   This DSN will be used when debug_level equals zero
-production_dsn: "driver://user:pass@server/dbname"
+#
+# DATASOURCES
+# Application datasources are divided at the top level among
+# those that are for "debug"/development use, and those that 
+# are for production use. If debug_level (above) is > 0, only the
+# sources under "debug" will be available. The minimum requirement
+# in this section is that a datasource called "default" be specified
+# for each of "debug" and "production". Other, additional datasources
+# in either section are optional. You can reference a specific datasource
+# from the code by using the global database access function _db(). 
+# If used with no parameters, _db() references the currently enabled "default"
+# datasource (debug or production depending on debug_level). If given a 
+# string, the function will attempt to return a connection to the datasource
+# whose label matches the string (again, debug or production according to 
+# debug_level). 
+#
+# Examples:
+#
+#   _db()->query(...) will query the "default" datasource
+#   _db('analytics')->query(...) will query the "analytics" datasource
+#
+datasources:
+  debug:
+    default: "driver://user:pass@server/dbname"
+  production:
+    default: "driver://user:pass@server/dbname"
 
 # Application URL Base:
 #   The base url (default is /) to expect at the beginning of 

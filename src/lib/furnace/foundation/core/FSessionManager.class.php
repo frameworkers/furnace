@@ -25,9 +25,8 @@ class FSessionManager {
 		 $encrypted = md5($pw);
 		 $q = "SELECT * FROM `app_accounts` "
 			. "WHERE `username`='{$un}' AND `password`='{$encrypted}' ";
-		 _db()
-		 	->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
-		 $r = _db()->queryRow($q);
+
+		 $r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 		 if (is_array($r)) {
 		 	// Populate session
 			self::initSession($r);
