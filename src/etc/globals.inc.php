@@ -7,11 +7,22 @@
  //  insulates against API changes that will probably come as a result
  //  of a future need to support additional database connection mechanisms.
  //
- function _db() {
- 	if (_furnace()->config['debug_level'] > 0) {
- 		return FDatabase::singleton(_furnace()->config['debug_dsn']);
+ function _db($which='default') {
+    $datasources = array("production"=>array(),"debug"=>array());
+    
+    if (_furnace()->config['debug_level'] > 0) {
+ 	    if (!isset($datasources['debug'][$which])) {
+ 	        $datasources['debug'][$which] = new FDatabase(_furnace()->config['datasources']['debug'][$which]);
+ 	    } 
+ 	    
+ 	    return $datasources['debug'][$which];
+ 	    
  	} else {
- 		return FDatabase::singleton(_furnace()->config['production_dsn']);
+ 		if (!isset($datasources['debug'][$which])) {
+ 	        $datasources['debug'][$which] = new FDatabase(_furnace()->config['datasources']['debug'][$which]);
+ 	    } 
+ 	    
+ 	    return $datasources['debug'][$which];
  	}
  }
  
@@ -20,13 +31,7 @@
  //  in user.
  //
  function _user($failPage = '/') {
- 	if (false !== ($user = FSessionManager::checkLogin())) {
- 		return $user;
- 	} else {
- 		_err('You must be logged in to continue...');
- 		header("Location: {$failPage}");
- 		exit;
- 	}
+ 	return $user = FSessionManager::checkLogin();
  }
  
  // FUNCTION: _err()
