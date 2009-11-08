@@ -86,7 +86,7 @@ class FAccountManager extends FAccount {
 	        $q = "UPDATE `app_accounts` SET `newPasswordKey`='{$npk}' WHERE `objId`={$r['objId']} LIMIT 1";
 	        _db()->exec($q);
 	        
-	        return true;
+	        return $npk;
 	    }
 	    return false;
 	}
