@@ -355,8 +355,8 @@ class FModel {
 		$r .= "\t\t\t// Initialize parents, peers, and children...\r\n";
 		$r .= "\t\t\t\$this->_initNonlocalAttributes(\$data);\r\n"
  			. "\t\t\t// Initialize local attributes...\r\n";
- 		foreach ($object->getAttributes() as $a) {
- 			$r .= "\t\t\t\$this->{$a->getName()} = isset(\$data['{$a->getName()}']) ? \$data['{$a->getName()}'] : null;\r\n";
+	    foreach ($object->getAttributes() as $a) {
+ 			$r .= "\t\t\t\$this->{$a->getName()} = isset(\$data['{$a->getName()}']) ? \$data['{$a->getName()}'] : \"{$a->getDefaultValue()}\";\r\n";
  		}
 
  		$r .= "\t\t} // end constructor\r\n\r\n";
