@@ -18,11 +18,11 @@
  	    return $datasources['debug'][$which];
  	    
  	} else {
- 		if (!isset($datasources['debug'][$which])) {
- 	        $datasources['debug'][$which] = new FDatabase(_furnace()->config['datasources']['debug'][$which]);
+ 		if (!isset($datasources['production'][$which])) {
+ 	        $datasources['production'][$which] = new FDatabase(_furnace()->config['datasources']['production'][$which]);
  	    } 
  	    
- 	    return $datasources['debug'][$which];
+ 	    return $datasources['production'][$which];
  	}
  }
  
