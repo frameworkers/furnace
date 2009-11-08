@@ -74,7 +74,7 @@ class FAccountManager extends FAccount {
 	
     public static function GenerateForgotPasswordKey($emailAddress) {
 	    $q = "SELECT * FROM `app_accounts` WHERE `emailAddress`='{$emailAddress}' ";
-	    $r = _db()->queryOne($q,FDATABASE_FETCHMODE_ASSOC);
+	    $r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 	    
 	    if ($r) {
 	        // Generate the key
