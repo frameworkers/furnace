@@ -27,6 +27,10 @@ login:
 logout:
   url: /logout
   map: { controller: _default, view: logout }
+  
+forgotpass:
+  url: /forgotpass
+  map: { controller: _default, view: forgotpass }
 
 ###########################################################
 ## SITEWIDE DEFAULT ROUTES

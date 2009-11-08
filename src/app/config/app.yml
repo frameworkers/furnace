@@ -6,10 +6,14 @@
 # This is the name of your application
 app_name: Untitled Application
 
+# Application URL:
+# This is the full url to the application root (including http://)
+app_URL: http://example.org
+
 
 # Database Engine:
 #   Specifies which datasource to use when connecting. Note that,
-#   at the moment, the only valid values are "MDB2" or the older "DB".
+#   at the moment, the only valid value is "MDB2".
 db_engine: MDB2
 
 # Debug Level:
