@@ -86,15 +86,28 @@ class FValidator {
 	}
 	
 	// Test whether var IS in a set of values
-	public static function Inclusion($var,$allowedValues=array(),$bCaseSensitive = true,$bPartialMatch = false) {
-		//TODO: implement this function
-		return true;	
+	public static function Inclusion($var,$allowedValues=array(),$bCaseSensitive = true,$bPartialMatch = false,$field=null) {
+	    if ($bPartialMatch) {
+	        throw new FException("FValidator::Inclusion: Partial matching has not yet been implemented");
+	    }
+	    
+		if ($bCaseSensitive) {
+		    foreach ($allowedValues as $av) {
+		        if (0 == strcmp($av,$var)) return true;
+		    }    
+		} else {
+		    foreach ($allowedValues as $av) {
+		        if (0 == strcasecmp($av,$var)) return true;
+		    }
+		}
+		throw new FValidationException('Inclusion',null, $field,
+			"<b>{$field}</b> must be provided. Please choose from the provided values.</b>");	
+		return false;
 	}
 	
 	//Test whether var is NOT in a set of values
-	public static function Exclusion($var,$prohibitedValues=array(),$bCaseSensitive = true, $bPartialMatch = false) {
-		//TODO: implement this function
-		return true;
+	public static function Exclusion($var,$prohibitedValues=array(),$bCaseSensitive = true, $bPartialMatch = false,$field=null) {
+		return ! self::Inclusion($var,$prohibitedValues,$bCaseSensitive,$bPartialMatch,$field);
 	}
 	
 	//Test whether var evaluates to true
@@ -175,6 +188,14 @@ class FValidator {
 				case "email":
 					$response[] = "FValidator::Email({$var});";
 					break;
+				case "allowedvalues":
+				    $values = array();
+				    foreach ($detail as $d) {
+				        $values[] = "\"{$d['value']}\"";
+				    }
+				    $values = "array(".implode(',',$values).")";
+				    $response[] = "FValidator::Inclusion({$var},{$values},false,false,{$field});";
+				    break;
 				default: break;
 			}
 		}
