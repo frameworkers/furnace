@@ -289,5 +289,9 @@ class FValidator {
 	protected function fAccountLastLogin($value) {
 		return true;
 	}
+	
+	protected function fAccountNewPasswordKey($value) {
+	    return true;
+	}
 }
 ?>

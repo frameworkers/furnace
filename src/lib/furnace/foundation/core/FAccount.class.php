@@ -68,6 +68,10 @@ class FAccount extends FBaseObject {
 		// The last time this account logged in
 		public $lastLogin;
 		
+		// Variable: newPassKey
+		// A key for validating forgot password attempts
+		public $newPasswordKey;
+		
 		// Variable: faccount_id
 		// The objId of the app_account entry for this account
 		protected $faccount_id;
@@ -82,6 +86,7 @@ class FAccount extends FBaseObject {
 			$this->objectClass = $data['objectClass'];
 			$this->objectId    = $data['objectId'];
 			$this->roles       = $data['faccount_id'];
+			$this->newPasswordKey  = $data['newPasswordKey'];
 			
 			
 			
@@ -172,6 +177,10 @@ class FAccount extends FBaseObject {
 		
 		public function getLastLogin() {
 			return $this->lastLogin;
+		}
+		
+		public function getNewPasswordKey() {
+		    return $this->newPasswordKey;
 		}
 
 		public function getRoles() {
@@ -293,9 +302,27 @@ class FAccount extends FBaseObject {
 				$this->validator->fAccountLastLogin($this->lastLogin);
 			}
 		}
+		
+		public function setNewPasswordKey($value,$bValidate = false) {
+		    // Set the provided value
+		    $this->newPasswordKey = $value;
+		    $this->_dirtyTable['newPasswordKey'] = $value;
+		    if ($bValidate) {
+		        $this->validator->fAccountNewPasswordKey($this->newPasswordKey);
+		    }
+		}
 
 		public function save($data = array(), $bValidate = true) {
-			
+		    
+    		if ($bValidate) {
+     			// Validate all dirty attributes, and any data directly passed in
+    			$this->validator->isValid($this->_dirtyTable);
+    			$this->validator->isValid($data);
+     		}
+     		
+     		// In any event, do nothing if this is not a valid object
+    		if (!$this->validator->valid) { return false; }
+		    
  			if ($this->objId == 0) {
  				
 				// Create an 'FAccount' (app_accounts + app_roles) for this object
@@ -321,7 +348,8 @@ class FAccount extends FBaseObject {
 				. "`objectId`='{$this->objectId}', "
 				. "`created`='{$this->created}', "
 				. "`modified`=NOW(), "
-				. "`lastLogin`='{$this->lastLogin}' ";
+				. "`lastLogin`='{$this->lastLogin}', "
+				. "`newPasswordKey`='{$this->newPasswordKey}' ";
 				$q .= "WHERE `objId`='{$this->faccount_id}'";
 				_db()->exec($q);
 				
@@ -337,6 +365,7 @@ class FAccount extends FBaseObject {
 				unset($this->_dirtyTable['created']);
 				unset($this->_dirtyTable['modified']);
 				unset($this->_dirtyTable['lastLogin']);
+				unset($this->_dirtyTable['newPasswordKey']);
 				
 				// unset the entries in the data array
 				unset($data['username']);
@@ -350,6 +379,7 @@ class FAccount extends FBaseObject {
 				unset($data['created']);
 				unset($data['modified']);
 				unset($data['lastLogin']);
+				unset($data['newPasswordKey']);
 			}			
 			
 			// Call FBaseObject::save to handle everything else

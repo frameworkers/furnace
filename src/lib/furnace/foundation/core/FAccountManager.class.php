@@ -72,6 +72,44 @@ class FAccountManager extends FAccount {
 		return md5($salted);
 	}
 	
+    public static function GenerateForgotPasswordKey($emailAddress) {
+	    $q = "SELECT * FROM `app_accounts` WHERE `emailAddress`='{$emailAddress}' ";
+	    $r = _db()->queryOne($q,FDATABASE_FETCHMODE_ASSOC);
+	    
+	    if ($r) {
+	        // Generate the key
+	        $chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	        for ($i=0;$i<22;$i++) {
+	            $npk .= $chars[rand(0,61)];
+	        }
+	        // Associate it with the account
+	        $q = "UPDATE `app_accounts` SET `newPasswordKey`='{$npk}' WHERE `objId`={$r['objId']} LIMIT 1";
+	        _db()->exec($q);
+	        
+	        return true;
+	    }
+	    return false;
+	}
+	
+	public static function EmailAddressExists($emailAddress,$bGetObject=false) {
+
+	    $q = "SELECT * FROM `app_accounts` WHERE `emailAddress`='{$emailAddress}' LIMIT 1";
+	    $r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
+	    
+	    if ($r) {
+	        if ($bGetObject) { 
+	            $c = $r['objectClass'];
+	            $o = call_user_func_array(array($r['objectClass'],'Retrieve'),array($r['objectId']));
+	            return $o;
+	        } else {
+	            return true;
+	        }
+	    }
+	    else { 
+	        return false; 
+	    }
+	}
+	
 	public static function Delete($username) {
 		$q = "SELECT `objId` FROM `app_accounts` WHERE `username` = '{$username}' ";
 		$id= _db()->queryOne($q);
