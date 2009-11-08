@@ -2,24 +2,9 @@
 
 class ModelController extends Controller {
 	
-	private $dsn;
 
 	public function __construct() {
 		parent::__construct();
-		
-		if ($GLOBALS['furnace']->config['debug_level'] > 0 && 
-			$GLOBALS['furnace']->config['debug_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No debug database specified. Please edit the 'debug_dsn' variable in your application config file");
-		} else if ($GLOBALS['furnace']->config['debug_level'] == 0 &&
-				   $GLOBALS['furnace']->config['production_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No production database specified. Please edit the 'production_dsn' variable in your application config file");	   	
-		}
-		
-		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
-			$this->dsn = $GLOBALS['furnace']->config['debug_dsn'];
-		} else {
-			$this->dsn = $GLOBALS['furnace']->config['production_dsn'];
-		}
 		
 		$this->setTitle("FUEL :: model");
 	}
@@ -27,7 +12,7 @@ class ModelController extends Controller {
 	public function index() {
 		$this->init();							// Load required files
 		$d = new FDatabaseSchema();				// Create an FDatabaseSchema object
-		$d->discover($this->dsn);				// Load the currently active database
+		$d->discover('default');				// Load the currently active database
 		$this->set('model',$this->getModel());	// Register the model with Tadpole
 		
 	}
