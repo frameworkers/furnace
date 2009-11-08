@@ -68,7 +68,7 @@ class FAccount extends FBaseObject {
 		// The last time this account logged in
 		public $lastLogin;
 		
-		// Variable: newPassKey
+		// Variable: newPasswordKey
 		// A key for validating forgot password attempts
 		public $newPasswordKey;
 		
