@@ -24,10 +24,10 @@
   //DATABASE WRAPPER
   class FDatabase  {
   	
-  	public $mdb2;
+  	private $mdb2;
   	
   	public function __construct($dsn) {
-  		$this->mdb2 =& MDB2::factory($dsn);
+  		$this->mdb2 = MDB2::factory($dsn);
 
   		if (MDB2::isError($this->mdb2)) {
   			die('<b>Furnace: </b>Could not connect to the database.');

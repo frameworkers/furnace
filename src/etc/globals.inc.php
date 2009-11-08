@@ -6,23 +6,24 @@
  //  Provides shorthand notation for accessing the database, and also
  //  insulates against API changes that will probably come as a result
  //  of a future need to support additional database connection mechanisms.
- //
+ // 
+ $_datasources = array("production"=>array(),"debug"=>array());
  function _db($which='default') {
-    $datasources = array("production"=>array(),"debug"=>array());
-    
+    global $_datasources;
+ 
     if (_furnace()->config['debug_level'] > 0) {
- 	    if (!isset($datasources['debug'][$which])) {
- 	        $datasources['debug'][$which] = new FDatabase(_furnace()->config['datasources']['debug'][$which]);
+ 	    if (!isset($_datasources['debug'][$which])) {
+ 	        $_datasources['debug'][$which] = new FDatabase(_furnace()->config['datasources']['debug'][$which]);
  	    } 
  	    
- 	    return $datasources['debug'][$which];
+ 	    return $_datasources['debug'][$which];
  	    
  	} else {
- 		if (!isset($datasources['production'][$which])) {
- 	        $datasources['production'][$which] = new FDatabase(_furnace()->config['datasources']['production'][$which]);
+ 		if (!isset($_datasources['production'][$which])) {
+ 	        $_datasources['production'][$which] = new FDatabase(_furnace()->config['datasources']['production'][$which]);
  	    } 
  	    
- 	    return $datasources['production'][$which];
+ 	    return $_datasources['production'][$which];
  	}
  }
  
