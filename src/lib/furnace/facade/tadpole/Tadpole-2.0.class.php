@@ -1078,7 +1078,7 @@ class Tadpole {
 			case 'string':
 				if (isset($attributeData['allowedValues'])) {
 					// create a select box
-					$option = '';
+					$option = '<option value=\"\">Please select...</option>';
 					foreach ($attributeData['allowedValues'] as $opt) {
 						$option .= "<option value=\"{$opt['value']}\" ".(($value == $opt['value'])? ' selected="selected" ' : '').">{$opt['label']}</option>";
 					}
@@ -1088,7 +1088,7 @@ class Tadpole {
 			case 'integer':
 				if (isset($attributeData['allowedValues'])) {
 					// create a select box
-					$option = '';
+					$option = '<option value=\"\">Please select...</option>';
 					foreach ($attributeData['allowedValues'] as $opt) {
 						$option .= "<option value=\"{$opt['value']}\" ".(($value == $opt['value'])? ' selected="selected" ' : '') .">{$opt['label']}</option>";
 					}
