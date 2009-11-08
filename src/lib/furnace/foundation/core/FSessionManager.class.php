@@ -22,7 +22,9 @@ class FSessionManager {
 		 if ('' == $un || '' == $pw) {
 		 	return false; 
 		 }
-		 $encrypted = md5($pw);
+		 
+		 $encrypted = FAccountManager::EncryptPassword($pw);
+		 
 		 $q = "SELECT * FROM `app_accounts` "
 			. "WHERE `username`='{$un}' AND `password`='{$encrypted}' ";
 

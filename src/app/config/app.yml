@@ -46,6 +46,17 @@ datasources:
   production:
     default: "driver://user:pass@server/dbname"
 
+
+#
+# Password Salt
+# A password salt is a unique, hard to guess string that is 
+# used in combination with user-selected passwords to provide
+# additional security guarantees. 
+# NOTE: For security, you should change this for each project
+#
+password_salt: "daFc893nv5ad7b4{3k%6Zx&3k00(Dz?34f%23/z4GGz"
+
+
 # Application URL Base:
 #   The base url (default is /) to expect at the beginning of 
 #   each request. This is particularly helpful when your 

@@ -34,9 +34,9 @@ class FAccountManager extends FAccount {
 	 * 
 	 *  (integer) - The unique id of the newly created account
 	 */
-	public static function Create($un,$pw,$em) {
-		$encrypted = md5($pw);
-		
+    public static function Create($un,$pw,$em) {
+	
+		$encrypted = self::EncryptPassword($pw);		
 		
 		$now = date('Y-m-d G:i:s');
 		
@@ -56,6 +56,20 @@ class FAccountManager extends FAccount {
 			FDatabaseErrorTranslator::translate($r->getCode());
 		}
 		return array("faccount_id"=>$faccountId,"encryptedPassword"=>$encrypted);
+	}
+	
+    public static function ChangePassword($user,$pw) {
+	    $user->setPassword(self::EncryptPassword($pw));
+	    $user->save();
+	}
+	
+	public static function EncryptPassword($pw) {
+	    if (isset(_furnace()->config['password_salt'])) {
+	        $salted = _furnace()->config['password_salt'] . $pw;
+	    } else {
+	        $salted = $pw;
+	    }
+		return md5($salted);
 	}
 	
 	public static function Delete($username) {
