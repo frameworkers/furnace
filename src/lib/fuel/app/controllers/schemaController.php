@@ -8,22 +8,10 @@ class SchemaController extends Controller {
 	
 	public function index() {
 		
-		if ($GLOBALS['furnace']->config['debug_level'] > 0 && 
-			$GLOBALS['furnace']->config['debug_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No debug database specified. Please edit the 'debug_dsn' variable in your application config file");
-		} else if ($GLOBALS['furnace']->config['debug_level'] == 0 &&
-				   $GLOBALS['furnace']->config['production_dsn'] == 'mysql://user:password@server/dbname') {
-			die("No production database specified. Please edit the 'production_dsn' variable in your application config file");	   	
-		}
-		
 		$this->init();		// Load required files
 		
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['furnace']->config['debug_level'] > 0) {
-			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
-		} else {
-			$d->discover($GLOBALS['furnace']->config['production_dsn']);
-		}
+		$d->discover('default');
 		$model = $this->getModel();
 		
 		$tables = array();
