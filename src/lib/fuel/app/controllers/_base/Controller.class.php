@@ -31,13 +31,9 @@ abstract class Controller extends FController {
 			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml")
 		);
 	}
-	protected function getSchema() {
+    protected function getSchema() {
 		$d = new FDatabaseSchema();
-		if ($GLOBALS['fconfig_debug_level'] > 0) {
-			$d->discover($GLOBALS['furnace']->config['debug_dsn']);
-		} else {
-			$d->discover($GLOBALS['furnace']->config['production_dsn']);
-		}
+		$d->discover('default');
 		return $d;
 	}
 	protected function writeModelFile($contents) {
