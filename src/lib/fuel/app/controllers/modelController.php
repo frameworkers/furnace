@@ -138,6 +138,7 @@ CREATE TABLE `app_accounts` (
   `created` datetime NOT NULL COMMENT 'When this account was created',
   `modified` datetime NOT NULL COMMENT 'When this account was last modified',
   `lastLogin` datetime NOT NULL COMMENT 'The last time this account logged in',
+  `newPasswordKey` varchar(25) NOT NULL COMMENT 'A key for verifying forgot password attempts',
   PRIMARY KEY  (`objId`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
@@ -244,6 +245,7 @@ CREATE TABLE `app_accounts` (
   `created`        datetime NOT NULL COMMENT 'When this account was created',
   `modified`       datetime NOT NULL COMMENT 'When this account was last modified',
   `lastLogin`      datetime NOT NULL COMMENT 'The last time this account logged in',
+  `newPasswordKey` varchar(25) NOT NULL COMMENT 'A key for verifying forgot password attempts',
   PRIMARY KEY  (`objId`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
