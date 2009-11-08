@@ -60,6 +60,7 @@ class FAccountManager extends FAccount {
 	
     public static function ChangePassword($user,$pw) {
 	    $user->setPassword(self::EncryptPassword($pw));
+	    $user->setNewPasswordKey('');
 	    $user->save();
 	}
 	

@@ -46,7 +46,7 @@
  	                $valid = false;
  	            }
  	            
- 	            if ($user && $user->getNewPasswordKey() != $k) {
+ 	            if ($user && ($user->getNewPasswordKey() != $k || $user->getNewPasswordKey() == '')) {
  	                $this->flash("Key does not match stored value","error");
  	                $valid = false;
  	            }
