@@ -278,7 +278,7 @@ class FAccount extends FBaseObject {
 		
 		public function setModified($value,$bValidate = false) {
 			// Set the provided value
-			$this->created = $value;
+			$this->modified = $value;
 			$this->_dirtyTable['modified'] = $value;
 			if ($bValidate) {
 				$this->validator->fAccountModified($this->modified);
@@ -287,7 +287,7 @@ class FAccount extends FBaseObject {
 		
 		public function setLastLogin($value,$bValidate = false) {
 			// Set the provided value
-			$this->created = $value;
+			$this->lastLogin = $value;
 			$this->_dirtyTable['lastLogin'] = $value;
 			if ($bValidate) {
 				$this->validator->fAccountLastLogin($this->lastLogin);
