@@ -16,16 +16,16 @@ class FDatabaseSchema {
 	// tables in this schema
 	private $tables;
 	
-	// Variable: dsn
-	// A data source name to connect to
-	private $dsn;
+	// Variable: datasource
+	// A data source
+	private $datasource;
 	
 	public function __construct() {
 		$this->tables = array();
 	}
 	
-	public function discover($dsn) {
-		$this->dsn = $dsn;
+	public function discover($datasource) {
+		$this->datasource =& _db($datasource);
 		
 		$this->discoverTables();
 		foreach ($this->tables as $t) {
@@ -49,11 +49,11 @@ class FDatabaseSchema {
 		}
 	}
 	public function executeStatement($stmt) {
-		$this->_db()->exec($stmt);
+		$this->datasource->exec($stmt);
 	}
 	
 	private function discoverTables() {
-		$results = $this->_db()->query("SHOW TABLES");
+		$results = $this->datasource->query("SHOW TABLES");
 		
 		while ($r = $results->fetchRow()) {
 			$bIsLookupTable = ((strpos($r[0],"_") > 0));
@@ -63,7 +63,7 @@ class FDatabaseSchema {
 	}
 	
 	private function discoverAttributes($tableName) {
-		$results = $this->_db()->query("DESCRIBE `{$tableName}`");
+		$results = $this->datasource->query("DESCRIBE `{$tableName}`");
 		
 		while ($r = $results->fetchRow()) {
 			$bIsAutoinc = (($r[5] != null));
@@ -84,13 +84,6 @@ class FDatabaseSchema {
 			// Add the column to the table
 			$this->tables[$tableName]->addColumn($c);
 		}
-		
-		
 	}
-	
-	private function _db() {
-		return FDatabase::singleton($this->dsn);
-	}
-
 }
 ?>
