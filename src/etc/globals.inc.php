@@ -31,8 +31,8 @@
  //  Provides shorthand notation for accessing the currently logged
  //  in user.
  //
- function _user($failPage = '/') {
- 	return $user = FSessionManager::checkLogin();
+ function _user() {
+ 	return FSessionManager::checkLogin();
  }
  
  // FUNCTION: _err()

@@ -72,17 +72,24 @@ class FSessionManager {
 		session_destroy();
 	}	
 
- 	public static function checkLogin() {
+    public static function checkLogin() {
+ 	    static $userAccountObject;
+ 	    
  		if (isset($_SESSION['_fwauth'])) {
 			$now = mktime();
 			$_SESSION['_fwauth']['idleseconds'] = 
 				$now - $_SESSION['_fwauth']['activity'];
 			$_SESSION['_fwauth']['activity'] = $now;
-			return self::getAccountObject();
+			
+			if (!isset($userAccountObject)) {
+			    $userAccountObject = self::getAccountObject();
+			}
+			return $userAccountObject;
 		} else {
 	 		if (isset($_POST['username']) && isset($_POST['password'])) {
 	 			if (self::doLogin()) {
-	 				return self::getAccountObject();
+	 			    $userAccountObject = self::getAccountObject();
+	 				return $userAccountObject;
 	 			} else {
 	 				return false;
 	 			}
