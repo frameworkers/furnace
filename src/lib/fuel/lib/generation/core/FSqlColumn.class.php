@@ -158,7 +158,7 @@
   		$null   = (($this->bIsNull)? "NULL " : "NOT NULL ");
   		$comment = (("" == $this->comment)? "" : "COMMENT '".str_replace("'","''",$this->getComment())."' ");
   		$default = (("" == $this->defaultValue)? "" : "DEFAULT \"{$this->getDefaultValue()}\" ");
-  		$autoinc = (($this->bIisAutoinc)? "auto_increment " : "");
+  		$autoinc = (($this->bIsAutoinc)? "auto_increment " : "");
   		return "`{$this->getName()}` {$this->getColType()} {$null} {$default} {$autoinc} {$comment} ";
   	}  
 }
