@@ -278,6 +278,7 @@ class Furnace {
                 // Provide view access to Furnace, Application, and Model config vars
                 $controller->ref('_furnace',$this);
                 $controller->ref('_app',    $this->config);
+                $controller->ref('_user',   _user());
                 $controller->ref('_model',  $GLOBALS['fApplicationModel']);
                 	
                 // Send the rendered content out over the wire
