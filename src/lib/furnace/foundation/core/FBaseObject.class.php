@@ -80,7 +80,7 @@
  					break;
  				case 'lookup':
  					// Clear entries in all lookup tables with references to this object
- 					if ($this->fObjectType == $info['class']) {
+ 					if ($class == $info['class']) {
  						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$id}' OR `{$info['sqlcol2']}`='{$id}'";
  					} else {
  						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$id}'";
