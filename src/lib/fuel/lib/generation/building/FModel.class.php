@@ -193,6 +193,7 @@ class FModel {
 		
 		foreach ($this->objects as $o) {
 			$r .= "\t\tpublic \${$o->getName()} = array(\r\n"
+			    . "\t\t\t\"table\" => '".$this->standardizeTableName($o->getName(),false)."',\r\n"
 				. "\t\t\t\"attributes\" => array(\r\n";
 			// ATTRIBUTES
 			foreach ($o->getAttributes() as $a) {

@@ -92,44 +92,11 @@
  			}
  		}
  		
+ 		// Delete the object itself"
+		$q = "DELETE FROM `{$modelInfo['table']}` WHERE `{$modelInfo['table']}`.`objId`='{$id}'";
+		$r = _db()->exec($q); 		
  			
  		return true;
- 		// Delete objects that depend on this object
- 		
- 		/*
- 		 * $delete_info = $this->determineDeleteInformationFor($object);
-		foreach ($delete_info as $info ) {
-			if ("parent" == $info['type']) {
-				if ("yes" == $info['required']) {
-					// Delete objects that depend on this object
-					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that depend on this object\r\n";
-					$r .= "\t\t\t\$q= \"SELECT `{$info['sqltable']}`.`objId` FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}'\";\r\n";
-					$r .= "\t\t\t\$r= _db()->query(\$q);\r\n";
-					$r .= "\t\t\twhile (\$data = \$r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {\r\n"
-						. "\t\t\t\t{$info['class']}::Delete(\$data['objId']);\r\n"
-						. "\t\t\t}\r\n\r\n";
-				} else {
-					// Clear references to this object for objects with a non-required parent relationship to this object
-					$r .= "\r\n\t\t\t// Delete {$info['class']} objects that have an optional parent relationship to this object\r\n";
-					$r .= "\t\t\t\$q= \"UPDATE `{$info['sqltable']}` SET `{$info['sqltable']}`.`{$info['sqlcol']}`='0' WHERE `{$info['sqlcol']}`='{\$objId}'\";\r\n";
-					$r .= "\t\t\t_db()->exec(\$q);\r\n";
-				}
-			} else if ("lookup" == $info['type']) {
-				// Clear entries in all lookup tables with references to this object
-				$r .= "\r\n\t\t\t// Delete entries in {$info['sqltable']} containing this object\r\n";
-				if ($object->getName() == $info['class']) {
-					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}' OR `{$info['sqlcol2']}`='{\$objId}'\";\r\n";
-				} else {
-					$r .= "\t\t\t\$q = \"DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{\$objId}'\";\r\n";
-				}
-				$r .= "\t\t\t\$r = _db()->exec(\$q);\r\n\r\n";	
-			}
-		}
-		$r .= "\r\n\t\t\t// Delete the object itself\r\n"
-			. "\t\t\t\$q = \"DELETE FROM `".self::standardizeTableName($object->getName())."` WHERE `".self::standardizeTableName($object->getName())."`.`objId`='{\$objId}'\";\r\n"
-			. "\t\t\t\$r = _db()->exec(\$q);\r\n";
-		$r .= "\t\t}\r\n";
- 		 */
  	}
  	
  	
