@@ -150,7 +150,7 @@
 		foreach ($data as $k => $v) {
 			if (isset($this->_dirtyTable[$k])) { continue; } // don't overwrite manual changes
 			$realK = $k;
-			if (false !== ($underscorePos = strpos($k,'_'))) {
+			if (false !== ($underscorePos = strpos($k,'_id'))) {
 				$realK = substr($k,0,$underscorePos);
 			}
 			try {
