@@ -132,7 +132,7 @@
  	public function getSubset($firstIndex,$count,$key='objId',$sortOrder="default") {
  		// Return an array of objects according to the subset details given
 		$q = "SELECT * FROM `{$this->objectTypeTableName}` "
-			."{$this->filter} ORDER BY `{$key}` "
+			."{$this->filter} ORDER BY {$key} "
  			.(($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($count,$firstIndex);
 		$result = _db()->query($q);

@@ -136,7 +136,7 @@ abstract class FAccountCollection {
  			."{$this->filter} ORDER BY "
  			.(('objId' == $key)
  				? "`{$this->objectTypeTableName}`.`objId` "
- 				: "`{$key}` ")
+ 				: "{$key} ")
  			. (($sortOrder == "desc") ? " DESC " : " ASC ");
 		_db()->setLimit($count,$firstIndex);
 		$result = _db()->query($q);
