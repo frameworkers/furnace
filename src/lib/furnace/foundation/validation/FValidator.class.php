@@ -246,7 +246,7 @@ class FValidator {
 	
 	protected function fAccountUsername($value) {
 		try {
-			FValidator::Length($value,null,3,null,"username");
+			FValidator::Format($value,"/^[a-zA-Z0-9_\.\-]+$/",false,"username","username can only contain letters, numbers, dot (.), dash (-),and underscore (_)");
 			return true;
 		} catch (FValidationException $fve) {
 			$this->errors['username'] = $fve->getMessage();
