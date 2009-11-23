@@ -8,7 +8,7 @@ class ImageManager extends FPageModule {
 	// Variable: directoryCharset
 	// The list of valid characters for use in generating file ids and 
 	// the image repository directory layout
-	private static $directoryCharset   = "0123456789abcdef";
+	private static $directoryCharset   = "0123456789abcdefghijklmnopqrstuvwxyz";
 	
 	// Variable: directoryDepth
 	// The level of directory nesting to employ within the image repository.
@@ -220,6 +220,10 @@ class ImageManager extends FPageModule {
 			$this->getFullPathToImage($smId,$fileData['extension']));		// Small
 		self::limitMaxDimension($canonicalPath,self::$largeImageSize,
 			$this->getFullPathToImage($lgId,$fileData['extension']));		// Large
+
+		// Finally, scale the original to medium size
+		self::limitMaxDimension($canonicalPath,self::$mediumImageSize,
+		    $this->getFullPathToImage($fileData['fileId'],$fileData['extension']));  // Medium
 			
 		// Save the ids in the fileData structure
 		$fileData['sqId'] = $sqId;
