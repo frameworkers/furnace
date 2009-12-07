@@ -166,6 +166,13 @@ END;
 			}
 			// Actually create the object
 			$m = $this->getModel();
+			
+			// Validate that the object does not yet exist
+			if (false !== $m->objects[$objectTYpe]) {
+			    $this->flash("<strong>Error!</strong> &nbsp;An object of type <code>{$objectType}</code> already exists!","error");
+			    $this->redirect("/fuel/model/");
+			}
+			
 			$newObject = new FObj($objectType,$m->getModelData());
 			$newObject->setParentClass($objectParent);
 			$m->objects[$objectType] = $newObject;
