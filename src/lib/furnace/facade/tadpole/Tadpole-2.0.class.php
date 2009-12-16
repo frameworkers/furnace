@@ -374,12 +374,22 @@ class Tadpole {
 							$after    = substr($contents,(("self" == $commands['block']) 
 								? $blockEnd + 2
 								: $blockEnd + strlen($commands['block']) + 3));
+
 							$contents = $before . (isset($commands['else'])
 								? ((false !== strpos($commands['else'],'[')) 
 									? $this->compile($commands['else'],$iter_data) 	// Compile 'else' text if necessary
 									: $commands['else'])
 								: '') . $after;
-							$offset   = (false !== $outer_offset) ? $outer_offset : $offset;
+								
+							// Offset needs to be set to the start of the newly removed block so as not to accidentally
+							// overshoot additional tags immediately following the newly removed block. (It is not good
+							// enough to set the offset to the tag start, since the tag start can be up to $maxReverseSearch
+							// characters inside the block, meaning that a tag trailing the block by less than the distance
+							// of the tag start from the block start will be effectively skipped over. Therefore, set the 
+							// offset to the block start)
+							$offset   = (false !== $outer_offset) 
+							    ? $outer_offset 
+							    : $blockStart;
 						}
 					}
 					// Clear the relative conditional cache since the block is finished
