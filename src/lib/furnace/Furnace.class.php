@@ -147,14 +147,24 @@ class Furnace {
             } else {
                 $controllerFilePath = "{$this->rootdir}/app/pages/{$this->req->route['controller']}/{$this->req->route['controller']}Controller.php";        
             }
+            
+            // Ensure that the requested controller actually exists
+            if (!file_exists($controllerFilePath)) {
+                ( $this->config['debug_level'] > 0 ) 
+                    ? $this->process("/_debug/errors/noController/".str_replace('/','+',$controllerFilePath))
+                    : $this->process("/_default/http404");
+                exit();
+            }        
+            
             // Include the base controller
             if ($this->req->route['extension'] && file_exists("{$this->rootdir}/app/plugins/extensions/{$this->req->route['extension']}/pages/Controller.class.php")) {
                 include_once("{$this->rootdir}/app/plugins/extensions/{$this->req->route['extension']}/pages/Controller.class.php");
             } else {
                 include_once("{$this->rootdir}/app/pages/Controller.class.php");
             }
-            // Include the requested controller
-            include_once($controllerFilePath);
+            
+            // Include the controller file
+            @include_once($controllerFilePath);
             
             if ($this->config['debug_level'] > 0) {
                 $this->bm_envsetupend = microtime(true);
@@ -258,11 +268,11 @@ class Furnace {
                 
             } else {
                 if ($this->config['debug_level'] > 0) {
-                    dev_messages();
-                    die("No handler function '{$this->req->route['action']}' defined in {$controllerFilePath}");
+                    $this->process("/_debug/errors/noControllerFunction/".str_replace('/','+',$controllerFilePath)."/{$this->req->route['action']}");
                 } else {
                     $this->process("/_error/http404");
                 } 
+                exit();
             }
             
             if ($this->config['debug_level'] > 0) {
