@@ -23,20 +23,31 @@ class FApplicationResponse {
         $this->controller->ref('_app',    $app->config);
         $this->controller->ref('_model',  $GLOBALS['fApplicationModel']);
         
-        // Determine local and theme urls for assets
+        // Determine theme and local urls for assets
         if (false === $extension) {
-            $this->controller->set('_local_',"{$this->url_base}pages/"
- 		    .$app->req->route['controller'].'/'
- 		    .$app->req->route['action']);
+            // No extension
             $this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
-        } else {
+            $this->controller->set('_local_',"{$this->url_base}pages/"
+ 		        .$app->req->route['controller'].'/'
+ 		        .$app->req->route['action']);
+        } else if (strtolower($app->req->route['theme'] == 'inherit')) {
+            // Extension with inherited theme
+            $this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
             $this->controller->set('_local_',"{$this->url_base}extensions/{$extension}/pages/"
- 		    .$app->req->route['controller'].'/'
- 		    .$app->req->route['action']);
+ 		        .$app->req->route['controller'].'/'
+ 		        .$app->req->route['action']);
+ 		    $this->controller->setTheme($app->req->route['theme']);
+            $this->controller->extensionSetLayout($extension,'default');
+        } else {
+            // Extension with its own theme
             $this->controller->set('_theme_',"{$this->url_base}extensions/{$extension}/themes/{$app->theme}");
-            $this->controller->setTheme($app->req->route['theme']);
+            $this->controller->set('_local_',"{$this->url_base}extensions/{$extension}/pages/"
+ 		        .$app->req->route['controller'].'/'
+ 		        .$app->req->route['action']);
+ 		    $this->controller->setTheme($app->req->route['theme']);
             $this->controller->extensionSetLayout($extension,'default');
         }
+         
         // Determine the prefix for relative links (especially important for extensions)
         $this->controller->set('_prefix_',$app->req->route['prefix']);
     }

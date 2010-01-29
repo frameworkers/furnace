@@ -28,6 +28,7 @@
  	// Variable: theme
  	// The name of the theme to use with this page
  	protected $theme;
+ 	protected $bInheritTheme;
  	
  	// Variable: layout
  	// The name of the layout to use with this controller
@@ -53,7 +54,8 @@
  		parent::__construct(); 
  		$this->javascripts = array();
  		$this->stylesheets = array();
- 		$this->theme       = 'default';
+ 		$this->theme         = 'default';
+ 		$this->bInheritTheme = false;
  		$this->setLayout($layout);
  		$this->contents    = "";
  	}
@@ -87,9 +89,16 @@
  	}
  	
  	public function extensionSetLayout($extension,$layout) {
- 	    $this->layout = file_get_contents(
- 	        _furnace()->rootdir . "/app/plugins/extensions/{$extension}/themes/{$this->theme}/layouts/{$layout}.html"
- 	    );
+ 	    if ($this->bInheritTheme) {
+ 	        $baseTheme = _furnace()->config['app_theme'];
+ 	        $this->layout = file_get_contents(
+ 	            _furnace()->rootdir . "/app/themes/{$baseTheme}/layouts/{$layout}.html"
+ 	        );
+ 	    } else {
+ 	        $this->layout = file_get_contents(
+ 	            _furnace()->rootdir . "/app/plugins/extensions/{$extension}/themes/{$this->theme}/layouts/{$layout}.html"
+ 	        );
+ 	    }
  	}
  	
  	public function getLayout() {
@@ -102,6 +111,7 @@
  	
  	public function setTheme($val) {
  	    $this->theme = $val;
+ 	    $this->bInheritTheme = (strtolower($this->theme) == "inherit");
  	}
  	
  	public function getTitle() {
