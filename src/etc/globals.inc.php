@@ -8,6 +8,7 @@
  //  of a future need to support additional database connection mechanisms.
  // 
  $_datasources = array("production"=>array(),"debug"=>array());
+ 
  function _db($which='default') {
     global $_datasources;
  
@@ -25,6 +26,13 @@
  	    
  	    return $_datasources['production'][$which];
  	}
+ }
+ 
+ // FUNCTION: _model()
+ //  Provides shorthand notation for accessing the application's 
+ //  data model.
+ function _model() {
+     return $GLOBALS['_model'];
  }
  
  // FUNCTION: _user()
@@ -92,9 +100,9 @@ function _furnace() {
 
 // FUNCTION: _model()
 //  Provides shorthand notation for accessing the application model
-function _model() {
-	return $GLOBALS['fApplicationModel'];
-}
+//function _model() {
+//	return $GLOBALS['fApplicationModel'];
+//}
  
 // FUNCTION _storeUserInput($data)
 //   Stores the requested $data in the session variable _userform
@@ -114,4 +122,38 @@ function _readUserInput($field) {
     }
 	return $data;
 }
+
+
+define(FF_INFO,true);
+define(FF_DEBUG,true);	
+define(FF_WARN,true);
+define(FF_ERR,true);
+
+$dev_messages = array();
+
+function info($msg) {
+	global $dev_messages;
+	$dev_messages[] =  sprintf("%.5f I: %s ",microtime(true),$msg);
+}
+function debug($msg) {
+	global $dev_messages;
+	$dev_messages[] =  sprintf("%.5f D: %s ",microtime(true),$msg);
+}
+function warn($msg) {
+	global $dev_messages;
+	$dev_messages[] =  sprintf("%.5f W: %s ",microtime(true),$msg);
+}
+function err($msg) {
+	global $dev_messages;
+	$dev_messages[] =  sprintf("%.5f E: %s ",microtime(true),$msg);
+}
+function dump($var) {
+	global $dev_messages;
+	$dev_messages[] =  sprintf("%.5f D: ",microtime(true)).print_r($var,true);
+}
+function dev_messages() {
+    global $dev_messages;
+    echo "<ul><li>" . implode('</li><li>',$dev_messages) .'</li></ul>';
+}
+
 ?>

@@ -1,0 +1,66 @@
+<ul class="breadcrumbs">
+  <li><a href="#">Home</a> </li>
+</ul>
+
+
+<div id="colContainer">
+	<div id="col1">
+		<div id="col1Content">
+			<h2>Application Model Objects</h2>
+			<div class="modelObjectSummaries">
+			  <div class="modelObjectSummary">
+			  	[theModel.objects;block=div]
+			  	<a href="[_prefix_]/model/editObject/[@.name]" class="objectName">[@.name]</a><br/>
+			  	<span class="description">[@.description;ifempty='<em>no description</em>']</span>
+			  	<div class="deleteLink">
+			  		<a href="[_prefix_]/model/deleteObject/[@.name]" onclick="return confirm('This can not be undone. Continue?');">delete</a>
+			  	</div>
+			  </div>
+			</div>
+		</div>
+	</div>
+	<div id="col2">
+		<div class="innerBox">
+			<h2>Create a New Object</h2>
+			<form method="POST" action="[_prefix_]/model/createObject">
+				<table class="vertical fullwidth">
+				  <tr>
+				    <th>Name: </th>
+				    <td><input type="text" name="objectName" style="width:200px;"/></td>
+				  </tr>
+				  <tr>
+				    <th>Description: </th>
+				    <td><input type="text" name="description" style="width:200px;"/></td>
+				  </tr>
+				  <tr>
+				    <th>Parent: </th>
+				    <td><select name="objectParent">
+				    	<option selected value="FBaseObject">FBaseObject</option>
+				    	<option value="FAccount">FAccount</option>
+				    	</select>
+				    </td>
+				  </tr>
+				  <tr>
+				    <td colspan="2" class="rightAligned">
+				      <input type="submit" value="Create!"/>
+				    </td>
+				  </tr>
+				      
+				</table>
+			</form>
+		</div>
+		<div class="innerBox">
+			<h2>Regenerate Model Objects</h2>
+			If you have made manual changes to the .yml model file, you may
+			want to regenerate your model objects so that the changes are 
+			applied to the code.
+			<div style="text-align:center;margin-top:10px;">
+				<form method="POST" action="[_prefix_]/model/forceGenerateObjects">
+					<input type="submit" value="Regenerate Objects"/>
+				</form>
+			</div>
+		</div>
+	</div>
+	<br class="clr"/>
+</div>
+

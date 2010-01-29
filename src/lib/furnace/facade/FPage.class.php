@@ -11,7 +11,7 @@
  
   /*
   * Class: FPage
-  * A wrapper for Tadpole that adds, among other things,
+  * A wrapper for FPageTemplate that adds, among other things,
   * support for internationalization and object oriented page
   * generation. 
   * 
@@ -19,11 +19,15 @@
   * 
   *  <Tadpole>
   */
- class FPage extends Tadpole {
+ class FPage extends FPageTemplate {
  	
  	// Variable: title
  	// The page title
  	protected $title;
+ 	
+ 	// Variable: theme
+ 	// The name of the theme to use with this page
+ 	protected $theme;
  	
  	// Variable: layout
  	// The name of the layout to use with this controller
@@ -45,12 +49,12 @@
 	protected $contents;
 	
 		
- 	public function __construct() {
+ 	public function __construct($layout='default') {
  		parent::__construct(); 
- 		self  ::setLayout('default');
  		$this->javascripts = array();
  		$this->stylesheets = array();
- 		
+ 		$this->theme       = 'default';
+ 		$this->setLayout($layout);
  		$this->contents    = "";
  	}
 
@@ -78,11 +82,26 @@
  	
  	public function setLayout($layout) {
  		$this->layout = file_get_contents(
- 			_furnace()->layoutBasePath . "/{$layout}.html");
+ 		    _furnace()->rootdir . "/app/themes/{$this->theme}/layouts/{$layout}.html"
+ 		);
+ 	}
+ 	
+ 	public function extensionSetLayout($extension,$layout) {
+ 	    $this->layout = file_get_contents(
+ 	        _furnace()->rootdir . "/app/plugins/extensions/{$extension}/themes/{$this->theme}/layouts/{$layout}.html"
+ 	    );
  	}
  	
  	public function getLayout() {
  		return $this->layout;	
+ 	}
+ 	
+ 	public function getTheme() {
+ 	    return $this->theme;
+ 	}
+ 	
+ 	public function setTheme($val) {
+ 	    $this->theme = $val;
  	}
  	
  	public function getTitle() {
@@ -93,11 +112,30 @@
 		$this->title = $value;
 	}
 	
-	protected function addStylesheet($path) {
+	protected function addStylesheet($path,$bTheme = true) {
+		if ($bTheme) {
+	        $path = "assets/themes/{$this->theme}/css/{$path}";   
+	    } else {
+	        //TODO: add ability to programmatically add local stylesheet
+	    }
 		$this->stylesheets[] = $path;
 	}
 	
-	protected function addJavascript($path) {
+	protected function extensionAddStylesheet($extension,$path,$bTheme = true) {
+	    if ($bTheme) {
+	        $path = "extensions/{$extension}/themes/{$this->theme}/css/{$path}";
+	    } else {
+	        $path = "extensions/{$extension}{$path}";
+	    }
+	    $this->stylesheets[] = $path;
+	}
+	
+	protected function addJavascript($path,$bTheme = true) {
+		if ($bTheme) {
+	      $path = "assets/themes/{$this->theme}/js/{$path}\r\n";   
+	    } else {
+	        //TODO: add ability to programmatically add local stylesheet
+	    }
 		$this->javascripts[] = $path;
 	}
 	
@@ -118,9 +156,12 @@
 	}
 	
 	public function setTemplate($templatePath,$bCompileNow = false) {
-		$this->contents = file_get_contents($templatePath);
-		if ($bCompileNow) {
-			$this->contents = parent::compile($this->contents);	
+		if (false !== ($this->contents = @file_get_contents($templatePath))) {
+    		if ($bCompileNow) {
+    			$this->contents = parent::compile($this->contents);	
+    		}
+		} else {
+		    throw new FException("Requested template file \"{$templatePath}\" does not exist");
 		}
 	}
 	

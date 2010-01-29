@@ -1,24 +1,22 @@
 RewriteEngine On
 
-# FUEL ASSETS
-RewriteRule ^fuel/assets/((css|images|js)/(.*))$ lib/fuel/app/assets/$2/$3 [NC,L]
-RewriteRule ^lib/fuel/app/assets/(.*) lib/fuel/app/assets/$1 [NC,L]
+# EXTENSION ASSETS
+RewriteRule ^extensions/(.*)/themes/(.*)$ app/plugins/extensions/$1/themes/$2 [NC,L]
+RewriteRule ^app/plugins/extensions/(.*)  app/plugins/extensions/$1 [NC,L]
 
-# FUEL WEBAPP
-RewriteRule ^fuel/ etc/fuel.php [NC,L]
-RewriteRule ^etc/(.*) etc/$1 [NC,L]
-
-# FOUNDRY ASSETS
-RewriteRule ^_furnace/assets/(.*)$		lib/foundry/app/assets/$1 	[NC,L]
-RewriteRule ^lib/foundry/app/assets/(.*)	lib/foundry/app/assets/$1	[NC,L]
-
-# FOUNDRY WEBAPP
-RewriteRule ^_furnace/				etc/foundry.php			[NC,L]
+# LOCAL (page-related) EXTENSION ASSETS
+RewriteCond %{REQUEST_URI} !pages\/.*(\.html|\.php)$
+RewriteRule ^extensions/(.*)/pages/(.*)   app/plugins/extensions/$1/pages/$2 [NC,L]
+RewriteRule app/plugins/extensions/(.*)  app/plugins/extensions/$1 [NC,L]
 
 # APPLICATION ASSETS
-RewriteRule ^assets/((css|images|js)/(.*))$ app/assets/$2/$3 [NC,L]
-RewriteRule ^app/assets/(.*) app/assets/$1 [NC,L]	
+RewriteRule ^assets/themes/(.*)$ app/themes/$1 [NC,L]
+RewriteRule ^app/themes/(.*) app/themes/$1 [NC,L]
+
+# LOCAL (page-related) ASSETS
+RewriteCond %{REQUEST_URI} !^pages\/.*(\.html|\.php)$
+RewriteRule ^pages/(.*)/(.*\..*)$ app/pages/$1/$2 [NC,L]
+RewriteRule app/pages/(.*) app/pages/$1 [NC,L]
 
 # WEBAPP
 RewriteRule ^(.*)/?$ etc/app.php [NC,L]
-

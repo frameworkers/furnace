@@ -1,36 +1,46 @@
 #
 # FURNACE Application Route Definition File
 #
-
 # Mappings between URLs and Controller/View pairs
 # NOTE: Order is important! The Router runs top to bottom, 
 # stopping after it has found a route that matches.
+#
+#
+#
+###########################################################
+## ROUTES FOR EXTENSIONS
+## Labels for extensions must begin with '_' and must at a minimum provide
+##  a 'path' (name of the directory under /plugins/extensions)
+##  a 'prefix' (the portion of the url to ignore for these routes)
+##  a 'routes' (the array of defined routes for this extension)
+##
+_fuel:
+  path:   org.frameworkers.fuel
+  prefix: /fuel
+  theme:  default
+  routes:
+    default:
+      url: /:controller/:view
+    default_index:
+      url: /:controller
+      map: { view: index }
 
-## Maintenance URL 
-## This is an example of site-wide (global) redirection. This
-## type of redirection can be useful in the event that all or
-## part of the application is undergoing maintenance. Naturally,
-## this route should be the first available route (topmost) in 
-## the file. Uncomment the route to activate it. 
-#site_down:
-#  url: /*
-#  map: {controller: _furnace, view: unavailable}
 
 ###########################################################
 ## ADD CUSTOM ROUTES HERE:
 ## Add custom routes (if needed) for your application here.
 ##
-login:
+login: 
   url: /login
   map: { controller: _default, view: login }
-  
 logout:
   url: /logout
   map: { controller: _default, view: logout }
-  
 forgotpass:
   url: /forgotpass
   map: { controller: _default, view: forgotpass }
+
+
 
 ###########################################################
 ## SITEWIDE DEFAULT ROUTES
@@ -39,30 +49,8 @@ forgotpass:
 ## only be matched if every previous rule fails. 
 ##
 ##
-fuel_login:
-  url: /fuel/login
-  map: {controller: _default, view: login}
-fuel_logout:
-  url: /fuel/logout
-  map: {controller: _default, view: logout}
-fuel_default:
-  url: /fuel/:controller/:view
-fuel_index:
-  url: /fuel/:controller
-  map: {view: index}
-  
-
-
 default:
   url: /:controller/:view
-
 default_index:
   url: /:controller
-  map: {view: index}
-
-default:
-  url: /:controller/:view
-
-default_index:
-  url: /:controller
-  map: {view: index}
+  map: { view: index }

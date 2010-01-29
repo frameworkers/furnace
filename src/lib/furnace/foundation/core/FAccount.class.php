@@ -123,11 +123,11 @@ class FAccount extends FBaseObject {
 		
 		public static function getRolesForId($id) {
 			// Get Roles for the provided account id
-			$q = "SELECT * FROM `app_roles` WHERE `accountId`='{$id}' ";
+			$q = "SELECT * FROM `app_roles` WHERE `faccount_id`='{$id}' ";
 			$r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
 			$roles = array();
 			foreach ($r as $role=>$value) {
-				if ("accountId" == $role) {continue;}
+				if ("faccount_id" == $role) {continue;}
 				if (1 == $value) {
 					$roles[$role] = $value;
 				}
@@ -204,112 +204,76 @@ class FAccount extends FBaseObject {
 		public function getFAccountId() {
 			return $this->faccount_id;
 		}
-		public function setUsername($value,$bValidate = false) {
+		public function setUsername($value) {
 			// Set the provided value
 			$this->username = $value;
 			$this->_dirtyTable['username'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountUsername($this->username);
-			}
 		}
 
-		public function setPassword($value,$bValidate = false) {
+		public function setPassword($value) {
 			// Set the provided value
 			$this->password = $value;
 			$this->_dirtyTable['password'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountPassword($this->password);
-			}
 		}
 
-		public function setEmailAddress($value,$bValidate = false) {
+		public function setEmailAddress($value) {
 			// Set the provided value
 			$this->emailAddress = $value;
 			$this->_dirtyTable['emailAddress'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountEmailAddress($this->emailAddress);
-			}
 		}
 
-		public function setStatus($value,$bValidate = false) {
+		public function setStatus($value) {
 			// Set the provided value
 			$this->status = $value;
 			$this->_dirtyTable['status'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountStatus($this->status);
-			}
 		}
 		
-		public function setSecretQuestion($value,$bValidate = false) {
+		public function setSecretQuestion($value) {
 			// Set the provided value
 			$this->secretQuestion = $value;
 			$this->_dirtyTable['secretQuestion'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountSecretQuestion($this->secretQuestion);
-			}
 		}
 
-		public function setSecretAnswer($value,$bValidate = false) {
+		public function setSecretAnswer($value) {
 			// Set the provided value
 			$this->secretAnswer = $value;
 			$this->_dirtyTable['secretAnswer'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountSecretAnswer($this->secretAnswer);
-			}
 		}
 
-		public function setObjectClass($value,$bValidate = false) {
+		public function setObjectClass($value) {
 			// Set the provided value
 			$this->objectClass = $value;
 			$this->_dirtyTable['objectClass'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountObjectClass($this->objectClass);
-			}
 		}
 
-		public function setObjectId($value,$bValidate = false) {
+		public function setObjectId($value) {
 			// Set the provided value
 			$this->objectId = $value;
 			$this->_dirtyTable['objectId'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountObjectId($this->objectId);
-			}
 		}
 		
-		public function setCreated($value,$bValidate = false) {
+		public function setCreated($value) {
 			// Set the provided value
 			$this->created = $value;
 			$this->_dirtyTable['created'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountCreated($this->created);
-			}
 		}
 		
-		public function setModified($value,$bValidate = false) {
+		public function setModified($value) {
 			// Set the provided value
 			$this->modified = $value;
 			$this->_dirtyTable['modified'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountModified($this->modified);
-			}
 		}
 		
-		public function setLastLogin($value,$bValidate = false) {
+		public function setLastLogin($value) {
 			// Set the provided value
 			$this->lastLogin = $value;
 			$this->_dirtyTable['lastLogin'] = $value;
-			if ($bValidate) {
-				$this->validator->fAccountLastLogin($this->lastLogin);
-			}
 		}
 		
-		public function setNewPasswordKey($value,$bValidate = false) {
+		public function setNewPasswordKey($value) {
 		    // Set the provided value
 		    $this->newPasswordKey = $value;
 		    $this->_dirtyTable['newPasswordKey'] = $value;
-		    if ($bValidate) {
-		        $this->validator->fAccountNewPasswordKey($this->newPasswordKey);
-		    }
 		}
 
 		public function save($data = array(), $bValidate = true) {
@@ -323,7 +287,7 @@ class FAccount extends FBaseObject {
      		// In any event, do nothing if this is not a valid object
     		if (!$this->validator->valid) { return false; }
 		    
- 			if ($this->objId == 0) {
+ 			if ($this->id == 0) {
  				
 				// Create an 'FAccount' (app_accounts + app_roles) for this object
 				$newAccount  = true;
@@ -350,7 +314,7 @@ class FAccount extends FBaseObject {
 				. "`modified`=NOW(), "
 				. "`lastLogin`='{$this->lastLogin}', "
 				. "`newPasswordKey`='{$this->newPasswordKey}' ";
-				$q .= "WHERE `objId`='{$this->faccount_id}'";
+				$q .= "WHERE `faccount_id`='{$this->faccount_id}'";
 				_db()->exec($q);
 				
 				// unset the entries in the dirty table
@@ -392,7 +356,7 @@ class FAccount extends FBaseObject {
 					$this->objectId    = $this->objId;
 					$q = "UPDATE `{$this->fObjectTableName}` SET `faccount_id`={$this->faccount_id} WHERE `objId`={$this->objId} LIMIT 1";
 					_db()->exec($q);
-					$q = "UPDATE `app_accounts` SET `objectClass`='{$this->fObjectType}', `objectId`={$this->objId} WHERE `objId`={$this->faccount_id} LIMIT 1";
+					$q = "UPDATE `app_accounts` SET `objectClass`='{$this->fObjectType}', `objectId`={$this->objId} WHERE `faccount_id`={$this->faccount_id} LIMIT 1";
 					_db()->exec($q);
 				}
 				// All set. Return true
@@ -424,7 +388,7 @@ class FAccount extends FBaseObject {
 		}
 		
 		public function grantRole($namedRole) {
-			$q = "UPDATE `app_roles` SET `{$namedRole}`='1' WHERE `accountId`='{$this->getFAccountId()}' ";
+			$q = "UPDATE `app_roles` SET `{$namedRole}`='1' WHERE `faccount_id`='{$this->getFAccountId()}' ";
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
@@ -440,7 +404,7 @@ class FAccount extends FBaseObject {
 			}
 			
 			$q = "UPDATE `app_roles` SET " . implode(",",$roles) 
-			  . " WHERE `accountId`='{$this->getFAccountId()}' ";
+			  . " WHERE `faccount_id`='{$this->getFAccountId()}' ";
 			$r = _db()->exec($q);
 			if (is_array($this->roles)) {
 				foreach ($namedRoles as $role) {
@@ -450,7 +414,7 @@ class FAccount extends FBaseObject {
 		}
 		
 		public function denyRole($namedRole) {
-			$q = "UPDATE `app_roles` SET `{$namedRole}`='0' WHERE `accountId`='{$this->getFAccountId()}' ";
+			$q = "UPDATE `app_roles` SET `{$namedRole}`='0' WHERE `faccount_id`='{$this->getFAccountId()}' ";
 			$r = _db()->exec($q);
 			if (MDB2::isError($r)) {
 				FDatabaseErrorTranslator::translate($r->getCode());
@@ -484,9 +448,9 @@ class FAccount extends FBaseObject {
 			*/
 		}
 		
-		public static function Retrieve($objId) {
+		public static function Retrieve($id) {
 			_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
-			$q = "SELECT * FROM `app_accounts` WHERE `objId`='{$objId}' LIMIT 1 ";
+			$q = "SELECT * FROM `app_accounts` WHERE `faccount_id`='{$id}' LIMIT 1 ";
 			$r = _db()->queryRow($q);
 			return new FAccount($r);
 		}
@@ -495,8 +459,8 @@ class FAccount extends FBaseObject {
 			
 			if ($value) {$value = '1';} else {$value = '0';}
 			
-			$q = "SELECT `app_accounts`.`objectId` FROM `app_accounts`, `app_roles`
-				WHERE `app_accounts`.`objId`=`app_roles`.`accountId` 
+			$q = "SELECT `app_accounts`.`faccount_id` FROM `app_accounts`, `app_roles`
+				WHERE `app_accounts`.`faccount_id`=`app_roles`.`faccount_id` 
 				AND `app_roles`.`{$role}`='{$value}' 
 				AND `app_accounts`.`objectClass`='{$objectClass}'";
 			$results  = _db()->queryAll($q,FDATABASE_FETCHMODE_ASSOC);
@@ -507,6 +471,7 @@ class FAccount extends FBaseObject {
 			return $response;
 		}
 		
+		/* deprecated 2010.1.3
 		public static function Delete($objId,$acctId,$class) {
 			
 			//$q = "SELECT `objId` FROM `app_accounts` WHERE `objectId`='{$objId}' AND `objectClass`='{$this->fObjectType}' LIMIT 1";
@@ -524,6 +489,7 @@ class FAccount extends FBaseObject {
 			$q = "DELETE FROM `app_accounts` WHERE  `objId`='{$fAccountId}' ";
 			$r = _db()->exec($q);
 		}
+		*/
 		
 		public static function DefineRole($name,$defaultAttribution) {
 			if (true == $defaultAttribution) {

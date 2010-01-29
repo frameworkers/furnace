@@ -47,10 +47,10 @@ class FAccountManager extends FAccount {
 		if (MDB2::isError($r)) {
 			FDatabaseErrorTranslator::translate($r->getCode());
 		}
-		$faccountId = _db()->lastInsertID("app_accounts","objId");
+		$faccountId = _db()->lastInsertID("app_accounts","faccount_id");
 				
 		// Add entry in app_roles
-		$q = "INSERT INTO `app_roles` (`accountId`) VALUES ('{$faccountId}')";
+		$q = "INSERT INTO `app_roles` (`faccount_id`) VALUES ('{$faccountId}')";
 		$r = _db()->exec($q);
 		if (MDB2::isError($r)) {
 			FDatabaseErrorTranslator::translate($r->getCode());
@@ -112,14 +112,21 @@ class FAccountManager extends FAccount {
 	}
 	
 	public static function Delete($username) {
-		$q = "SELECT `objId` FROM `app_accounts` WHERE `username` = '{$username}' ";
-		$id= _db()->queryOne($q);
-		FAccount::Delete($id);
+		$q = "SELECT * FROM `app_accounts` WHERE `username` = '{$username}' ";
+		$data = _db()->queryRow($q);
+		if ($data) {
+		    // Call the actual object's delete function
+		    call_user_func_array(array($r['objectClass'],'Delete'),array($r['objectId']));
+		}
 	}
 	
 	public static function DeleteByAccountId($id) {
-		FAccount::Delete($id);
-		//TODO: this no longer matches with the method signature!
+	    $q = "SELECT * FROM `app_accounts` WHERE `faccount_id` = '{$id}' ";
+		$data = _db()->queryRow($q);
+		if ($data) {
+		    // Call the actual object's delete function
+		    call_user_func_array(array($r['objectClass'],'Delete'),array($r['objectId']));
+		}
 	}
 }
 ?>

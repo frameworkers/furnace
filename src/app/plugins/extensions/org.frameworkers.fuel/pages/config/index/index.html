@@ -1,0 +1,31 @@
+<h2>Application Configuration</h2>
+
+<form action="[_prefix_]/config/saveApplicationSettings" method="POST"/>
+<table class="vertical fullwidth">
+    <tr><th colspan="2">Application Root Directory:</th></tr>
+    <tr><td colspan="2" style="border:solid 1px #abc;padding:3px;padding-bottom:1px;line-height:125%"><code>[_furnace.rootdir]</code><br/>
+    	<span class="hint">This value is auto-determined based upon the location into which you installed Furnace and can not be changed manually.</span>
+    	</td>
+    </tr>
+    
+    <tr><td colspan="2"><h3>Basic</h3></td></tr>
+	<tr><th>Application Name:</th><td><input type="text" name="app_name" value="[_app.app_name]"/></td></tr>
+	<tr><th>Application Base URL:</th><td><input type="text" name="app_url" value="[_app.app_url]"/></td></tr>
+	<tr><th>Database Engine:</th><td><select name="db_engine"><option value="MDB2" [if:_app.db_engine=MDB2;content='selected="selected"']>MDB2</option>
+															  <option value="DB"   [if:_app.db_engine=DB;content='selected="selected"']>DB</option></select></td></tr>
+	
+	<tr><td colspan="2"><h3>Security</h3></td></tr>
+	<tr><th>Debug Level:</th><td><select name="debug_level"><option value="2" [if:_app.debug_level=2;content='selected="selected"']>(2) Development: Verbose Output</option>
+															<option value="1" [if:_app.debug_level=1;content='selected="selected"']>(1) Development: Error messages only</option>
+															<option value="0" [if:_app.debug_level=0;content='selected="selected"']>(0) Production: No errors or warnings</option></select></td></tr>
+	<tr><th>Password Salt:</th><td><input type="text" name="password_salt" value="[_app.password_salt]"/></td></tr>
+	<tr><th>Foundry Password:</th><td><input type="text" name="root_password" value="[_app.root_password]"/></td></tr>
+	
+	
+	<tr><td colspan="2"><h3>Database</h3></td></tr>
+	<tr><th>Debug DSN:</th><td><input type="text" name="debug_dsn" value="[_app.debug_dsn]"/></td></tr>
+	<tr><th>Production DSN:</th><td><input type="text" name="production_dsn" value="[_app.production_dsn]"/></td></tr>
+	
+	<tr><th>&nbsp;</th><th style="text-align:right;"><input type="submit" value="Save Changes"/></th></tr>
+</table>
+</form>

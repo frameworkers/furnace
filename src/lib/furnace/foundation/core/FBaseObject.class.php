@@ -17,14 +17,14 @@
   */
  abstract class FBaseObject {
  	
- 	protected $objId;
+ 	protected $id;
  	
  	protected $fObjectType;
  	protected $fObjectTableName;
  	protected $fObjectModelData;
  	
  	// Internal Variable: validator
- 	// The validator is the object's <<ObjectType>>Validator instance
+ 	// The validator is the object's FValidator instance
  	public $validator;
  	
  	// Internal Variable: _dirtyTable
@@ -32,8 +32,8 @@
  	public $_dirtyTable;
  	
  	
- 	public function getObjId() {
- 		return $this->objId;
+ 	public function getId() {
+ 		return $this->id;
  	}
  	
  	/**
@@ -50,68 +50,14 @@
  	public static function Create($objectType, $requiredAttributes, $additionalData) {
  		// Build the data array to pass to the object constructor
  		$data = array_merge($additionalData,$requiredAttributes);	// Prefer values in requiredAttributes
- 		$data['objId'] = 0;
+ 		$data['id'] = 0;
  		
  		return new $objectType($data);
  	}
  	
  	
- 	public static function Delete($id,$class) {
- 		
- 		// Delete objects that depend on this object
- 		$modelInfo =& _model()->$class;
- 		foreach ($modelInfo['delete_info'] as $info) {
- 			switch ($info['type']) {
- 				case 'parent':
- 					if ('yes' == $info['required']) {
- 						// Delete objects of type $info['class'] that depend on this object
- 						$q = "SELECT `{$info['sqltable']}`.`objId` FROM `{$info['sqltable']}` WHERE "
- 							."`{$info['sqltable']}`.`{$info['sqlcol']}`={$id} ";
- 						$r = _db()->query($q);
- 						while ($data = $r->fetchRow(FDATABASE_FETCHMODE_ASSOC)) {
- 							call_user_func(array($info['class'],"Delete"),$data['objId']);
- 						}
- 					} else {
- 						// Clear references to this object for objects with a non-required parent relationship to this object
- 						$q = "UPDATE `{$info['sqltable']}` SET `{$info['sqltable']}`.`{$info['sqlcol']}`='0' WHERE "
- 							."`{$info['sqltable']}`.`{$info['sqlcol']}`={$id} ";
- 						_db()->exec($q);
- 					}
- 					break;
- 				case 'lookup':
- 					// Clear entries in all lookup tables with references to this object
- 					if ($class == $info['class']) {
- 						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$id}' OR `{$info['sqlcol2']}`='{$id}'";
- 					} else {
- 						$q = "DELETE FROM `{$info['sqltable']}` WHERE `{$info['sqltable']}`.`{$info['sqlcol']}`='{$id}'";
- 					}
- 					_db()->exec($q);
- 					break;
- 				default:
- 					die('Non-standard delete information encountered. FBaseObject');
- 			}
- 		}
- 		
- 		// Delete the object itself"
-		$q = "DELETE FROM `{$modelInfo['table']}` WHERE `{$modelInfo['table']}`.`objId`='{$id}'";
-		$r = _db()->exec($q); 		
- 			
- 		return true;
- 	}
- 	
- 	
  	public function save($data = array(), $bValidate = true) {
  		
- 		if ($bValidate) {
- 			// Validate all dirty attributes, and any data directly passed in
-			$this->validator->isValid($this->_dirtyTable);
-			$this->validator->isValid($data);
- 		}
- 		
- 		// In any event, do nothing if this is not a valid object
-		if (!$this->validator->valid) { return false; }
-		
-		
  		// Merge $data into the object
  		$properties = get_object_vars($this);
 		foreach ($data as $k => $v) {
@@ -128,16 +74,25 @@
 			} catch (Exception $e) { /* silently ignore */ }
 		}
 		
+ 	    if ($bValidate) {
+ 			// if requested, validate the object before saving
+ 			$objectType = $this->fObjectType;
+ 			_model()->$objectType->validate($this);
+ 		}
+ 		
+ 		// In any event, do nothing if this is not a valid object
+		if (!$this->validator->valid) { return false; }
+		
 		// Determine whether to 'create' or 'update'
-		if ( $this->objId == 0 ) {
+		if ( $this->id == 0 ) {
 			
 			// Set the 'created' attribute if it has been defined
- 			if (isset($this->fObjectModelData['attributes']['created'])) {
+			if (property_exists($this->fObjectType,'created')) {
  				$this->setCreated(date('Y-m-d G:i:s')); 
  			}
  			
 			// Set the 'modified' attribute if it has been defined
- 			if (isset($this->fObjectModelData['attributes']['modified'])) {
+			if (property_exists($this->fObjectType,'modified')) {
  				$this->setModified(date('Y-m-d G:i:s')); 
  			}
 			
@@ -146,7 +101,7 @@
 			$q .= "({$this->buildSqlUniqueAttributeList()}) ";
 			$q .= "VALUES ({$this->buildSqlUniqueAttributeValueList()}) ";
 			$r = _db()->exec($q);
-			$this->objId   = _db()->lastInsertID($this->FObjectTableName,"objId");
+			$this->id   = _db()->lastInsertID($this->FObjectTableName,"{$this->fObjectTableName}_id");
 			return true; 
 		} else {
 			return $this->update($data,false);	// Validation already handled above
@@ -160,25 +115,27 @@
  	 */
  	
  	private function update($data = array(),$bValidate = false) {
- 		if ($this->objId == 0) { die("{$this->fObjectType}::update(...) called on non-existent object. Use {$this->fObjectType}::save(...) first"); }
+ 		if ($this->id == 0) { die("{$this->fObjectType}::update(...) called on non-existent object. Use {$this->fObjectType}::save(...) first"); }
  		if ($bValidate && !$this->validator->isValid($data)) { return false; }  // Invalid data
  		if (empty($data) && empty($this->_dirtyTable)) { return true; }         // Nothing to do
  		
  		// Update the 'modified' attribute if it has been defined
- 		if (isset($this->fObjectModelData['attributes']['modified'])) {
+ 		if (property_exists($this->fObjectType,'modified')) {
  			$this->setModified(date('Y-m-d G:i:s')); 
  		}
 
  		// Update the database for the dirty values
  		$fieldsToSave = array();
+ 		$ot = $this->fObjectType;
+ 		$parents = _model()->$ot->parentsAsArray();
  		foreach ($this->_dirtyTable as $attr => $val) {
- 		    $fieldsToSave[] = isset($this->fObjectModelData['parents'][$attr])
- 		        ? "`{$attr}_id` = '".mysql_real_escape_string($val)."' "
- 		        : "`{$attr}`    = '".mysql_real_escape_string($val)."' ";
+ 		    $fieldsToSave[] = isset($parents[$attr])
+ 		        ? "`{$attr}_id` = '".$val."' "
+ 		        : "`{$attr}`    = '".$val."' ";
  		}
  		$q = "UPDATE `{$this->fObjectTableName}` SET "
  			. implode(',',$fieldsToSave)
- 			. " WHERE `{$this->fObjectTableName}`.`objId` = {$this->objId} LIMIT 1";
+ 			. " WHERE `{$this->fObjectTableName}`.`{$this->fObjectTableName}_id` = {$this->id} LIMIT 1";
  			
  		_db()->exec($q);
  		
@@ -207,11 +164,13 @@
  	private function buildSqlUniqueAttributeList() {
  		$s = '`';
  		$arrayComponents = array();
- 		foreach ($this->fObjectModelData['parents'] as $p) {
- 			$arrayComponents[] = "{$p['sqlname']}";
+ 		$ot = $this->fObjectType;
+
+ 		foreach (_model()->$ot->parentsAsArray() as $p) {
+ 			$arrayComponents[] = "{$p['column']}";
  		}
- 		foreach ($this->fObjectModelData['attributes'] as $a) {
- 			$arrayComponents[] = "{$a['sqlname']}";
+ 		foreach (_model()->$ot->attributeInfo() as $a) {
+ 			$arrayComponents[] = "{$a['column']}";
  		}
 
  		$s .= implode('`,`',$arrayComponents);
@@ -224,11 +183,15 @@
  		
  		$s = "'";
  		$arrayComponents = array();
- 		foreach ($this->fObjectModelData['parents'] as $p) {
- 			$arrayComponents[] = mysql_real_escape_string($this->$p['name']); 
+ 		$ot = $this->fObjectType;
+ 		
+ 		foreach (_model()->$ot->parentsAsArray() as $p) {
+ 		    $arrayComponents[] = is_object($this->$p['name']) 
+ 		        ? $this->$p['name']->getId()
+ 		        : $this->$p['name'];
  		}
- 		foreach ($this->fObjectModelData['attributes'] as $a) {
- 			$arrayComponents[] = mysql_real_escape_string($this->$a['name']);
+ 		foreach (_model()->$ot->attributeInfo() as $a) {
+ 			$arrayComponents[] = $this->$a['column'];
  		}
  		
  		$s .= implode("','",$arrayComponents);

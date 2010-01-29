@@ -199,7 +199,11 @@ class FValidator {
 				default: break;
 			}
 		}
-		return implode("\r\n\t\t\t\t",$response) . "\r\n";
+		if (count($response) == 0) {
+		    return false;
+		} else {
+		    return implode("\r\n\t\t\t\t",$response) . "\r\n";
+		}
 	}
 	
 	
@@ -219,7 +223,10 @@ class FValidator {
 	}
 	
 	public function getValid() {
-		return $this->valid();
+		return $this->valid;
+	}
+	public function isValid() {
+	    return $this->valid;
 	}
 	
 	public function getErrors() {
@@ -246,6 +253,7 @@ class FValidator {
 	
 	protected function fAccountUsername($value) {
 		try {
+			FValidator::Length($value,null,3,null,"username");
 			FValidator::Format($value,"/^[a-zA-Z0-9_\.\-]+$/",false,"username","username can only contain letters, numbers, dot (.), dash (-),and underscore (_)");
 			return true;
 		} catch (FValidationException $fve) {

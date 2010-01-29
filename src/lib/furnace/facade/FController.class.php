@@ -21,6 +21,10 @@ class FController extends FPage {
 		$_SESSION['_validationErrors'] = array();
 	}
 	
+	public function form() {
+	    return $this->form;
+	}
+	
 	
 	public function redirect($url='',$external=false) {
 		// If 'external' is indicated, don't preface with url_base
@@ -47,6 +51,17 @@ class FController extends FPage {
 				"The page requested a module ({$uri}) that does not exist or is not installed correctly."
 			);
 		}	
+	}
+	
+	protected function loadLibrary($uri) {
+	    $path = _furnace()->rootdir . "/app/plugins/libraries/{$uri}";
+	    if (file_exists($path)) {
+	        require_once($path);
+	    } else {
+	        die(
+	            "The page requested a library ({$uri}) that does not exist or is not installed correctly."
+	        );
+	    }
 	}
 }
 ?>

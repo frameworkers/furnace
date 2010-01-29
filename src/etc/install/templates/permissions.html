@@ -1,0 +1,21 @@
+<h3>Furnace Permissions</h3>
+<p>Furnace needs to be able to write to certain files and directories inside your
+   installation. If any of the indicators below are not green, please take the 
+   following steps to ensure the files/directories are writeable:
+</p>
+   
+<h6>Hint:</h6>
+<p class="box">
+   if your web server is running as user 'www-data', and the directory exists at 'path', then
+   from the command line, enter the following two commands to make the directory writeable:<br/>
+   <code>
+   chgrp -R www-data 'path'</code> &nbsp;and then<br/>
+   <code>
+   chmod -R g+w 'path'
+   </code>
+</p>
+<code>[rootdir] = [app-rootdir]</code>
+<table>
+  <tr><th style="width:80%;">Path</th><th style="width:10%;">Readable</th><th>Writeable</th></tr>
+  <tr><td>[perms;block=tr]<code>[@.0]</code></td><td>[@.1;type=boolean;format='Yes|No']</td><td>[@.2;type=boolean;format='Yes|No']</td></tr>
+</table>

@@ -33,7 +33,7 @@ class FSessionManager {
 		 	// Populate session
 			self::initSession($r);
 			// Mark the lastLogin time for this account
-			$q = "UPDATE `app_accounts` SET `lastLogin`=NOW() WHERE `objId`='{$r['objId']}' ";
+			$q = "UPDATE `app_accounts` SET `lastLogin`=NOW() WHERE `faccount_id`='{$r['objId']}' ";
 			_db()->exec($q);
 			return true;
 		 } else {
@@ -57,7 +57,7 @@ class FSessionManager {
 		$fws['activity'] = mktime();
 		$fws['idleseconds'] = 0;
 		$fws['username'] = $data['username'];
-		$fws['accountid']= $data['objId'];
+		$fws['accountid']= $data['faccount_id'];
 		$fws['objectId'] = $data['objectId'];
 		$fws['objectClass'] = $data['objectClass'];
 		$fws['status']   = $data['status'];
@@ -106,8 +106,9 @@ class FSessionManager {
 	}
 	public static function getAccountObject() {
 		if (isset($_SESSION['_fwauth'])) {
-			return call_user_func(
-				array($_SESSION['_fwauth']['objectClass'], 'Retrieve'),$_SESSION['_fwauth']['objectId']);
+		    $collectionClass = "{$_SESSION['_fwauth']['objectClass']}Collection";
+		    $c = new $collectionClass();
+		    return $c->get($_SESSION['_fwauth']['objectId'])->first();
 		} else {
 			return false;
 		}
