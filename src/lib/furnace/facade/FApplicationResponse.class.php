@@ -18,10 +18,11 @@ class FApplicationResponse {
         $this->projectRootDir = $app->rootdir;
         $this->url_base       = $app->config['url_base'];
         
-        // Provide view access to Furnace, Application, and Model config vars
+        // Provide view access to Furnace, Application, and Model config vars and $_SERVER superglobal
         $this->controller->ref('_furnace',$app);
         $this->controller->ref('_app',    $app->config);
         $this->controller->ref('_model',  $GLOBALS['fApplicationModel']);
+        $this->controller->ref('_server', $_SERVER);
         
         // Determine theme and local urls for assets
         if (false === $extension) {
@@ -53,15 +54,17 @@ class FApplicationResponse {
     }
     
     public function setPage($group,$page) {
-        try { 
-            if (false !== $this->extension) {
-                $this->controller->setTemplate("{$this->projectRootDir}/app/plugins/extensions/{$this->extension}/pages/{$group}/{$page}/{$page}.html");    
-            } else {
-                $this->controller->setTemplate("{$this->projectRootDir}/app/pages/{$group}/{$page}/{$page}.html");
-            }
+        // Determine the correct path to the page
+        $path = (false !== $this->extension)
+            ? "{$this->projectRootDir}/app/plugins/extensions/{$this->extension}/pages/{$group}/{$page}/{$page}.html"
+            : "{$this->projectRootDir}/app/pages/{$group}/{$page}/{$page}.html";
+            
+        // Attempt to load the page content
+        try {
+            $this->controller->setTemplate($path);
             return true;
         } catch (Exception $e) {
-            return false;    // Page did not exist
+            return $path;    // Page at $path did not exist
         }
     }
     
