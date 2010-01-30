@@ -17,6 +17,13 @@ class ModelController extends Controller {
         $m = $this->getModel();
         $this->set('theModel',$m);
 		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/model/index/index.css',false);
+
+		try {
+		    _db();
+		} catch (FDatabaseException $fde) {
+		    $this->set('dbConnectOk',false);
+		    $this->set('dbConnectMessage',$fde->getMessage());
+		}
     }
     
     public function editObject($name) {
@@ -117,7 +124,7 @@ CREATE TABLE `app_account` (
   `modified` datetime NOT NULL COMMENT 'When this account was last modified',
   `lastLogin` datetime NOT NULL COMMENT 'The last time this account logged in',
   `newPasswordKey` varchar(25) NOT NULL COMMENT 'A key for verifying forgot password attempts',
-  PRIMARY KEY  (`account_id`),
+  PRIMARY KEY  (`faccount_id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
 
@@ -128,7 +135,7 @@ CREATE TABLE `app_account` (
 
 CREATE TABLE `app_role` (
   `faccount_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`account_id`)
+  PRIMARY KEY  (`faccount_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
 
 END;
@@ -227,7 +234,7 @@ CREATE TABLE `app_accounts` (
   `modified`       datetime NOT NULL COMMENT 'When this account was last modified',
   `lastLogin`      datetime NOT NULL COMMENT 'The last time this account logged in',
   `newPasswordKey` varchar(25) NOT NULL COMMENT 'A key for verifying forgot password attempts',
-  PRIMARY KEY  (`objId`),
+  PRIMARY KEY  (`faccount_id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
 END;
@@ -241,8 +248,8 @@ END;
 -- 
 
 CREATE TABLE `app_roles` (
-  `faccountId` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`accountId`)
+  `faccount_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY  (`faccount_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
 END;
 					_db()->exec($appRolesSql);
