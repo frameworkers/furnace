@@ -15,8 +15,14 @@ class errorsController extends Controller {
         $this->set('controllerName',$name);
         $this->set('controllerFilePath',$realSuppliedPath); 
         
-        $this->set('action',$action);
-        
+        $this->set('action',$action); 
+    }
+    
+    public function noTemplate($path) {
+        $realPath = trim(str_replace('+','/',$path),'+');
+        $this->set('path',$realPath);
+        $file     = substr($realPath,strrpos($realPath,'/')+1);
+        $this->set('file',$file);
     }
 }
 ?>
