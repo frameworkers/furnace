@@ -35,7 +35,7 @@
   			$this->db = DB::connect($GLOBALS['furnace']->config['production_dsn']);
   		}
   		if (DB::isError($this->db)) {
-  			die('<b>Furnace: </b>Could not connect to the database.');
+  			throw new FDatabaseException('Could not connect to the database');
   		}
   	}
   	
