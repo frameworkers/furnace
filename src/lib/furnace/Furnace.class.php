@@ -111,7 +111,10 @@ class Furnace {
             $this->bm_envsetupstart = microtime(true);
         }
         
-        // Create a request object to hold request details
+        // Make the request available to controllers via _furnace()->request
+        $this->request = $request;
+        
+        // Create an FApplicationRequest object to hold request details
         $this->req = new FApplicationRequest();
                	
         // Determine the route to take
@@ -174,6 +177,7 @@ class Furnace {
             // TODO: Check for the existence of the class within the file
 
             // Create an instance of the requested controller
+            $pageExists = true;
             try {
                 
                 // Create a response object to hold response details
@@ -184,8 +188,7 @@ class Furnace {
                 $pageExists = $this->res->setPage(
                     $this->req->route['controller'],
                     $this->req->route['action']);
-                
-                
+                    
             } catch (FDatabaseException $fde) {
                 $_SESSION['_exception'] = $fde;
                 echo $fde;
@@ -211,6 +214,15 @@ class Furnace {
                 }   
                 try {
                     $this->res->run($this->req->route['action'],$this->req->route['parameters']);
+                    // Display error if expected view template does not exist..
+                    if ($pageExists !== true) {
+                        $this->process(
+                            (($this->config['debug_level'] > 0) 
+                                ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
+                                : '/_default/http404')
+                    );
+                    exit();
+                }   
                 } catch (FDatabaseException $fde) {
                     $_SESSION['_exception'] = $fde;
                     echo $fde;
@@ -270,7 +282,7 @@ class Furnace {
                 if ($this->config['debug_level'] > 0) {
                     $this->process("/_debug/errors/noControllerFunction/".str_replace('/','+',$controllerFilePath)."/{$this->req->route['action']}");
                 } else {
-                    $this->process("/_error/http404");
+                    $this->process("/_default/http404");
                 } 
                 exit();
             }
