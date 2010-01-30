@@ -325,6 +325,30 @@ li.ff_notice {
 
 
 
+div.modelTableIcon {
+	float:left;
+	width:60px;
+	height:60px;
+	margin:5px;
+	margin-right:25px;
+}
+div.modelTableIcon img {
+	width:40px;
+	height:40px;	
+}
+div.modelTableDetails {
+	
+}
+div.modelTableDetails h4 {
+	margin-top:8px;
+	color:#222;
+}
+div.modelTableDetails h3 a {
+	color:#00e;
+}
+
+
+
 /*
 ul {
 	margin:5px;
