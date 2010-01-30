@@ -42,13 +42,24 @@ class FController extends FPage {
 		exit();
 	}
 	
-	protected function loadModule($uri) {
-		$path = _furnace()->rootdir . "/app/modules/" . str_replace(".","/",$uri) . '/module.php';
+	protected function loadFragment($label) {
+		$path = _furnace()->rootdir . "/app/scripts/fragments/{$label}Fragment.php";
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
 			die(
-				"The page requested a module ({$uri}) that does not exist or is not installed correctly."
+				"The page requested a fragment ({$label}) that does not exist or is not installed correctly."
+			);
+		}	
+	}
+	
+    protected function loadHelper($provider,$label) {
+		$path = _furnace()->rootdir . "/app/scripts/helpers/{$provider}/{$label}Helper.php";
+		if (file_exists($path)) {
+			require_once($path);
+		} else {
+			die(
+				"The page requested a helper ({$label}) that does not exist or is not installed correctly."
 			);
 		}	
 	}
