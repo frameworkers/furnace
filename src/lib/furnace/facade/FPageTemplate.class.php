@@ -44,8 +44,8 @@ class FPageTemplate extends TadpoleEngine {
 		// 1. get the base object
 		$dotPosition = strrpos($context['value'],'.');
 		if (false !== $dotPosition) {
-			$baseObjectNeedle = substr($context['value'],0,strrpos($context['value'],'.'));
-			$attributeNeedle  = substr($context['value'],strrpos($context['value'],'.') + 1);
+			$baseObjectNeedle = $this->compile(substr($context['value'],0,strrpos($context['value'],'.')),$iter_data);
+			$attributeNeedle  = $this->compile(substr($context['value'],  strrpos($context['value'],'.') + 1),$iter_data);
 		} else {
 			$baseObjectNeedle = $context['value'];
 			$attributeNeedle  = '';
@@ -370,9 +370,5 @@ class FPageTemplate extends TadpoleEngine {
 			}
 		}
 	}
-    
-    
-    
-    
 }
 ?>
