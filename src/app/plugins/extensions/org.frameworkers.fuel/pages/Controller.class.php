@@ -8,6 +8,44 @@ abstract class Controller extends FController {
         }
     }
     
+    public function requireLogin() {
+        if (!$this->checkLogin()) {
+            $prefix = _furnace()->req->route['prefix'];
+            $this->redirect("{$prefix}/login");
+        }
+    }
+    
+    public function checkLogin() {
+        
+        if ('' == $GLOBALS['furnace']->config['root_username'] || 
+            '' == $GLOBALS['furnace']->config['root_password']) {
+			// ALWAYS FAIL IF THE ROOT USERNAME & PASSWORD HAVE NOT BEEN SET 
+			// IN THE PROJECT CONFIGURATION FILE!
+			return false;
+		}
+		
+		if ($this->form) {
+    		$un =& $this->form['rootuser'];
+    		$pw =& $this->form['rootpass'];
+    		
+    		if (     $un == $GLOBALS['furnace']->config['root_username'] && 
+    		    md5($pw) == md5($GLOBALS['furnace']->config['root_password'])) {
+    			$_SESSION['fuel']['loggedin']  = true;
+    			$_SESSION['fuel']['timestamp'] = mktime();
+    			return true;
+    		} else {
+    			return false;
+    		}
+		} else {
+		   if (isset($_SESSION['fuel']['loggedin']) && $_SESSION['fuel']['loggedin'] === true) {
+		       $_SESSION['fuel']['timestamp'] = mktime();
+		       return true;
+		   } else {
+		       return false;
+		   }
+		}
+    }
+    
     protected function init() {
 		require_once($GLOBALS['furnace']->rootdir
 			. "/lib/furnace/foundation/database/"
