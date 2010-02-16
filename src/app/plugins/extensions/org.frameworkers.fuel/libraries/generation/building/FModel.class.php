@@ -252,7 +252,7 @@ class FModel {
 		    if (count($o->getParents()) > 0) {
     		    $oParents = array();
     		    foreach ($o->getParents() as $s) {
-    		        $oParents[] = "\"{$s->getName()}\" => array(\"name\"=>\"{$s->getName()}\",\"column\"=>\"".FModel::standardizeTableName($s->getName()).'_id'."\",\"foreign\"=>\"{$s->getForeign()}\")";
+    		        $oParents[] = "\"{$s->getName()}\" => array(\"name\"=>\"{$s->getName()}\",\"column\"=>\"".FModel::standardizeTableName($s->getName()).'_id'."\",\"foreign\"=>\"{$s->getForeign()}\",\"required\"=>\"{$s->getRequired()}\")";
     		    }
 		        $r .=  implode("\",\"",$oParents);
 		    }
@@ -471,7 +471,7 @@ class FModel {
 				. "\t\t\t\tif (\$bIdOnly) {\r\n"
 				. "\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
 				. "\t\t\t\t} else {\r\n"
-				. "\t\t\t\t\t\$this->{$s->getName()} = {$s->getForeign()}::Retrieve(\$this->{$s->getName()});\r\n"
+				. "\t\t\t\t\t\$this->{$s->getName()} = _model()->{$s->getForeign()}->get(\$this->{$s->getName()})->first();\r\n"
 				. "\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
 				. "\t\t\t\t}\r\n"
 				. "\t\t\t}\r\n"
@@ -654,6 +654,23 @@ class FModel {
  				. "\t\t\treturn true;\r\n";
 		}
 		$r .= "\t\t}\r\n\r\n";
+		
+		// Add toXML
+ 		
+ 		// Add toYML
+ 		
+ 		// Add toJSON
+ 		$r .= "\t\tpublic function toJSON() {\r\n"
+ 			. "\t\t\t\$data = array('id' => \$this->id);\r\n";
+ 		if ("FAccount" == $object->getParentClass()) {
+ 		    $r .= "\t\t\t\$data['username'] = \$this->username;\r\n";
+ 		    $r .= "\t\t\t\$data['emailAddress'] = \$this->emailAddress;\r\n";
+ 		}
+ 		foreach ($object->getAttributes() as $attr) {
+ 		    $r .= "\t\t\t\$data['{$attr->getName()}'] = \$this->{$attr->getName()};\r\n";
+ 		}
+ 		$r .= "\t\t\treturn json_encode(\$data);\r\n"
+ 			. "\t\t}\r\n\r\n";
 
  		
 		$r .="\t} // end {$object->getName()}\r\n\r\n";
@@ -685,6 +702,8 @@ class FModel {
  		$r .= "\t\tpublic function destroyObject(\$objectId) {\r\n"
  			. "\t\t\t//TODO: Implement this\r\n"
  			. "\t\t}\r\n\r\n";
+ 			
+ 			
  		
  		$r .= "\t} // end {$object->getName()}Collection\r\n\r\n";
  		// return the class string
@@ -809,9 +828,9 @@ class FModel {
         $r .= "\t\tpublic function attributeInfo(\$name = '') {\r\n";
         $r .= "\t\t\t\$attrInfos = array(\r\n";
         if ("FAccount" == $object->getParentClass()) {
- 			$r .= "'username'     => array('type'=>'string','size'=>20),\r\n"
- 				. "'password'     => array('type'=>'password','size'=>20),\r\n"
- 				. "'emailAddress' => array('type'=>'string','size'=>80),\r\n\r\n";
+ 			$r .= "'username'     => array('type'=>'string','size'=>20,'column'=>'username','name'=>'username'),\r\n"
+ 				. "'password'     => array('type'=>'password','size'=>20,'column'=>'password','name'=>'password'),\r\n"
+ 				. "'emailAddress' => array('type'=>'string','size'=>80,'column'=>'emailAddress','name'=>'emailAddress'),\r\n\r\n";
  		}
         foreach ($object->getAttributes() as $attr) {
             $components = array();
@@ -848,6 +867,8 @@ class FModel {
 			}
 			// Set the column name here
 			$components[] = "'column'=>'{$attr->getName()}'";
+			// Set the attribute name here
+			$components[] = "'name'=>'{$attr->getName()}'";
 			
 			$r .= "\t\t\t\t'{$attr->getName()}' => array(".implode(',',$components)."),\r\n";
         }
