@@ -167,6 +167,13 @@ END;
 				$this->flash("<strong>Error!</strong> &nbsp;Please provide all required information before submitting!","error");
 				$this->redirect("/fuel/model/");
 			}
+			
+		    // Validate that the object does not yet exist
+			if (isset($m->objects[$objectType])) {
+			    $this->flash("<strong>Error!</strong> &nbsp;An object of type <code>{$objectType}</code> already exists!","error");
+			    $this->redirect("/fuel/model/");
+			}
+			
 			// Actually create the object
 			$m = $this->getModel();
 
