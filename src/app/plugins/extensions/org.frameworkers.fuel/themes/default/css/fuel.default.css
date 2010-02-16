@@ -349,6 +349,23 @@ div.modelTableDetails h3 a {
 
 
 
+table.objects {
+	
+}
+
+table.objects tr {
+	
+}
+
+table.objects tr th {
+	padding:5px;
+	border-bottom:solid 1px #ddd;	
+}
+
+table.objects tr td {
+	padding:5px;
+}
+
 /*
 ul {
 	margin:5px;
