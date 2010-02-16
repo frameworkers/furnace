@@ -76,10 +76,11 @@ password_salt: "daFc893nv5ad7b4{3k%6Zx&3k00(Dz?34f%23/z4GGz"
 url_base: /
 
 
-# Application Root Password
+# Application Root Username and Password
 #   Setting this password will allow you to manage your application
-#   using the FUEL web-based management interface. If this password
-#   is blank, you will not be able to use FUEL.
+#   using the web-based management interface. If this password is
+#   blank, you will not be able to use web-based administration.
+root_username:
 root_password: 
 
 
