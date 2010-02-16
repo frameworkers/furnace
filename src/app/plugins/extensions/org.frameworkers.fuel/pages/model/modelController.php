@@ -5,6 +5,7 @@ class ModelController extends Controller {
     
     public function __construct() {
         parent::__construct();
+        $this->requireLogin();
         $this->setActiveMenuItem('main','model');
         $this->prefix = _furnace()->req->route['prefix'];
         $this->setTitle('Foundry :: Model');
@@ -20,6 +21,7 @@ class ModelController extends Controller {
 
 		try {
 		    _db();
+		    $this->set('dbConnectOk',true);
 		} catch (FDatabaseException $fde) {
 		    $this->set('dbConnectOk',false);
 		    $this->set('dbConnectMessage',$fde->getMessage());
@@ -264,7 +266,7 @@ END;
 			
 			
 			// Redirect to the new object's edit page
-			$this->redirect("/fuel/model/editObject/{$objectType}");
+			$this->redirect("{$this->prefix}/model/editObject/{$objectType}");
 		}
 	}
 	/*
@@ -624,7 +626,7 @@ END;
 			// Write changes to the model file
 			$this->writeModelFile($m->export());
 			$this->generateObjects();
-			$this->redirect("/fuel/model/editObject/{$objectType}");
+			$this->redirect("{$this->prefix}/model/editObject/{$objectType}");
 		}
 	}
 	
@@ -738,7 +740,7 @@ END;
 				$objectName = FModel::standardizeName($this->form['objectClass']);
 				$tableName  = FModel::standardizeTableName($objectName);
 				$q = "ALTER TABLE `{$tableName}` "
-					."ADD COLUMN {$column->toSqlString()} AFTER `id`";
+					."ADD COLUMN {$column->toSqlString()} AFTER `{$tableName}_id`";
 				_db()->exec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
