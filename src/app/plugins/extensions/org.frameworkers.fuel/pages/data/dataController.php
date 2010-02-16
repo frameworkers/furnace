@@ -1,6 +1,7 @@
 <?php
 class DataController extends Controller {
     
+    private $prefix;
     private static $PER_PAGE = 10;
     
     public function __construct() {
@@ -87,29 +88,124 @@ class DataController extends Controller {
         
         $collectionClass = "{$name}Collection";
         $oc = new $collectionClass();
-        $attrInfo = _model()->$name->attributeInfo();
+        $attrInfo   = _model()->$name->attributeInfo();
+        $parentInfo = _model()->$name->parentsAsArray(); 
         
         
-        $objects = $oc->get()->limit(self::$PER_PAGE,$page-1)->output();
+        $objectCollection = $oc->get()->limit(self::$PER_PAGE,$page-1);
+        //foreach ($parentInfo as $pdata) {
+        //    $objectCollection->each()->expand($pdata['name']);
+        //}
+        
+        
+        $objects = $objectCollection->output();
         $oarray  = array();
         foreach ($objects as $o) {
-            $odata    = array('id' => $o->getId());
+            $odata    = array('id' => "<a href='{$this->prefix}/data/edit/{$name}/{$o->getId()}'>{$o->getId()}</a>");
             foreach ($attrInfo as $aname => $adata) {
                 $fn = "get{$aname}";
                 $odata[$aname ] = $o->$fn();
             }
-            
-            $oarray[$o->getId()] = $odata;            
+            foreach ($parentInfo as $pdata) {
+                $fn = "get{$pdata['name']}";
+                $odata[$pdata['name'] ] = $o->$fn(true);
+            }
+            $oarray[$o->getId()] = $odata;
         }
         
         $headers = array('id');
         foreach ($attrInfo as $aname => $adata) {
             $headers[] = $aname;
         }
+        foreach ($parentInfo as $pdata) {
+            $headers[] = $pdata['name'];
+        }
         
         $this->set('objectName',$name);
         $this->set('headers',$headers);
         $this->set('objects',$oarray); 
+    }
+    
+    public function create($name) {
+        $attrInfo   = _model()->$name->attributeInfo();
+        $parentInfo = _model()->$name->parentsAsArray();
+        $this->set('object',_model()->$name);
+        $this->set('objectName',$name);
+        $this->set('attrs',$attrInfo);
+        $this->set('parents',$parentInfo);
+        $this->set('attr','password');
+        
+    }
+    
+    public function doCreate() {
+        if ($this->form) {
+            $ot = $this->form['objectType'];
+            
+            $object = new $ot();
+            if ($object->save($this->form)) {
+                $this->flash("New {$ot} object created");
+            } else {
+                $this->flash($object->validator,"error");
+                _storeUserInput($this->form);
+            }
+            
+            $this->redirect("{$this->prefix}/data/objects/{$ot}");
+        } else {
+            die("You must use POST");
+        }
+    }
+    
+    public function edit($ot,$id) {
+        if (false !== ($object = _model()->$ot->get($id)->first())) {
+            
+            $this->set('object',$object);
+            $this->set('objectName',$ot);
+            $this->set('id',$id);
+            
+            $this->set('attrs',_model()->$ot->attributeInfo());
+            $parents = _model()->$ot->parentsAsArray();
+            $this->set('parentInfo',$parents);
+            
+        } else {
+            $this->noexist();
+        }
+    }
+    
+    public function doEdit() {
+        if ($this->form) {
+            $ot = $this->form['objectType'];
+            $oid= $this->form['objectId'];
+            
+            if (false !== ($object = _model()->$ot->get($oid)->first())) {
+                if ($object->save($this->form)) {
+                    $this->flash("Object updated");
+                } else {
+                    $this->flash($object->validator,"error");
+                    _storeUserInput($this->form);
+                }
+                $this->redirect("{$this->prefix}/data/objects/{$ot}");
+            } else {
+                $this->noexist();
+            }      
+        } else {
+            die("You must use POST");
+        }
+    }
+    
+    public function ajaxShowChildren($ot,$id,$var,$cnt,$offset=0) {
+        $object   = _model()->$ot->instance($id);
+        $fn = "get{$var}";
+
+        $children  = $object->$fn()->limit($cnt,$offset)->output();
+        header('Content-type: application/json');
+        header('Content-type: text/plain');
+        $output = '[';
+        foreach ($children as $c) {
+            $kids[] .= $c->toJSON();
+        }
+        $output .= implode(',',$kids).']';
+        echo $output;
+        die();
     }
 }
 ?>

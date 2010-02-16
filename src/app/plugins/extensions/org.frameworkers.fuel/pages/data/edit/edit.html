@@ -1,0 +1,37 @@
+<ul class="breadcrumbs">
+  <li><a href="[_app.url_base]">Application</a> ::</li>
+  <li><a href="[_prefix_]/">Fuel</a> ::</li>
+  <li><a href="[_prefix_]/data">Data</a> :: </li>
+  <li><a href="[_prefix_]/data/objects/[objectName]">[objectName]</a> :: Edit [id]</li>
+</ul>
+
+<h2>[objectName]</h2>
+Create a new [objectName] object:
+<h3>Attributes</h3>
+<form action="[_prefix_]/data/doEdit" method="POST">
+<input type="hidden" name="objectType" value="[objectName]"/>
+<input type="hidden" name="objectId"   value="[id]"/>
+	<table class="vertical">
+	    <th style="width:200px;">[attrs;block=tr][@.name] ([@.type])</th>
+	    <td>[input:object.[@.name]]</td>
+	  </tr>
+	  <tr>
+	    <td colspan="3">
+	    	<input type="submit" value="Save Changes"/>
+	    </td>
+	  </tr>
+	 </table>
+</form>
+<h3>Parents</h3>
+<table class="vertical">
+	  <tr>
+	    <th style="width:200px;">[parentInfo;block=tr][@.name] ([@.foreign])</th>
+	    <td><input type="text" size="4" name="[@.name]_id" value="[object.[@.name].id]"/></td>
+	  </tr>
+	  <tr>
+	    <td colspan="3">
+	    	<input type="submit" value="Create"/>
+	    </td>
+	  </tr>
+	</table>
+</form>
