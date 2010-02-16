@@ -251,7 +251,7 @@ class FValidator {
 	}
 	
 	
-	protected function fAccountUsername($value) {
+	public function fAccountUsername($value) {
 		try {
 			FValidator::Length($value,null,3,null,"username");
 			FValidator::Format($value,"/^[a-zA-Z0-9_\.\-]+$/",false,"username","username can only contain letters, numbers, dot (.), dash (-),and underscore (_)");
@@ -263,7 +263,7 @@ class FValidator {
 		}
 	}
 	
-	protected function fAccountPassword($value) {
+	public function fAccountPassword($value) {
 		try {
 			FValidator::Length($value,null,4,null,"password");
 			return true;
@@ -274,7 +274,7 @@ class FValidator {
 		}
 	}
 	
-	protected function fAccountEmailAddress($value) {
+	public function fAccountEmailAddress($value) {
 		try {
 			FValidator::Email($value,"Email address");
 			return true;

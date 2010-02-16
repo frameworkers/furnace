@@ -161,7 +161,7 @@
  	}
  	
  	
- 	private function buildSqlUniqueAttributeList() {
+ 	protected function buildSqlUniqueAttributeList() {
  		$s = '`';
  		$arrayComponents = array();
  		$ot = $this->fObjectType;
@@ -179,7 +179,7 @@
  	}
  	
  	
-     private function buildSqlUniqueAttributeValueList() {
+     protected function buildSqlUniqueAttributeValueList() {
  		
  		$s = "'";
  		$arrayComponents = array();
