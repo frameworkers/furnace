@@ -280,7 +280,7 @@ class FAccount extends FBaseObject {
 	    
 	    // Merge FAccount variables into the object
 	    if (isset($data['username'])) { $this->username = $data['username']; }
-	    if (isset($data['password'])) { $this->password = $data['password']; }
+	    if (isset($data['password'])) { $this->password = FAccountManager::EncryptPassword($data['password']); }
 	    if (isset($data['emailAddress'])) { $this->emailAddress = $data['emailAddress']; }
 	    //TODO: same for all other FAccount variables
 	    
