@@ -194,6 +194,8 @@ class FModel {
 		
 		foreach ($this->objects as $o) {
 		    $r .= "\tclass {$o->getName()}Model {\r\n"
+		        . "\t\tpublic \$parentClass = \"{$o->getParentClass()}\";\r\n"
+		        . "\t\t\r\n"
 		        . "\t\tpublic function instance(\$data = array() ) {\r\n"
 		        . "\t\t\t// return an instance of this object\r\n"
 		        . "\t\t\treturn new {$o->getName()}(\$data);\r\n"
@@ -254,7 +256,7 @@ class FModel {
     		    foreach ($o->getParents() as $s) {
     		        $oParents[] = "\"{$s->getName()}\" => array(\"name\"=>\"{$s->getName()}\",\"column\"=>\"".FModel::standardizeTableName($s->getName()).'_id'."\",\"foreign\"=>\"{$s->getForeign()}\",\"required\"=>\"{$s->getRequired()}\")";
     		    }
-		        $r .=  implode("\",\"",$oParents);
+		        $r .=  implode(",",$oParents);
 		    }
 		    $r .= ");\r\n";
 		    $r .= "\t\t}\r\n\r\n";
@@ -793,7 +795,7 @@ class FModel {
 	            $table_l  = FModel::standardizeTableName($socket_f->getOwner());
 	            $table_f  = FModel::standardizeTableName($socket_l->getOwner());
 	            $key_l    = 'id';
-	            $key_f    = $socket_f->getName();
+	            $key_f    = ($object_l == $object_f) ? $socket_l->getName() : $socket_f->getName();
 	            $column_l = FModel::standardizeTableName($socket_f->getOwner()).'_id';
 	            $column_f = FModel::standardizeTableName($socket_l->getName()).'_id';
 	            break;
@@ -828,9 +830,9 @@ class FModel {
         $r .= "\t\tpublic function attributeInfo(\$name = '') {\r\n";
         $r .= "\t\t\t\$attrInfos = array(\r\n";
         if ("FAccount" == $object->getParentClass()) {
- 			$r .= "'username'     => array('type'=>'string','size'=>20,'column'=>'username','name'=>'username'),\r\n"
- 				. "'password'     => array('type'=>'password','size'=>20,'column'=>'password','name'=>'password'),\r\n"
- 				. "'emailAddress' => array('type'=>'string','size'=>80,'column'=>'emailAddress','name'=>'emailAddress'),\r\n\r\n";
+ 			$r .= "\t\t\t\t'username'     => array('type'=>'string','size'=>20,'column'=>'username','name'=>'username'),\r\n"
+ 				. "\t\t\t\t'password'     => array('type'=>'password','size'=>20,'column'=>'password','name'=>'password'),\r\n"
+ 				. "\t\t\t\t'emailAddress' => array('type'=>'string','size'=>80,'column'=>'emailAddress','name'=>'emailAddress'),\r\n\r\n";
  		}
         foreach ($object->getAttributes() as $attr) {
             $components = array();
