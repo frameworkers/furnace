@@ -30,6 +30,12 @@ _fuel:
   prefix: /fuel
   theme:  default
   routes:
+    login: 
+       url: /login
+       map: { controller: _default, view: login }
+    logout:
+       url: /logout
+       map: { controller: _default, view: logout }
     default:
       url: /:controller/:view
     default_index:
