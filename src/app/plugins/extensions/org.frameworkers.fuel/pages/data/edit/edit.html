@@ -1,3 +1,15 @@
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#changePW').change(function() {
+			if ($(this).attr('checked')) {
+				$('input[name=password]').removeAttr('disabled');
+			} else {
+				$('input[name=password]').val('').attr('disabled','disabled');
+			}
+		});
+	});
+</script>
+
 <ul class="breadcrumbs">
   <li><a href="[_app.url_base]">Application</a> ::</li>
   <li><a href="[_prefix_]/">Fuel</a> ::</li>
@@ -12,8 +24,10 @@ Create a new [objectName] object:
 <input type="hidden" name="objectType" value="[objectName]"/>
 <input type="hidden" name="objectId"   value="[id]"/>
 	<table class="vertical">
+	  <tr>
 	    <th style="width:200px;">[attrs;block=tr][@.name] ([@.type])</th>
-	    <td>[input:object.[@.name]]</td>
+	    <td>[if:@.name==password;block=td]<em>stored</em> &nbsp;<input id="changePW" type="checkbox" name="changePW"/> Change to: <input type="password" name="password" disabled="disabled"/></td>
+	    <td>[if:@.name!=password;block=td][input:object.[@.name]]</td>
 	  </tr>
 	  <tr>
 	    <td colspan="3">
@@ -23,6 +37,9 @@ Create a new [objectName] object:
 	 </table>
 </form>
 <h3>Parents</h3>
+<form action="[_prefix_]/data/doEdit" method="POST">
+<input type="hidden" name="objectType" value="[objectName]"/>
+<input type="hidden" name="objectId"   value="[id]"/>
 <table class="vertical">
 	  <tr>
 	    <th style="width:200px;">[parentInfo;block=tr][@.name] ([@.foreign])</th>
@@ -30,7 +47,7 @@ Create a new [objectName] object:
 	  </tr>
 	  <tr>
 	    <td colspan="3">
-	    	<input type="submit" value="Create"/>
+	    	<input type="submit" value="Save Changes"/>
 	    </td>
 	  </tr>
 	</table>
