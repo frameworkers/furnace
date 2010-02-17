@@ -186,32 +186,49 @@ abstract class FObjectCollection {
         $relationshipData = _model()->$ot->$fn();
         $loadAttribute    = "load{$attribute}";
         $setAttribute     = "set{$attribute}";
+        $getAttribute     = "get{$attribute}";
         
         // Parent
         if ($relationshipData['role_l'] == "M1") {
-            $keys = $this->getKeys($relationshipData['key_l']);
             
             //TODO: Handle the case in which the
             // parent class is of the same type as the child
             //
             //
             if ($relationshipData['table_l'] != $relationshipData['table_f']) {
+                $keys = $this->getKeys($relationshipData['key_l']);
                 $q = "SELECT * "
                     ."FROM  `{$relationshipData['table_l']}`,`{$relationshipData['table_f']}` "
                     . (($relationshipData['base_f'] == 'FAccount') ? ",`app_accounts` " : '')
                     ."WHERE `{$relationshipData['table_l']}`.`{$relationshipData['column_l']}` = `{$relationshipData['table_f']}`.`{$relationshipData['column_f']}` "
                     ."AND   `{$relationshipData['table_f']}`.`{$relationshipData['table_f']}_id` IN (\"".implode("\",\"",$keys)."\") "
                     . (($relationshipData['base_f'] == 'FAccount') ? "AND {$relationshipData['table_l']}.faccount_id=app_accounts.faccount_id " : '');
-            } else {
-                die("Furnace: FObjectCollection::expand() same-type parents not implemented yet");
-            }
-                
-            $result = _db($relationshipData['db_l'])->query($q,FDATABASE_FETCHMODE_ASSOC);
+
+                $result = _db($relationshipData['db_l'])->query($q,FDATABASE_FETCHMODE_ASSOC);
+                while (false != ($unsortedParent = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC))) {
+                    $this->data['o_'.$unsortedParent[$relationshipData['table_f'].'_id'] ]
+                        ->$setAttribute(new $relationshipData['object_f']($unsortedParent));
+                }
             
-            while (false != ($unsortedParent = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC))) {
-                $this->data['o_'.$unsortedParent[$relationshipData['table_f'].'_id'] ]
-                    ->$setAttribute(new $relationshipData['object_f']($unsortedParent));
-            }
+            } else {
+                $keys = $this->getKeys($relationshipData['key_f']);
+                $q = "SELECT * "
+                    ."FROM  `{$relationshipData['table_l']}` "
+                    . (($relationshipData['base_f'] == 'FAccount') ? ",`app_accounts` " : '')
+                    ."WHERE `{$relationshipData['table_l']}`.`{$relationshipData['table_l']}_id` IN (\"".implode("\",\"",$keys)."\") "
+                    . (($relationshipData['base_f'] == 'FAccount') ? "AND {$relationshipData['table_l']}.faccount_id=app_accounts.faccount_id " : '');
+
+
+                $result = _db($relationshipData['db_l'])->query($q,FDATABASE_FETCHMODE_ASSOC);
+                while (false != ($unsortedParent = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC))) {
+                    foreach ($this->data as &$do) {
+                        if ($do->$getAttribute(true) == $unsortedParent[$relationshipData['table_l'].'_id']) {
+                            $do->$setAttribute(new $relationshipData['object_f']($unsortedParent));
+                            break;
+                        }
+                    }
+                }
+            } 
         }
         
         // Pair
