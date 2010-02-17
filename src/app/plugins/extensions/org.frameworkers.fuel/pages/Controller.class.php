@@ -24,7 +24,8 @@ abstract class Controller extends FController {
 			return false;
 		}
 		
-		if ($this->form) {
+		if ($this->form && isset($this->form['rootuser']) && isset($this->form['rootpass'])) {
+		    // Process a login attempt
     		$un =& $this->form['rootuser'];
     		$pw =& $this->form['rootpass'];
     		
@@ -37,6 +38,7 @@ abstract class Controller extends FController {
     			return false;
     		}
 		} else {
+		    // Simply check whether appropriate session vars exist
 		   if (isset($_SESSION['fuel']['loggedin']) && $_SESSION['fuel']['loggedin'] === true) {
 		       $_SESSION['fuel']['timestamp'] = mktime();
 		       return true;
