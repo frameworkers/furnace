@@ -424,7 +424,7 @@ class FModel {
  				$type = self::standardizeAttributeName($s->getOwner());
  				$lookup = $s->getLookupTable();
  				// Set the filter for M:M between two objects of the same type
- 				$filter = "`{$table}`.`objId` IN ( SELECT (`"
+ 				$filter = "`{$table}`.`{$table}_id` IN ( SELECT (`"
 					. $type . "1_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "2_id`='{\$this->id}') "
 					. "OR ("
 					. $type . "2_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "1_id`='{\$this->id}') "
@@ -433,14 +433,14 @@ class FModel {
  				// Set the filter for M:M between two different object types
 				$foreignName = self::standardizeAttributeName($s->getForeign());
 				$ownerName   = self::standardizeAttributeName($s->getOwner());
- 				$filter = "`{$table}`.`objId` IN ( SELECT `{$s->getLookupTable()}`.`"
+ 				$filter = "`{$table}`.`{$table}_id` IN ( SELECT `{$s->getLookupTable()}`.`"
 					. $foreignName
  					. "_id` FROM `{$s->getLookupTable()}` WHERE `{$s->getLookupTable()}`.`"
 					. $ownerName
 					. "_id` = '{\$this->id}' )";
  			}
 			
-			$r .= "\t\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$s->getLookupTable()}',\"{$filter}\");\r\n";
+			$r .= "\t\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$table}',\"{$filter}\");\r\n";
 			//$r .= "\t\t\t\t\$this->{$s->getName()}->setOwnerId(\$this->id);\r\n";
  		}
  		foreach ($object->getChildren() as $s) {
@@ -482,7 +482,7 @@ class FModel {
  		foreach ($object->getPeers() as $s) {
 			$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n"
 			    . "\t\t\t\$argv = func_get_args();\r\n"
-				. "\t\t\treturn call_user_func_array(array(\$this->{$s->getName()},'get',\$argv);\r\n"
+				. "\t\t\treturn call_user_func_array(array(\$this->{$s->getName()},'get'),\$argv);\r\n"
 				. "\t\t}\r\n\r\n";
  		}
  		foreach ($object->getChildren() as $s) {
@@ -770,6 +770,7 @@ class FModel {
 	    $object_f = $socket_l->getForeign();
 	    $base_l   = $this->objects[$socket_l->getOwner()]->getParentClass();
 	    $base_f   = $this->objects[$socket_l->getFOreign()]->getParentClass();
+	    $table_m  = '';    // Lookup table (for M:M only)
 	    
 	    switch ($type) {
 	        case 'peer'   : $role_l = 'MM'; $role_f = 'MM'; break;
@@ -800,8 +801,9 @@ class FModel {
 	            $column_f = FModel::standardizeTableName($socket_l->getName()).'_id';
 	            break;
 	        case "MM":    // PEER
-	            $table_l  = $socket_l->getLookupTable();
-	            $table_f  = $socket_f->getLookupTable();
+	            $table_l  = FModel::standardizeTableName($socket_f->getOwner());
+	            $table_f  = FModel::standardizeTableName($socket_l->getOwner());
+	            $table_m  = $socket_f->getLookupTable();
 	            
 	            if ($socket_l->getOwner() == $socket_f->getOwner()) {
 	                // sort names to determine who is _1 and who is _2
@@ -812,15 +814,15 @@ class FModel {
 	            } else {
 	                $key_l    = 'id';
 	                $key_f    = 'id';
-	                $column_l = FModel::standardizeTableName($socket_f->getName()).'_id';
-	                $column_f = FModel::standardizeTableName($socket_l->getName()).'_id';
+	                $column_l = FModel::standardizeTableName($socket_f->getOwner()).'_id';
+	                $column_f = FModel::standardizeTableName($socket_l->getOwner()).'_id';
 	            }
 	            break;
 	        default:
 	            die("role {$role_l} not implemented yet --FModel::determineRelationshipInformation");
 	    }
 	    
-	    return "array('object_l'=>'{$object_l}','base_l'=>'{$base_l}','object_f'=>'{$object_f}','base_f'=>'{$base_f}','role_l'=>'{$role_l}','role_f'=>'{$role_f}','db_l'=>'{$db_l}','db_f'=>'{$db_f}','table_l'=>'{$table_l}','table_f'=>'{$table_f}','key_l'=>'{$key_l}','key_f'=>'{$key_f}','column_l'=>'{$column_l}','column_f'=>'{$column_f}')";
+	    return "array('object_l'=>'{$object_l}','base_l'=>'{$base_l}','object_f'=>'{$object_f}','base_f'=>'{$base_f}','role_l'=>'{$role_l}','role_f'=>'{$role_f}','db_l'=>'{$db_l}','db_f'=>'{$db_f}','table_l'=>'{$table_l}','table_f'=>'{$table_f}','table_m'=>'{$table_m}','key_l'=>'{$key_l}','key_f'=>'{$key_f}','column_l'=>'{$column_l}','column_f'=>'{$column_f}')";
 	}
 	
 	
