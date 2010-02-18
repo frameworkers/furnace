@@ -23,6 +23,7 @@ class FApplicationResponse {
         $this->controller->ref('_app',    $app->config);
         $this->controller->ref('_model',  $GLOBALS['fApplicationModel']);
         $this->controller->ref('_server', $_SERVER);
+        $this->controller->ref('_session',$_SESSION);
         
         // Determine theme and local urls for assets
         if (false === $extension) {
