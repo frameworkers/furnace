@@ -54,7 +54,7 @@ class FController extends FPage {
 	}
 	
     protected function loadHelper($provider,$label) {
-		$path = _furnace()->rootdir . "/app/scripts/helpers/{$provider}/{$label}Helper.php";
+		$path = _furnace()->rootdir . "/app/scripts/helpers/{$provider}/{$label}Helper/{$label}Helper.php";
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
