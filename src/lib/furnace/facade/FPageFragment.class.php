@@ -17,6 +17,23 @@ abstract class FPageFragment {
  * 
  */ 
     
+    protected $controller;
+	
+	private $installPath;
+	
+	public function __construct(&$controller,$installPath) {
+		
+		// Initialize the controller
+		$this->controller  = $controller;
+		
+		// Initialize the installation path
+		$this->installPath = $installPath; 
+	}
+
+ 	protected function getView($view) {
+ 		return file_get_contents($this->installPath . "/views/{$view}.html");
+ 	}
+    
     // return the rendered fragment content
     public function render($argv = array()) {
         
