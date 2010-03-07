@@ -70,7 +70,6 @@
  		
  		// Initialize data structures
  		$this->name = FModel::standardizeName($name);
- 		$this->description = $modelData['description'];
  		$this->attributes = array();
  		$this->parents = $this->peers = $this->children = array();
  		$this->isAbstract  = false;
@@ -78,6 +77,9 @@
  		
  		// Store the model data
 		$objectData =& $modelData[$name];
+		
+		// Description
+ 		$this->description = $objectData['description'];
 		
 		// PrettyId
  		$this->prettyId    = isset($objectData['prettyId']) ? $objectData['prettyId'] : 'objId';
