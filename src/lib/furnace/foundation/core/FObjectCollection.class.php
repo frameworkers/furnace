@@ -180,7 +180,16 @@ abstract class FObjectCollection {
     }
     
     public function expand($attribute,$fieldList = null,$indexKey='id') {
-        if (count($this->data) == 0) { return $this; }
+        
+        // Ensure a working set of objects already exists
+        if (count($this->data) == 0) { 
+            $this->runQuery();    // Attempt to retrieve some objects
+                                  // (this makes calling ->each() first optional)
+            if (count($this->data) == 0) {
+                                  // If there are STILL no objects, return
+                return $this;
+            }
+        }
         $ot = $this->objectType;
         $fn = "get{$attribute}Info";
         $relationshipData = _model()->$ot->$fn();
@@ -190,11 +199,8 @@ abstract class FObjectCollection {
         
         // Parent
         if ($relationshipData['role_l'] == "M1") {
-            
-            //TODO: Handle the case in which the
-            // parent class is of the same type as the child
-            //
-            //
+
+            // Parent and child are of different types
             if ($relationshipData['table_l'] != $relationshipData['table_f']) {
                 $keys = $this->getKeys($relationshipData['key_l']);
                 $q = "SELECT * "
@@ -210,6 +216,7 @@ abstract class FObjectCollection {
                         ->$setAttribute(new $relationshipData['object_f']($unsortedParent));
                 }
             
+            // Parent and child are of the same type
             } else {
                 $keys = $this->getKeys($relationshipData['key_f']);
                 $q = "SELECT * "
@@ -247,7 +254,19 @@ abstract class FObjectCollection {
             // the case in which table_l and table_f are the same table.
             
             if ($relationshipData['table_l'] != $relationshipData['table_f']) {
-                die("Furnace: FObjectCollection::expand() different-type peers not implemented yet");
+                $keys = $this->getKeys();
+                $q = "SELECT * FROM `{$relationshipData['table_l']}`,`{$relationshipData['table_m']}` "
+                .(($relationshipData['base_f'] == 'FAccount') ? ',`app_accounts` ' : '')
+                ."WHERE `{$relationshipData['table_m']}`.`{$relationshipData['column_f']}` IN (\"".implode("\",\"",$keys)."\") "
+                ."AND `{$relationshipData['table_l']}`.`{$relationshipData['column_l']}`=`{$relationshipData['table_m']}`.`{$relationshipData['column_l']}` "
+                .(($relationshipData['base_f'] == 'FAccount') ? "AND {$relationshipData['table_l']}.faccount_id=app_accounts.faccount_id " : '');
+                $result = _db($relationshipData['db_l'])->query($q,FDATABASE_FETCHMODE_ASSOC);
+                
+                while (false != ($unsortedPeer = $result->fetchrow(FDATABASE_FETCHMODE_ASSOC))) {
+                    $peerId = $unsortedPeer[$relationshipData['column_f'] ];
+                    $this->data["o_{$peerId}"]->$loadAttribute(array("o_{$unsortedPeer[$relationshipData['column_l'] ]}" => new $relationshipData['object_f']($unsortedPeer)));   
+                }
+  
             } else {
                 die("Furnace: FObjectCollection::expand() same-type peers not implemented yet"); 
             }
@@ -297,7 +316,7 @@ abstract class FObjectCollection {
                 // Get a single object using the provided objId
                 $v = func_get_arg(0);
                 if (false !== ($obj = $this->getSingleObjectByObjectId($v))) {
-                    $this->data = array($obj);
+                    $this->data = array("o_{$obj->getId()}" => $obj);
                 }
                 break;
             case 2:
@@ -305,7 +324,7 @@ abstract class FObjectCollection {
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
                 if (false !== ($obj = $this->getSingleObjectByAttribute($k,$v))) {
-                    $this->data = array($obj);
+                    $this->data = array("o_{$obj->getId()}" => $obj);
                 }
                 break;
             default:
