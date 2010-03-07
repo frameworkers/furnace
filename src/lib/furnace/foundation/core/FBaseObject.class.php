@@ -120,7 +120,9 @@
  		if (empty($data) && empty($this->_dirtyTable)) { return true; }         // Nothing to do
  		
  		// Update the 'modified' attribute if it has been defined
- 		if (property_exists($this->fObjectType,'modified')) {
+ 		// NOTE: For FAccount-derived objects, 'modified' will have already been handled in 
+ 		// FAccountObject::save() and so does not need to be handled here.
+ 		if (property_exists($this->fObjectType,'modified') && !is_subclass_of($this,"FAccount")) {
  			$this->setModified(date('Y-m-d G:i:s')); 
  		}
 
