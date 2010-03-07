@@ -6,15 +6,19 @@ class MenuListHelper extends FPageFragment {
     private $id;
     private $class;
     
-    public function __construct($menuItems = array()) {
+    public function __construct($controller,$menuItems = array()) {
+        parent::__construct($controller,dirname(__FILE__));
         $this->menuItems = $menuItems;
+        
+        $this->id    = '';
+        $this->class = '';
     }
     
-    public function setId($id) {
+    public function setDomId($id) {
         $this->id = $id;
     }
     
-    public function setClass($className) {
+    public function setCssClass($className) {
         $this->class = $className;
     }
     
