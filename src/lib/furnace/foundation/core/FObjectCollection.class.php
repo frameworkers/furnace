@@ -65,12 +65,25 @@ abstract class FObjectCollection {
     
     
 
-    public function __construct($objectType,$lookupTable,$baseFilter = null) {
-        $this->data            = array();
+    public function __construct($objectType,$lookupTables = array(),$baseFilter = null,$data=array()) {
+        $this->data            = $data;
         $this->objectType      = $objectType;
-        $this->objectTypeTable = $lookupTable;
         $this->query      = new FQuery();
-        $this->query->addTable($lookupTable);
+        
+        // An array of tables was provided, add them all
+        if (is_array($lookupTables) && !empty($lookupTables)) {
+            $this->objectTypeTable = $lookupTables[0];
+            foreach ($lookupTables as $lt) {
+                $this->query->addTable($lt);
+            }
+        // A single scalar value was provided
+        } else if (!is_array($lookupTables) && '' != $lookupTables) {
+            $this->objectTypeTable = $lookupTables;
+            $this->query->addTable($lookupTables);
+        // The default (blank) was provided, use the objectType as table name
+        } else {
+            $this->query->addTable(FModel::standardizeTableName($objectType));
+        }
 
         $this->output = 'objects';
         if ( $baseFilter ) {
@@ -128,6 +141,11 @@ abstract class FObjectCollection {
         $this->query->setLimit($limit,$offset);
         return $this;
     }
+    
+    // Empty this collection of previously retrieved data
+    public function purge() {
+        $this->data = array();
+    }
 
 
     // Adds a filter to the collection
@@ -146,7 +164,22 @@ abstract class FObjectCollection {
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
                 if ($k == 'id') { $k = $this->getRealId(); }
-                $this->query->addCondition(null, "{$k}='{$v}' ");
+                
+                if (empty($this->data)) {
+                    // Add a condition to the query
+                    $this->query->addCondition(null, "{$k}='{$v}' ");
+                } else {
+                    // Filter the existing data points
+                    $keys = array_keys($this->data);
+                    $count= 0;
+                    $fn   = "get{$k}";
+                    foreach ($this->data as $d) {
+                        if ($d->$fn() != $v) {
+                            unset($this->data[$keys[$count]]);
+                        }
+                        $count++;
+                    }
+                }
                 break;
             case 3:
                 // Process a key,comp,val filter
@@ -154,7 +187,12 @@ abstract class FObjectCollection {
                 $c = func_get_arg(1);
                 $v = func_get_arg(2);
                 if ($k == 'id') { $k = $this->getRealId(); }
-                $this->query->addCondition(null, "{$k} {$c} {$v} ");
+                if (empty($this->data)) {
+                    // Add a condition to the query
+                    $this->query->addCondition(null, "{$k} {$c} {$v} ");
+                } else {
+                    // Filter the existing data points
+                }
                 break;
             default:
                 throw new FException("Unexpected number of arguments for FObjectCollection::filter()");
@@ -313,10 +351,15 @@ abstract class FObjectCollection {
                 // Return the collection object, as-is
                 break;
             case 1:
-                // Get a single object using the provided objId
+                // Get a single object using the provided id
+                // Since this will always result in at most 1 object, return
+                // the object directly
                 $v = func_get_arg(0);
                 if (false !== ($obj = $this->getSingleObjectByObjectId($v))) {
                     $this->data = array("o_{$obj->getId()}" => $obj);
+                    return $obj;
+                } else {
+                    return false;
                 }
                 break;
             case 2:

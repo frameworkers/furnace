@@ -108,7 +108,7 @@ class FSessionManager {
 		if (isset($_SESSION['_fwauth'])) {
 		    $collectionClass = "{$_SESSION['_fwauth']['objectClass']}Collection";
 		    $c = new $collectionClass();
-		    return $c->get($_SESSION['_fwauth']['objectId'])->first();
+		    return $c->get($_SESSION['_fwauth']['objectId']);
 		} else {
 			return false;
 		}
