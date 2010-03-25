@@ -238,6 +238,7 @@ abstract class FObjectCollection {
                 }
                 // Finally, if k == 'id' it needs to be expanded to its full schema equivalent
                 //   of '<tablename>_id'
+                $origK = $k;
                 if ($k == 'id') { $k = $this->getRealId(); }
                 //
                 // END 'k' PRE-PROCESSING
@@ -250,8 +251,10 @@ abstract class FObjectCollection {
                     // the request can be satisfied by adding a simple condition to
                     // the query object:
                     $ot  = $this->objectType;
-                    $otm = "{$ot}Model"; 
-                    if (_model()->$ot->attributeInfo($k)) {   
+                    $otm = "{$ot}Model";  
+                    
+                    
+                    if ($origK == 'id' || _model()->$ot->attributeInfo($k)) {   
                         $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}`='{$v}' ");
                     }
                     
@@ -260,7 +263,6 @@ abstract class FObjectCollection {
                         $fn = "get{$k}Info";;
                         if (is_callable(array($otm,$fn))) {
                             $info = _model()->$ot->$fn();
-                            var_dump($info);
                             if ($info['role_l'] == 'M1') {
                                 // Filtering on a Parent relation
                                 // If the remote key (rk) === false, it means that no 
