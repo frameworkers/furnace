@@ -22,7 +22,8 @@ class FQuery {
     }
 
     public function addTable($name) {
-        $this->tables[] = $name;
+        // hashing on the name prevents the same table from being added 2x
+        $this->tables[$name] = $name;
     }
 
     public function addCondition($previousOp, $condition) {
@@ -37,6 +38,14 @@ class FQuery {
         $this->limit  = $limit;
         $this->offset = $offset;
         _db()->setLimit($this->limit,$this->offset);
+    }
+    
+    public function orderBy($var,$order) {
+        if (strtoupper($order) == "RANDOM") {
+            $this->orderBy = "ORDER BY RANDOM(`{$var}`) ";
+        } else {
+            $this->orderBy = "ORDER BY `{$var}` ".strtoupper($order)." ";
+        }
     }
 
     public function select() {
