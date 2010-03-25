@@ -142,6 +142,10 @@
  		        ? "`{$attr}_id` = '".$val."' "
  		        : "`{$attr}`    = '".$val."' ";
  		}
+ 		
+ 		// If nothing to save, don't bother making a round trip to the db
+ 		if (empty($fieldsToSave)) { return true; }
+ 		
  		$q = "UPDATE `{$this->fObjectTableName}` SET "
  			. implode(',',$fieldsToSave)
  			. " WHERE `{$this->fObjectTableName}`.`{$this->fObjectTableName}_id` = {$this->id} LIMIT 1";
