@@ -6,14 +6,14 @@
 <div id="colContainer">
 	<div id="col1">
 		<div id="col1Content">
-			<h2>Application Model Objects</h2>
+			<h2>Application Data</h2>
 			<div class="modelObjectSummaries">
 			  <div class="modelObjectSummary">
 			  	[theModel.objects;block=div]
 			  	<a href="[_prefix_]/data/objects/[@.name]" class="objectName">[@.name]</a><br/>
 			  	<span class="description">[@.description;ifempty='<em>no description</em>']</span>
 			  	<div class="deleteLink">
-			  		<a href="[_prefix_]/model/deleteObject/[@.name]" onclick="return confirm('This can not be undone. Continue?');">delete</a>
+			  	
 			  	</div>
 			  </div>
 			</div>
@@ -31,26 +31,14 @@
 		<img src="[_theme_]/images/[if:@.found;content=[@.status];else=missing].png" alt="[if:@.found;content=[@.status];else=missing]"/>
 	</div>
 	<div class="modelTableDetails">
-		<h5 style="margin-bottom:0px;padding-bottom:0px;"><a href="[_prefix_]/schema/compareFields/[@.name]">[if:@.found;block=a;else="Not Found: [@.name]"][@.name]</a></h5>
+		<h5 style="margin-bottom:0px;padding-bottom:0px;">Table: <a href="[_prefix_]/schema/compareFields/[@.name]">[if:@.found;block=a;else="[@.name] (Not Found)"][@.name]</a></h5>
 		<span>[assert:@.found;block=span] Status: 
 			<span>[if:@.status=fieldsDiffer;block=span;else=OK (no changes detected)] 
-				<a href="[_app.url_base]fuel/schema/compareFields/[@.name]">Fields Differ</a>!
+				<a href="[_prefix_]/schema/compareFields/[@.name]">Fields Differ</a>!
 			</span>
 		</span>
 		<span>[assert:!@.found;block=span] 
-		<em>'[@.name]'</em>&nbsp; has been defined in your model but was not detected in the database. Your options are:
-		<ol>
-		  <li><a href="[_app.url_base]fuel/schema/createTable/[@.name]">Add as a new table</a></li>
-		  <li>Rename an existing database table: 
-		    <form style="display:inline;" action="[_app.url_base]fuel/schema/renameDbTable/" method="POST">
-		    	<input type="hidden" name="renameTo" value="[@.name]"/>
-			 	<select name="tableName">
-			  		<option value="[existingTableNames;block=option][@]">[@]</option>
-			  	</select>
-			  	<input type="submit" value="Apply"/>
-		  	</form>
-		  	</li>
-		 </ol>
+		Status: NOT FOUND. (<a href="[_prefix_]/schema/">remedy this</a>)
 		</span>
 	</div>
 	<div class="clr"><!-- clear --></div>

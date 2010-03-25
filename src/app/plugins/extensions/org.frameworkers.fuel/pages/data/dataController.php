@@ -156,7 +156,7 @@ class DataController extends Controller {
     }
     
     public function edit($ot,$id) {
-        if (false !== ($object = _model()->$ot->get($id)->first())) {
+        if (false !== ($object = _model()->$ot->get($id))) {
             
             $this->set('object',$object);
             $this->set('objectName',$ot);
@@ -176,7 +176,7 @@ class DataController extends Controller {
             $ot = $this->form['objectType'];
             $oid= $this->form['objectId'];
             
-            if (false !== ($object = _model()->$ot->get($oid)->first())) {
+            if (false !== ($object = _model()->$ot->get($oid))) {
                 if ($object->save($this->form)) {
                     $this->flash("Object updated");
                 } else {
