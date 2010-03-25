@@ -122,17 +122,19 @@
 		$this->title = $value;
 	}
 	
-	protected function addStylesheet($path,$bTheme = true) {
-		if ($bTheme) {
-	        $path = "assets/themes/{$this->theme}/css/{$path}";   
+	protected function addStylesheet($path,$bLocal = false) {
+		if (!$bLocal) {
+	        $path = "/assets/themes/{$this->theme}/css/{$path}";   
 	    } else {
+	        $localPath = $this->page_data['_local_'];
+	        $path = "{$localPath}/{$path}";
 	        //TODO: add ability to programmatically add local stylesheet
 	    }
 		$this->stylesheets[] = $path;
 	}
 	
-	protected function extensionAddStylesheet($extension,$path,$bTheme = true) {
-	    if ($bTheme) {
+	protected function extensionAddStylesheet($extension,$path,$bLocal = false) {
+	    if (!$bLocal) {
 	        $path = "extensions/{$extension}/themes/{$this->theme}/css/{$path}";
 	    } else {
 	        $path = "extensions/{$extension}{$path}";
@@ -140,11 +142,13 @@
 	    $this->stylesheets[] = $path;
 	}
 	
-	protected function addJavascript($path,$bTheme = true) {
-		if ($bTheme) {
-	      $path = "assets/themes/{$this->theme}/js/{$path}\r\n";   
+	protected function addJavascript($path,$bLocal = false) {
+		if (!$bLocal) {
+	      $path = "/assets/themes/{$this->theme}/js/{$path}\r\n";   
 	    } else {
-	        //TODO: add ability to programmatically add local stylesheet
+	        //TODO: add ability to programmatically add local javascript
+	        $localPath = $this->page_data['_local_'];
+	        $path = "{$localPath}/{$path}";
 	    }
 		$this->javascripts[] = $path;
 	}
