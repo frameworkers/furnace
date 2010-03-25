@@ -157,9 +157,13 @@ class FPageTemplate extends TadpoleEngine {
 			case 'string':
 				if (isset($attributeData['allowedValues'])) {
 					// create a select box
+					if (is_object($object)) { $commands['selected'] = $value; }
 					$option = '';
 					foreach ($attributeData['allowedValues'] as $opt) {
-						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
+					    $selected = (isset($commands['selected']) && ($opt['value'] == ($selectedValue = $this->compile($commands['selected'],$iter_data))))  
+					        ? " selected='selected' "
+					        : '';
+						$option .= "<option value=\"{$opt['value']}\" {$selected}>{$opt['label']}</option>";
 					}
 					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
 					break;	
@@ -167,9 +171,13 @@ class FPageTemplate extends TadpoleEngine {
 			case 'integer':
 				if (isset($attributeData['allowedValues'])) {
 					// create a select box
+					if (is_object($object)) { $commands['selected'] = $value; }
 					$option = '';
 					foreach ($attributeData['allowedValues'] as $opt) {
-						$option .= "<option value=\"{$opt['value']}\">{$opt['label']}</option>";
+						$selected = (isset($commands['selected']) && ($opt['value'] == $this->compile($commands['selected'],$iter_data))) 
+					        ? " selected='selected' "
+					        : '';
+						$option .= "<option value=\"{$opt['value']}\" {$selected}>{$opt['label']}</option>";
 					}
 					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
 					break;	
@@ -310,7 +318,12 @@ class FPageTemplate extends TadpoleEngine {
 							// If the object has a private method defined, call it
 							if (is_callable(array($flashlight,$privateMethod))) {
 							    // Call the private method and return its result
-							    return $flashlight->$privateMethod();
+							    $result = $flashlight->$privateMethod();
+							    if (is_object($result) && $result instanceof FObjectCollection) {
+							        return $result->output();
+							    } else {
+							        return $result;
+							    }
 							
 							// If the object does not have a private method defined, try to return the public attribute
 							} else {
