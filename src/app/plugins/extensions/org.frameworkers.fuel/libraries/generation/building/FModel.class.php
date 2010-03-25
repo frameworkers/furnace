@@ -26,7 +26,6 @@ class FModel {
 		
 		// Generate lookup tables required by inter-object relationships
 		$this->generateLookupTables();
-		
 	}
 	
 	public function export($format = "yml") {
@@ -473,7 +472,7 @@ class FModel {
 				. "\t\t\t\tif (\$bIdOnly) {\r\n"
 				. "\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
 				. "\t\t\t\t} else {\r\n"
-				. "\t\t\t\t\t\$this->{$s->getName()} = _model()->{$s->getForeign()}->get(\$this->{$s->getName()})->first();\r\n"
+				. "\t\t\t\t\t\$this->{$s->getName()} = _model()->{$s->getForeign()}->get(\$this->{$s->getName()});\r\n"
 				. "\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
 				. "\t\t\t\t}\r\n"
 				. "\t\t\t}\r\n"
@@ -491,6 +490,10 @@ class FModel {
 				. "\t\t\treturn call_user_func_array(array(\$this->{$s->getName()},'get'),\$argv);\r\n"
 				. "\t\t}\r\n\r\n";
  		}
+ 		
+ 		
+ 		// Transitive Getters
+ 		$r .= $this->generateTransitiveRelationships($object);
  		
  		
  		// Setters
@@ -551,18 +554,21 @@ class FModel {
 		// LOADER
 		//TODO: pairs loader
 	    foreach ($object->getParents() as $s) {
-		    $r .= "\t\tpublic function load{$s->getName()}(\$object){\r\n"
+	        $name = self::standardizeName($s->getName());
+		    $r .= "\t\tpublic function load{$name}(\$object){\r\n"
 		        . "\t\t\t\$this->{$s->getName()} = \$object;\r\n"
 		        . "\t\t}\r\n\r\n";
 		}
 	    foreach ($object->getPeers() as $s) {
-		    $r .= "\t\tpublic function load{$s->getName()}(\$objects){\r\n"
+	        $name = self::standardizeName($s->getName());
+		    $r .= "\t\tpublic function load{$name}(\$objects){\r\n"
 		        . "\t\t\tif (!is_array(\$objects)) { \$objects = array(\$objects); }\r\n"
 		        . "\t\t\t\$this->{$s->getName()} = \$objects;\r\n"
 		        . "\t\t}\r\n\r\n";
 		}
 		foreach ($object->getChildren() as $s) {
-		    $r .= "\t\tpublic function load{$s->getName()}(\$objects){\r\n"
+		    $name = self::standardizeName($s->getName());
+		    $r .= "\t\tpublic function load{$name}(\$objects){\r\n"
 		        . "\t\t\tif (is_array(\$objects)) { \$this->{$s->getName()}->data = array_merge(\$this->{$s->getName()}->data, \$objects); }\r\n"
 		        . "\t\t\telse { \$this->{$s->getName()}->data[] = \$objects; }\r\n"
 		        . "\t\t}\r\n\r\n";
@@ -797,7 +803,7 @@ class FModel {
 	            $table_f  = FModel::standardizeTableName($socket_l->getOwner());
 	            $key_l    = 'id';
 	            $key_f    = ($object_l == $object_f) ? $socket_l->getName() : $socket_f->getName();
-	            $column_l = FModel::standardizeTableName($socket_f->getOwner()).'_id';
+	            $column_l = FModel::standardizeTableName($socket_f->getReflectVariable()).'_id';
 	            $column_f = FModel::standardizeTableName($socket_l->getName()).'_id';
 	            break;
 	        case "MM":    // PEER
@@ -888,6 +894,165 @@ class FModel {
 
 		return $r;    
 	}
+	
+	private function generateTransitiveRelationships(&$object) {
+	    // Transitive relationships exist between any two objects
+	    // which are indirectly linked to one another via a third object.
+	    // For the time being, the transitive relationships will be 
+	    // associated from parent --> child in one of three situations:
+	    // 
+	    // 1) "Parent of my child"
+	    //
+	    // 2) "Child of my child"
+	    //
+	    // 3) "Peer of my child"
+	    //
+	    //
+	    $r = "\t\tpublic function transitiveGet(\$relation) {\r\n"
+	    	."\t\t\tswitch (strtolower(\$relation)) {\r\n";
+	    
+        // Examine the relationships of this object's children
+        // to discover any transitive relationships
+        foreach ($object->getChildren() as $child) {
+            // All relationships (parent, peer, child) that this
+            // child object has will have a transitive relationship with
+            // this object's parent. This transitive relationship will be one
+            // of the three types identified above, depending on the
+            // type of relationship (parent,peer,child) between this
+            // child object and its foreign endpoint.
+            foreach ($this->objects[$child->getForeign()]->getParents() as $childParent) {
+                // Type (1) transitive relationship between $object and $childParent
+                if ($childParent->getName() != $child->getReflectVariable()) {
+                    $r .= "\t\t\t\tcase '".strtolower($child->getName().'.'.$childParent->getName())."':\r\n";
+                    $r .= $this->createType1TransitiveRelationship($object,$child,$childParent);
+                    $r .= "\t\t\t\t\tbreak;\r\n";
+                }
+            }
+            
+            foreach ($this->objects[$child->getForeign()]->getChildren() as $childChild) {
+                // Type (2) transitive relationship between $object and $childChild
+                $r .= "\t\t\t\tcase '".strtolower($child->getName().'.'.$childChild->getName())."':\r\n";
+                $r .= $this->createType2TransitiveRelationship($object,$child,$childChild);
+                $r .= "\t\t\t\t\tbreak;\r\n";
+            }
+            
+            foreach ($this->objects[$child->getForeign()]->getPeers() as $childPeer) {
+                // Type (3) transitive relationship between $object and $childPeer
+                $r .= "\t\t\t\tcase '".strtolower($child->getName().'.'.$childPeer->getName())."':\r\n";
+                $r .= $this->createType3TransitiveRelationship($object,$child,$childPeer);
+                $r .= "\t\t\t\t\tbreak;\r\n";
+            }
+        }
+        
+        $r .= "\t\t\t\tdefault:\r\n"
+        	. "\t\t\t\t\treturn false;\r\n";
+        $r .= "\t\t\t}\r\n";
+        $r .= "\t\t}\r\n\r\n";
+        return $r;
+	}
+
+	
+	private function createType1TransitiveRelationship($parentObject,$intermediarySocket,$childSocket) {
+	    // Create an FObjectCollection representing the objects in this transitive relation
+	    $ot = self::standardizeTableName($parentObject->getName());
+	    $it = self::standardizeTableName($intermediarySocket->getForeign());
+	    $ct = self::standardizeTableName($childSocket->getForeign());
+	    $in = $intermediarySocket->getReflectVariable();
+	    $cn = $childSocket->getName();
+	    return "\t\t\t\t\treturn new {$childSocket->getForeign()}Collection(array('{$ct}','{$it}','{$ot}'),"
+	         . "\"`{$ot}`.`{$ot}_id` = \$this->id AND "
+	         . "  `{$it}`.`{$cn}_id` = `{$ct}`.`{$ct}_id` AND "
+	         . "  `{$it}`.`{$in}_id` = `{$ot}`.`{$ot}_id` \");\r\n";
+
+
+	    /* "get the parents of my children"
+	     * "get all members who have left comments on this blog entry
+	     * be = obj
+	     * bec=intermediate
+	     * mem=child
+	    SELECT * FROM `blogEntryComment`,`blogEntry`,`member` WHERE 
+		`blogEntryComment`.`entry_id` = `blogEntry`.`objId` AND
+		`blogEntryComment`.`author_id`= `member`.`objId`    AND
+		`blogEntry`.`objId`=25
+		*/
+	}
+	
+	private function createType2TransitiveRelationship($parentObject,$intermediarySocket,$childSocket) {
+	    // Create an FObjectCollection representing the objects in this transitive relation
+	    $ot = self::standardizeTableName($parentObject->getName());
+	    $it = self::standardizeTableName($intermediarySocket->getForeign());
+	    $ct = self::standardizeTableName($childSocket->getForeign());
+	    $in = $intermediarySocket->getReflectVariable();
+	    $cn = $childSocket->getReflectVariable();
+	    return "\t\t\t\t\treturn new {$childSocket->getForeign()}Collection(array('{$ct}','{$it}','{$ot}'),"
+	         . "\"`{$ot}`.`{$ot}_id` = \$this->id AND "
+	         . "  `{$it}`.`{$in}_id` = `{$ot}`.`{$ot}_id` AND "
+	         . "  `{$ct}`.`{$cn}_id` = `{$it}`.`{$it}_id` \");\r\n";
+	         
+	    /* "get the children of my children"
+	     * "get all action items for all of my projects"
+	     * ot=organization
+	     * it=project
+	     * ct=actionItem
+	     * 
+	     * SELECT *
+		 *	FROM `organization` , `project` , `actionItem`
+		 *	WHERE `organization`.`organization_id` =1
+		 *	AND `project`.`organization_id` = `organization`.`organization_id`
+		 *	AND `actionItem`.`project_id` = `project`.`project_id`
+	     */
+	} 
+	
+	private function createType3TransitiveRelationship($parentObject,$intermediarySocket,$childSocket) {
+	    // Create an FObjectCollection representing the objects in this transitive relation
+	    
+	    
+	    /* "get the peers of my children"
+	     * "get all projects for all of my developers"
+	     * 
+	     * ot=organization
+	     * it=user (developer)
+	     * ct=project
+	     * lt=project_user_users (lookup table)
+	     * 
+	     * SELECT *
+	     *  FROM `organization`,`user`,`project`,`project_user_users` 
+	     *  WHERE `organization`.`organization_id` =1
+	     *  AND `user`.`organization_id` = `organization`.`organization_id`
+	     *  AND `
+	     *  
+	     *  select * from organization,developer,project,developer_project_projects where
+organization.organization_id=1
+and developer.organization_id=organization.organization_id
+and developer_project_projects.developer_id = developer.developer_id
+and developer_project_projects.project_id = project.project_id
+	     * 
+	     * 
+	     * 
+	     */
+	    $ot = self::standardizeTableName($parentObject->getName());
+	    $it = self::standardizeTableName($intermediarySocket->getForeign());
+	    $ct = self::standardizeTableName($childSocket->getForeign());
+	    $cc = self::standardizeName($childSocket->getForeign());
+	    $lt = self::standardizeTableName($childSocket->getLookupTable(),true);
+	    $in = $intermediarySocket->getReflectVariable();
+	    $cn = $childSocket->getReflectVariable();
+	    // {ct} must go LAST in the list of tables because of the case where {$ct} extends FAccount. In
+	    // this case {$ct} will be automatically left joined with app_accounts to obtain the full
+	    // representation of each child object
+	    return "\t\t\t\t\t\$collection = new {$childSocket->getForeign()}Collection(array('{$it}','{$ot}','{$lt}','{$ct}'),"
+	         . "\"`{$ot}`.`{$ot}_id` = \$this->id AND "
+	         . "  `{$it}`.`{$in}_id` = `{$ot}`.`{$ot}_id` AND "
+	         . "  `{$lt}`.`{$it}_id` = `{$it}`.`{$it}_id` AND "
+	         . "  `{$lt}`.`{$ct}_id` = `{$ct}`.`{$ct}_id` \");\r\n"
+	         . "\t\t\t\t\t\$all = \$collection->get()->output('array');\r\n"
+	         . "\t\t\t\t\t\$rtn = array();\r\n"
+	         . "\t\t\t\t\tforeach (\$all as \$elem) {\r\n"
+	         . "\t\t\t\t\t\tif (!isset(\$rtn[\"o_{\$elem['{$ct}_id']}\"])) {\$rtn[\"o_{\$elem['{$ct}_id']}\"] = new {$cc}(\$elem); }\r\n"
+	         . "\t\t\t\t\t}\r\n"
+	         . "\t\t\t\t\treturn new {$childSocket->getForeign()}Collection('{$ct}',null,\$rtn);\r\n";
+	}
+	
 	
 	private function determineDeleteInformationFor(&$object) {
 		$delete_info = array();
