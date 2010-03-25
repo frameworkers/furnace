@@ -36,6 +36,13 @@
  		return $this->id;
  	}
  	
+ 	public function touch() {
+ 	    // Set the 'modified' attribute if it has been defined
+		if (property_exists($this->fObjectType,'modified')) {
+			$this->setModified(date('Y-m-d G:i:s')); 
+		}
+ 	}
+ 	
  	/**
  	 * 
  	 * @param $objectType
