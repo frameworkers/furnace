@@ -17,12 +17,12 @@
  
 abstract class FAccountCollection extends FObjectCollection {
 
-    public function __construct($objectType,$lookupTable,$baseFilter = null) {
+    public function __construct($objectType,$lookupTable,$baseFilter = null,$data=array()) {
         
-        parent::__construct($objectType,$lookupTable,$baseFilter);
+        parent::__construct($objectType,$lookupTable,$baseFilter,$data);
         
-        $this->query->addJoin('LEFT JOIN','app_accounts',
-        	'app_accounts.faccount_id='.$this->objectTypeTable.'.faccount_id');
+        $this->query->addJoin('LEFT JOIN','`app_accounts`',
+        	'`app_accounts`.`faccount_id`=`'.$this->objectTypeTable.'`.`faccount_id`');
     }
 }
 
