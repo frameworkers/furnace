@@ -803,7 +803,7 @@ class FModel {
 	            $table_f  = FModel::standardizeTableName($socket_l->getOwner());
 	            $key_l    = 'id';
 	            $key_f    = ($object_l == $object_f) ? $socket_l->getName() : $socket_f->getName();
-	            $column_l = FModel::standardizeTableName($socket_f->getReflectVariable()).'_id';
+	            $column_l = FModel::standardizeTableName($socket_f->getOwner()).'_id';
 	            $column_f = FModel::standardizeTableName($socket_l->getName()).'_id';
 	            break;
 	        case "MM":    // PEER
