@@ -72,7 +72,7 @@ abstract class FObjectCollection {
         
         // An array of tables was provided, add them all
         if (is_array($lookupTables) && !empty($lookupTables)) {
-            $this->objectTypeTable = $lookupTables[0];
+            $this->objectTypeTable = strtolower($this->objectType[0]).substr($this->objectType,1);
             foreach ($lookupTables as $lt) {
                 $this->query->addTable($lt);
             }
@@ -104,6 +104,8 @@ abstract class FObjectCollection {
         $this->output = $which;
 
         switch ($which) {
+            case 'array':
+                return $this->runQuery('array');
             case 'collection':
                 return this;
             case 'objects':
@@ -118,6 +120,11 @@ abstract class FObjectCollection {
                 throw new FException("Unknown output method provided to FObjectCollection::output()");
                 break;
         }
+    }
+    
+    public function orderBy($var,$order='asc') {
+        $this->query->orderBy($var,$order);
+        return $this;
     }
     
     // Return the first object in the collection
@@ -154,6 +161,42 @@ abstract class FObjectCollection {
     //    filter(key,comparator,value)    - key{comp}value where {$comp} is = != < <= > >=, etc
     //    filter(FCriteria)               - processes an FCriteria object to the query
     public function filter(/* variable arguments accepted */) {
+        
+        /*
+         * Algorithm (10,000 feet):
+         * 
+         * 1) Determine whether local or extended filtering is being requested
+         * 
+         * 2) Determine whether data has already been retrieved
+         * 
+         * 3) Perform the appropriate filter action
+         */
+        
+        /*
+         * Algorithm (1,000 feet):
+         * 
+         * 1) Determine whether local or extended filtering is being requested 
+         * 	a. filtering is 'local' if _model()->$objectType->attributeInfo($k) is not false
+         *  b. filtering is 'extended' if !(1.a) and _model()->$objectType->get{$k}Info() is callable
+         *  
+         * 2) Determine whether data has already been retrieved
+         *  a. data has already been retrieved if count($this->data) > 0
+         *  
+         * 3) Perform the appropriate filter action
+         *  When no data has yet been retrieved, both local and extended filtering are implemented 
+         *  through (possibly multiple) calls to $this->query->addCondition()
+         *  
+         *  If data exists, however,
+         *   i) local filtering is implemented by examining the corresponding values for each of the
+         *      objects in $this->data
+         *   ii)extended filtering is implemented by first expand()'ing the corresponding remote key
+         *      and then continuing as in (2.a.i)
+         */
+        
+          
+        
+        
+        
         $num_args = func_num_args();
         switch ($num_args) {
             case 1:
@@ -163,11 +206,88 @@ abstract class FObjectCollection {
                 // Process a key=val filter
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
+                
+                // BEGIN 'k' PRE-PROCESSING
+                // This is necessary when 'extended'
+                // filters are being used. An extended filter is one that filters
+                // on the value of an attribute of a *relative* of the current object.
+                //
+                // Example: 
+                //   objects: bug, release
+                //   rels:    bug has a M:1 (child-parent) relationship to release called 'target'
+                //
+                //   to filter those bugs targeted for a particular release:
+                // 
+                //   $bugCollection->filter('target',31) where 31 is the id of the release. This isn't
+                //   always ideal (most times the id is internal) so, to allow searching on the 'name'
+                //   of the release, for example:
+                //
+                //   $bugCollection->filter('target[name]','0.8.1-beta');
+                //
+                //   using the example above,
+                //     rk=name     (remote key)
+                //      k=target   (key)
+                //
+                //
+                $rk = false;
+                if (false !== ($rkstart = strpos($k,'['))) {
+                    if (false !== ($rkend = strpos($k,']',$rkstart))) {
+                        $rk = substr($k,$rkstart+1,($rkend-($rkstart+1)));
+                        $k = substr($k,0,$rkstart);
+                    }
+                }
+                // Finally, if k == 'id' it needs to be expanded to its full schema equivalent
+                //   of '<tablename>_id'
                 if ($k == 'id') { $k = $this->getRealId(); }
+                //
+                // END 'k' PRE-PROCESSING
+                
+                
                 
                 if (empty($this->data)) {
-                    // Add a condition to the query
-                    $this->query->addCondition(null, "{$k}='{$v}' ");
+                    
+                    // If the requested key represents a local attribute, then 
+                    // the request can be satisfied by adding a simple condition to
+                    // the query object:
+                    $ot  = $this->objectType;
+                    $otm = "{$ot}Model"; 
+                    if (_model()->$ot->attributeInfo($k)) {   
+                        $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}`='{$v}' ");
+                    }
+                    
+                    // If the requested key represents an external relationship, then...
+                    else {
+                        $fn = "get{$k}Info";;
+                        if (is_callable(array($otm,$fn))) {
+                            $info = _model()->$ot->$fn();
+                            var_dump($info);
+                            if ($info['role_l'] == 'M1') {
+                                // Filtering on a Parent relation
+                                // If the remote key (rk) === false, it means that no 
+                                // remote key was specified, and that we should default to the 
+                                // id of the remote object
+                                if (false === $rk) {
+                                    $rk = "{$info['table_l']}_id";
+                                }
+                                
+                                $this->query->addTable($info['table_l']);
+                                $this->query->addCondition('AND',
+                                	"`{$info['table_f']}`.`{$info['column_l']}`=`{$info['table_l']}`.`{$info['table_l']}_id`");
+                                $this->query->addCondition('AND',
+                                    "`{$info['table_l']}`.`{$rk}` = '{$v}' ");
+                            }
+                            if ($info['role_l'] == 'MM') {
+                                // Filtering on a Peer relation
+                                die("Extended filtering on PEER relations not supported yet");
+                            }
+                            if ($info['role_l'] == '1M') {
+                                // Filtering on a Child relation
+                                die("Extended filtering on CHILD relations not supported yet");
+                            }
+                        }
+                    }
+                
+                
                 } else {
                     // Filter the existing data points
                     $keys = array_keys($this->data);
@@ -189,7 +309,7 @@ abstract class FObjectCollection {
                 if ($k == 'id') { $k = $this->getRealId(); }
                 if (empty($this->data)) {
                     // Add a condition to the query
-                    $this->query->addCondition(null, "{$k} {$c} {$v} ");
+                    $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}` {$c} {$v} ");
                 } else {
                     // Filter the existing data points
                 }
@@ -208,6 +328,65 @@ abstract class FObjectCollection {
             $this->query->addCondition(null, "( {$key} {$negate} IN (\"" . implode('","',$allowedValues) . '") )');
         } else {
             $this->query->addCondition(null, "( {$key} {$negate} IN (" . implode(',',$allowedValues) . ") )");
+        }
+        return $this;
+    }
+    
+    public function filterOr(/*variable args accepted*/) {
+        $num_args = func_num_args();
+        switch ($num_args) {
+            case 1:
+                // Process an FCriteria object
+                break;
+            case 2:
+                // Process a key=val filter
+                $k = func_get_arg(0);
+                $v = func_get_arg(1);
+                if ($k == 'id') { $k = $this->getRealId(); }
+                
+                if (empty($this->data)) {
+                    // Add a condition to the query
+                    $this->query->addCondition('OR', "{$k}='{$v}' ");
+                } else {
+                    // Filter the existing data points
+                    /**
+                     * THIS IS IMPOSSIBLE... right?
+                     * 
+                     * 
+                     *
+                     *
+                    $keys = array_keys($this->data);
+                    $count= 0;
+                    $fn   = "get{$k}";
+                    foreach ($this->data as $d) {
+                        if ($d->$fn() != $v) {
+                            unset($this->data[$keys[$count]]);
+                        }
+                        $count++;
+                    }
+                    */
+                    throw new FException("Unsupported use of ->filterOr()");
+                    break;
+                }
+                break;
+            case 3:
+                // Process a key,comp,val filter
+                $k = func_get_arg(0);
+                $c = func_get_arg(1);
+                $v = func_get_arg(2);
+                if ($k == 'id') { $k = $this->getRealId(); }
+                if (empty($this->data)) {
+                    // Add a condition to the query
+                    $this->query->addCondition(null, "{$k} {$c} {$v} ");
+                } else {
+                    // Filter the existing data points
+                    throw new FException("Unsupported use of ->filterOr()");
+                    break;
+                }
+                break;
+            default:
+                throw new FException("Unexpected number of arguments for FObjectCollection::filter()");
+                break;
         }
         return $this;
     }
@@ -404,12 +583,19 @@ abstract class FObjectCollection {
         $result = _db()->queryAll($this->query->select(),FDATABASE_FETCHMODE_ASSOC);
         if (null == $result) { return false; }
         else {
-            $response = array();
-            $t = $this->objectType;
-            foreach ( $result as $r ) {
-                $response['o_'.$r[$this->objectTypeTable.'_id'] ] = new $t($r);
+            switch ($output) {
+                case 'array':
+                    return $result;
+                case 'objects':
+                default:
+                    $response = array();
+                    $t = $this->objectType;
+                    foreach ( $result as $r ) {
+                        $response['o_'.$r[$this->objectTypeTable.'_id'] ] = new $t($r);
+                    }
+                    $this->data = $response;
+                    break;
             }
-            $this->data = $response;
         }
     }
 }
