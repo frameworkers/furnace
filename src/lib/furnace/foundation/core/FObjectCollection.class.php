@@ -274,7 +274,7 @@ abstract class FObjectCollection {
                                 
                                 $this->query->addTable($info['table_l']);
                                 $this->query->addCondition('AND',
-                                	"`{$info['table_f']}`.`{$info['column_l']}`=`{$info['table_l']}`.`{$info['table_l']}_id`");
+                                	"`{$info['table_f']}`.`{$info['column_f']}`=`{$info['table_l']}`.`{$info['table_l']}_id`");
                                 $this->query->addCondition('AND',
                                     "`{$info['table_l']}`.`{$rk}` = '{$v}' ");
                             }
