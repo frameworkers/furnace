@@ -112,7 +112,7 @@ abstract class FObjectCollection {
                 if (count($this->data) == 0) {
                     $this->runQuery('objects');
                 }
-                return array_values($this->data);     // strip o_* keys
+                return $this->data;
                 break;
             case 'query':
                 return $this->query->select();
@@ -431,8 +431,12 @@ abstract class FObjectCollection {
 
                 $result = _db($relationshipData['db_l'])->query($q,FDATABASE_FETCHMODE_ASSOC);
                 while (false != ($unsortedParent = $result->fetchRow(FDATABASE_FETCHMODE_ASSOC))) {
-                    $this->data['o_'.$unsortedParent[$relationshipData['table_f'].'_id'] ]
-                        ->$setAttribute(new $relationshipData['object_f']($unsortedParent));
+                    foreach ($this->data as &$do) {
+                        if ($do->getId() == $unsortedParent[$relationshipData['table_f'].'_id']) {
+                            $do->$setAttribute(new $relationshipData['object_f']($unsortedParent));
+                            break;
+                        }
+                    }
                 }
             
             // Parent and child are of the same type
@@ -483,7 +487,12 @@ abstract class FObjectCollection {
                 
                 while (false != ($unsortedPeer = $result->fetchrow(FDATABASE_FETCHMODE_ASSOC))) {
                     $peerId = $unsortedPeer[$relationshipData['column_f'] ];
-                    $this->data["o_{$peerId}"]->$loadAttribute(array("o_{$unsortedPeer[$relationshipData['column_l'] ]}" => new $relationshipData['object_f']($unsortedPeer)));   
+                    foreach ($this->data as &$do) {
+                        if ($do->getId() == $peerId) {
+                            $do->$loadAttribute(array("{$unsortedPeer[$relationshipData['column_l'] ]}" => new $relationshipData['object_f']($unsortedPeer)));
+                            break;
+                        }
+                    }
                 }
   
             } else {
@@ -503,7 +512,12 @@ abstract class FObjectCollection {
 
             while (false != ($unsortedChild = $result->fetchrow(FDATABASE_FETCHMODE_ASSOC))) {
                 $parentId = $unsortedChild[$relationshipData['column_l'] ];
-                $this->data["o_{$parentId}"]->$loadAttribute(array("o_{$unsortedChild[$relationshipData['column_l'] ]}" => new $relationshipData['object_f']($unsortedChild)));    
+                foreach ($this->data as &$do) {
+                    if ($do->getId() == $parentId) {
+                        $do->$loadAttribute(array("{$unsortedChild[$relationshipData['column_l'] ]}" => new $relationshipData['object_f']($unsortedChild)));
+                        break;
+                    }   
+                }    
             }
         }
         
@@ -537,7 +551,7 @@ abstract class FObjectCollection {
                 // the object directly
                 $v = func_get_arg(0);
                 if (false !== ($obj = $this->getSingleObjectByObjectId($v))) {
-                    $this->data = array("o_{$obj->getId()}" => $obj);
+                    $this->data = array("{$obj->getId()}" => $obj);
                     return $obj;
                 } else {
                     return false;
@@ -548,7 +562,7 @@ abstract class FObjectCollection {
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
                 if (false !== ($obj = $this->getSingleObjectByAttribute($k,$v))) {
-                    $this->data = array("o_{$obj->getId()}" => $obj);
+                    $this->data = array("{$obj->getId()}" => $obj);
                 }
                 break;
             default:
@@ -583,6 +597,7 @@ abstract class FObjectCollection {
     
     protected function runQuery($output = 'objects') {
         $result = _db()->queryAll($this->query->select(),FDATABASE_FETCHMODE_ASSOC);
+
         if (null == $result) { return false; }
         else {
             switch ($output) {
@@ -593,7 +608,7 @@ abstract class FObjectCollection {
                     $response = array();
                     $t = $this->objectType;
                     foreach ( $result as $r ) {
-                        $response['o_'.$r[$this->objectTypeTable.'_id'] ] = new $t($r);
+                        $response[] = new $t($r);
                     }
                     $this->data = $response;
                     break;
