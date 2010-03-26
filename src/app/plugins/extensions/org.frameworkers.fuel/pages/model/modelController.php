@@ -1,8 +1,6 @@
 <?php
 class ModelController extends Controller {
     
-    private $prefix = '';
-    
     public function __construct() {
         parent::__construct();
         $this->requireLogin();

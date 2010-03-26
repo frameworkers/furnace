@@ -1,8 +1,6 @@
 <?php
 class _DefaultController extends Controller {
     
-    protected $prefix;
-    
     public function __construct() {
         parent::__construct();
         $this->setActiveMenuItem('main','home');

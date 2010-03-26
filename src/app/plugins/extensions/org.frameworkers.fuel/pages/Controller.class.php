@@ -1,13 +1,19 @@
 <?php
-abstract class Controller extends FController {
+class Controller extends FController {
+    
+    protected $prefix = '';
+
+    public function __construct() {
+        parent::__construct();
+        
+        $this->prefix = _furnace()->request->route['prefix'];
+    }
     
     public function setActiveMenuItem($which,$label) {
         
         if ('main' == $which) {
             $this->set('mainMenuActiveItem',$label);
         }
-        
-        $this->prefix = _furnace()->request->route['prefix'];
     }
     
     public function requireLogin() {

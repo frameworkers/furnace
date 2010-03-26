@@ -1,7 +1,5 @@
 <?php
 class SchemaController extends Controller {
-    
-    private $prefix;
 
     public function __construct() {
         parent::__construct();

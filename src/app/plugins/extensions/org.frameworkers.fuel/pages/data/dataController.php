@@ -1,7 +1,6 @@
 <?php
 class DataController extends Controller {
     
-    private $prefix;
     private static $PER_PAGE = 10;
     
     public function __construct() {
