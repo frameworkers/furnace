@@ -47,6 +47,7 @@ class Furnace {
     public $queries = array();
     
     
+    public $rawRrequest;
     public $request;
     public $response;
     public $theme;
@@ -70,8 +71,6 @@ class Furnace {
     public $db;
     public $model;
     public $user;
-    public $req;
-    public $res;
 
     public function __construct($type = 'app') {
         	
@@ -112,13 +111,13 @@ class Furnace {
         }
         
         // Make the request available to controllers via _furnace()->request
-        $this->request = $request;
+        $this->rawRequest = $request;
         
         // Create an FApplicationRequest object to hold request details
-        $this->req = new FApplicationRequest();
+        $this->request = new FApplicationRequest();
                	
         // Determine the route to take
-        $this->req->route = Furnace::route($request,$this->routes);
+        $this->request->route = Furnace::route($this->rawRequest,$this->routes);
 
         try {
             
@@ -145,10 +144,10 @@ class Furnace {
             
             // Determine if an extension is being requested and set the file path
             // to the appropriate controller
-            if ('' != $this->req->route['extension']) {
-                $controllerFilePath = "{$this->rootdir}/app/plugins/extensions/{$this->req->route['extension']}/pages/{$this->req->route['controller']}/{$this->req->route['controller']}Controller.php";
+            if ('' != $this->request->route['extension']) {
+                $controllerFilePath = "{$this->rootdir}/app/plugins/extensions/{$this->request->route['extension']}/pages/{$this->request->route['controller']}/{$this->request->route['controller']}Controller.php";
             } else {
-                $controllerFilePath = "{$this->rootdir}/app/pages/{$this->req->route['controller']}/{$this->req->route['controller']}Controller.php";        
+                $controllerFilePath = "{$this->rootdir}/app/pages/{$this->request->route['controller']}/{$this->request->route['controller']}Controller.php";        
             }
             
             // Ensure that the requested controller actually exists
@@ -160,8 +159,8 @@ class Furnace {
             }        
             
             // Include the base controller
-            if ($this->req->route['extension'] && file_exists("{$this->rootdir}/app/plugins/extensions/{$this->req->route['extension']}/pages/Controller.class.php")) {
-                include_once("{$this->rootdir}/app/plugins/extensions/{$this->req->route['extension']}/pages/Controller.class.php");
+            if ($this->request->route['extension'] && file_exists("{$this->rootdir}/app/plugins/extensions/{$this->request->route['extension']}/pages/Controller.class.php")) {
+                include_once("{$this->rootdir}/app/plugins/extensions/{$this->request->route['extension']}/pages/Controller.class.php");
             } else {
                 include_once("{$this->rootdir}/app/pages/Controller.class.php");
             }
@@ -179,15 +178,14 @@ class Furnace {
             // Create an instance of the requested controller
             $pageExists = true;
             try {
-                
                 // Create a response object to hold response details
-                $controllerClassName = "{$this->req->route['controller']}Controller";
-                $this->res = new FApplicationResponse($this,new $controllerClassName(),$this->req->route['extension']);
+                $controllerClassName = "{$this->request->route['controller']}Controller";
+                $this->response = new FApplicationResponse($this,new $controllerClassName(),$this->request->route['extension']);
             
                 // Attempt to load the page template
-                $pageExists = $this->res->setPage(
-                    $this->req->route['controller'],
-                    $this->req->route['action']);
+                $pageExists = $this->response->setPage(
+                    $this->request->route['controller'],
+                    $this->request->route['action']);
                     
             } catch (FDatabaseException $fde) {
                 $_SESSION['_exception'] = $fde;
@@ -204,7 +202,7 @@ class Furnace {
             }
             
             // Does the requested controller function exist?
-            $handlerExists = $this->res->handlerExists($this->req->route['action']);
+            $handlerExists = $this->response->handlerExists($this->request->route['action']);
 
             if ($handlerExists) {
 
@@ -213,7 +211,7 @@ class Furnace {
                     $this->bm_processstart = microtime(true);
                 }   
                 try {
-                    $this->res->run($this->req->route['action'],$this->req->route['parameters']);
+                    $this->response->run($this->request->route['action'],$this->request->route['parameters']);
                     // Display error if expected view template does not exist..
                     if ($pageExists !== true) {
                         $this->process(
@@ -244,14 +242,14 @@ class Furnace {
                 // Set the referringPage attribute in the session. This
                 // allows non-view controller actions to redirect to
                 // the location from which they were called.
-                $_SESSION['referringPage'] = $request;
+                $_SESSION['referringPage'] = $this->rawRequest;
                 	
                 // Send the rendered content out over the wire
                 if ($this->config['debug_level'] > 0) {
                     $this->bm_renderstart = microtime(true);
                 }
                 
-                $this->res->send();
+                $this->response->send();
                 
                 if ($this->config['debug_level'] > 0) {
                     $this->bm_renderend  = $this->bm_reqend = microtime(true);
@@ -280,7 +278,7 @@ class Furnace {
                 
             } else {
                 if ($this->config['debug_level'] > 0) {
-                    $this->process("/_debug/errors/noControllerFunction/".str_replace('/','+',$controllerFilePath)."/{$this->req->route['action']}");
+                    $this->process("/_debug/errors/noControllerFunction/".str_replace('/','+',$controllerFilePath)."/{$this->request->route['action']}");
                 } else {
                     $this->process("/_default/http404");
                 } 
