@@ -10,7 +10,7 @@ abstract class Controller extends FController {
     
     public function requireLogin() {
         if (!$this->checkLogin()) {
-            $prefix = _furnace()->req->route['prefix'];
+            $prefix = _furnace()->request->route['prefix'];
             $this->redirect("{$prefix}/login");
         }
     }
