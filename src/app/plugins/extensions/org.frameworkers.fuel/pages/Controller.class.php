@@ -6,6 +6,8 @@ abstract class Controller extends FController {
         if ('main' == $which) {
             $this->set('mainMenuActiveItem',$label);
         }
+        
+        $this->prefix = _furnace()->request->route['prefix'];
     }
     
     public function requireLogin() {

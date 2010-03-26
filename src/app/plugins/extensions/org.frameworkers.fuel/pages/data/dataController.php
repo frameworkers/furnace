@@ -7,7 +7,6 @@ class DataController extends Controller {
     public function __construct() {
         parent::__construct();
         $this->setActiveMenuItem('main','data');
-        $this->prefix = _furnace()->req->route['prefix'];
         $this->setTitle('Foundry :: Data');
         $this->set('pageTitle','Data');
     }
@@ -157,7 +156,6 @@ class DataController extends Controller {
     
     public function edit($ot,$id) {
         if (false !== ($object = _model()->$ot->get($id))) {
-            
             $this->set('object',$object);
             $this->set('objectName',$ot);
             $this->set('id',$id);

@@ -7,7 +7,6 @@ class SchemaController extends Controller {
         parent::__construct();
         $this->requireLogin();
         $this->setActiveMenuItem('main','schema');
-        $this->prefix = _furnace()->req->route['prefix'];
         $this->setTitle('Foundry :: Schema');
         $this->set('pageTitle','Schema');
     }

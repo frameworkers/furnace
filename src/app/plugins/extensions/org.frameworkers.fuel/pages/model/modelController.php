@@ -7,7 +7,6 @@ class ModelController extends Controller {
         parent::__construct();
         $this->requireLogin();
         $this->setActiveMenuItem('main','model');
-        $this->prefix = _furnace()->req->route['prefix'];
         $this->setTitle('Foundry :: Model');
         $this->set('pageTitle','Model');
     }

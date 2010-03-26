@@ -1,11 +1,10 @@
 <?php
 class _DefaultController extends Controller {
     
-    private $prefix;
+    protected $prefix;
     
     public function __construct() {
         parent::__construct();
-        $this->prefix = _furnace()->req->route['prefix'];
         $this->setActiveMenuItem('main','home');
         
     }
