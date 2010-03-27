@@ -213,7 +213,7 @@ class Furnace {
                 try {
                     $this->response->run($this->request->route['action'],$this->request->route['parameters']);
                     // Display error if expected view template does not exist..
-                    if ($pageExists !== true) {
+                    if ($pageExists !== true && !$this->response->pageOverrideDetected) {
                         $this->process(
                             (($this->config['debug_level'] > 0) 
                                 ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))

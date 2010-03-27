@@ -9,6 +9,8 @@ class FApplicationResponse {
     private $controller     = '';
     private $extension      = '';
     
+    public $pageOverrideDetected = false;
+    
     public function __construct($app,$controller,$extension=false) {
 
         $this->controller     = $controller;
@@ -64,6 +66,7 @@ class FApplicationResponse {
         // Attempt to load the page content
         try {
             $this->controller->setTemplate($path);
+            $this->pageOverrideDetected = true;
             return true;
         } catch (Exception $e) {
             return $path;    // Page at $path did not exist
