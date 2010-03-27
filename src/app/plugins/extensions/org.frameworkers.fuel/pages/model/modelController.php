@@ -14,7 +14,7 @@ class ModelController extends Controller {
         
         $m = $this->getModel();
         $this->set('theModel',$m);
-		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/model/index/index.css',false);
+		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/model/index/index.css',true);
 
 		try {
 		    _db();
@@ -510,7 +510,7 @@ END;
 				die("Attribute {$attrName} is not defined in object {$objectType}.");
 			}
 			// Process allowed value validation data (if any)
-			$attributeData = call_user_func(array($objectType,"_getAttribute"),$attrName);
+		    $attributeData = _model()->$objectType->attributeInfo($attrName);
 			if (isset($attributeData['allowedValues'])) {
 				$txt = '';
 				foreach ($attributeData['allowedValues'] as $av) {

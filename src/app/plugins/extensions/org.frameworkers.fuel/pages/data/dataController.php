@@ -79,7 +79,7 @@ class DataController extends Controller {
 		$this->set("tables",$tables);
 		$this->set("notices",$notices);
 		$this->set("theModel",$model);
-		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/data/index/index.css',false);
+		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/data/index/index.css',true);
     }
     
     public function objects($name,$page = 1) {
