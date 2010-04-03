@@ -42,7 +42,7 @@ class FApplicationResponse {
  		        .$app->request->route['controller'].'/'
  		        .$app->request->route['action']);
  		    $this->controller->setTheme($app->request->route['theme']);
-            $this->controller->extensionSetLayout($extension,'default');
+            $this->controller->extensionSetLayout($extension,'default',false);
         } else {
             // Extension with its own theme
             $this->controller->set('_theme_',"{$this->url_base}extensions/{$extension}/themes/{$app->theme}");
@@ -50,11 +50,14 @@ class FApplicationResponse {
  		        .$app->request->route['controller'].'/'
  		        .$app->request->route['action']);
  		    $this->controller->setTheme($app->request->route['theme']);
-            $this->controller->extensionSetLayout($extension,'default');
+            $this->controller->extensionSetLayout($extension,'default',false);
         }
          
         // Determine the prefix for relative links (especially important for extensions)
         $this->controller->set('_prefix_',$app->request->route['prefix']);
+        
+        // Inject the furnace javascript variables into the page
+        $this->controller->injectJS($this->prepareFurnaceJS($app));
     }
     
     public function setPage($group,$page) {
@@ -84,6 +87,23 @@ class FApplicationResponse {
             return false;    // Layout did not exist
         }
     } 
+    
+    private function prepareFurnaceJS(&$app) {
+        $fu_route_extension = (false == $this->extension) ? 'false' : $this->extension; 
+        
+        $js = <<<__END
+var fu_current_theme    = '{$this->currentTheme}';
+var fu_route_action     = '{$app->request->route['action']}';
+var fu_route_controller = '{$app->request->route['controller']}';
+var fu_route_extension  = '{$fu_route_extension}';
+var fu_route_prefix     = '{$app->request->route['prefix']}';
+var fu_url_base         = '{$this->url_base}';
+
+        
+__END;
+        return $js;
+    }
+    
     
     public function handlerExists($fn) {
         return is_callable(array($this->controller,$fn));
