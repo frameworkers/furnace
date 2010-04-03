@@ -91,7 +91,7 @@ class FPageTemplate extends TadpoleEngine {
 				    try {
 				        if (false !== ($info = _model()->$object->attributeInfo($attributeNeedle))) {
 				            $this->inputApplyOutput($tag,$context,
-				                $this->input_helper($baseObject,$attributeNeedle,$info,$commands));
+				                $this->input_helper($baseObject,$attributeNeedle,$info,$context['commands']));
 				            return true;
 				        } else {
 				            $this->inputRejected($tag,$context);
@@ -318,7 +318,12 @@ class FPageTemplate extends TadpoleEngine {
 							// If the object has a private method defined, call it
 							if (is_callable(array($flashlight,$privateMethod))) {
 							    // Call the private method and return its result
-							    $result = $flashlight->$privateMethod();
+							    if (isset($commands['argv'])) {
+							        $args = explode('|',$this->compile($commands['argv']));
+							        $result = call_user_func_array(array($flashlight,$privateMethod),$args);   
+							    } else {
+							        $result = $flashlight->$privateMethod();
+							    }
 							    if (is_object($result) && $result instanceof FObjectCollection) {
 							        return $result->output();
 							    } else {
