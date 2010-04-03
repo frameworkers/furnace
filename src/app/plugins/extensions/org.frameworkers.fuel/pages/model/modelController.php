@@ -14,7 +14,8 @@ class ModelController extends Controller {
         
         $m = $this->getModel();
         $this->set('theModel',$m);
-		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/model/index/index.css',true);
+
+		$this->extensionAddStylesheet('org.frameworkers.fuel','index.css',true);
 
 		try {
 		    _db();
@@ -69,26 +70,27 @@ class ModelController extends Controller {
 		// Import required files
         $this->init();
 		 
-		// Parse the YAML Model File
-		 $model_data = _furnace()->parse_yaml(_furnace()->rootdir . "/app/model/model.yml");
-		 
 		 // Build a representation of the data
-		 $model = new FModel($model_data);
+		 $model = $this->getModel();
 		 
 		 // Write the object code (individual and compiled)
 		 $output[] =  "<h4>Generating PHP Object Code</h4><ul>";
 		 foreach ($model->objects as $obj) {
 		 	$output[] = "<li>Writing class file: {$obj->getName()}</li>";
 		 	$outputFilePath = _furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php";
-		 	// Only if the file DOES NOT ALREADY EXIST:
-		 	if (!file_exists($outputFilePath)) {
+		 	// Only if the object is not an extension and the file DOES NOT ALREADY EXIST:
+		 	if (!$obj->getExtension() && !file_exists($outputFilePath)) {
 		 		$model->generateUserPhpFile($obj->getName(),_furnace()->rootdir . "/app/model/objects/{$obj->getName()}.class.php");
 		 	}
 		 }
 		 $output[] =  "<li> == creating base class file (model.php) == </li>";
 		 $compiledOutput = "<?php\r\n{$model->compilePhp()}\r\n\r\n";
 		 foreach ($model->objects as $o) {
-		 	$compiledOutput .= "require('objects/{$o->getName()}.class.php');\r\n";	
+		     if (false != $o->getExtension()) {
+		        $compiledOutput .= "require(_furnace()->rootdir.'/app/plugins/extensions/{$o->getExtension()}/model/objects/{$o->getName()}.class.php');\r\n";   
+		     } else {
+		 	    $compiledOutput .= "require('objects/{$o->getName()}.class.php');\r\n";
+		     }	
 		 }
 		 $compiledOutput .="\r\n?>";
 		 file_put_contents(_furnace()->rootdir 
@@ -514,7 +516,7 @@ END;
 			if (isset($attributeData['allowedValues'])) {
 				$txt = '';
 				foreach ($attributeData['allowedValues'] as $av) {
-					$txt .= "{$av['value']}|{$av['label']}\r\n";
+					$txt .= stripslashes($av['value'])."|".stripslashes($av['label'])."\r\n";
 				}
 				$this->set('allowedValuesData',$txt);
 			}
@@ -617,7 +619,7 @@ END;
 					foreach ($values as $value) {
 						list($v,$l) = explode('|',$value);
 						if (!empty($l)) {
-							$validationData['allowedValues'][] = array('value'=>trim($v),'label'=>trim($l));
+							$validationData['allowedValues'][] = array('value'=>trim(stripslashes($v)),'label'=>trim(stripslashes($l)));
 						}
 					}
 				}

@@ -17,7 +17,7 @@
 			  [assert:dbConnectOk;block=div]
 			  <div class="modelObjectSummary">
 			  	[theModel.objects;block=div;noerror]
-			  	<a href="[_prefix_]/model/editObject/[@.name]" class="objectName">[@.name]</a><br/>
+			  	<a href="[_prefix_]/model/editObject/[@.name]" class="objectName">[@.name]</a> [if:@.extension;content="[@.extension]";prefix='(extension: ';trailer=')']<br/>
 			  	<span class="description">[@.description;ifempty='<em>no description</em>']</span>
 			  	<div class="deleteLink">
 			  		<a href="[_prefix_]/model/deleteObject/[@.name]" onclick="return confirm('This can not be undone. Continue?');">delete</a>
