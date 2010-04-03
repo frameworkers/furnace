@@ -27,7 +27,12 @@ class FQuery {
     }
 
     public function addCondition($previousOp, $condition) {
-        $this->conditions[] = array("pOp" => $previousOp, "cond" => $condition);
+        if (count($this->conditions) == 0 ) {
+            // For the first condition, pOp is *always* null.
+            $this->conditions[] = array("pOp" => null, "cond" => $condition);
+        } else {
+            $this->conditions[] = array("pOp" => $previousOp, "cond" => $condition);
+        }
     }
     
     public function addJoin($joinType,$target,$on) {
