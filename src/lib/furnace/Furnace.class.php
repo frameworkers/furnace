@@ -362,7 +362,7 @@ class Furnace {
             if ( ':view' != $rp[$j] && 
         	':action' != $rp[$j] && 
         	':controller' != $rp[$j] ) {
-              $parameters[] = $parts[$j];
+              $parameters[$rp[$j] ] = $parts[$j];
             }
             continue;
           }
@@ -378,6 +378,18 @@ class Furnace {
           // url contained more parts than the matching route rule
           for ( $k = count($rp), $l = count($parts); $k < $l; $k++ ) {
             if ('' != $parts[$k] ) { $parameters[] = $parts[$k]; }
+          }
+          
+          // Build the expanded/replaced prefix if it contains :xx variables
+          if(strpos($prefix,':')) {
+              $prefixParts = explode('/',$prefix);
+              foreach ($prefixParts as &$p) {
+                  if ($p[0] == ':') {
+                      $p = $parameters[$p];
+                      break;
+                  }
+              }
+              $prefix = implode('/',$prefixParts);
           }
         
           // Build the resulting route data array
