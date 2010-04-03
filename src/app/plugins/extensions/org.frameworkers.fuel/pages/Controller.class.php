@@ -75,9 +75,26 @@ class Controller extends FController {
 	}
 	
 	protected function getModel() {
-		return new FModel(
-			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml")
-		);
+	    
+	    // Retrieve the primary model data
+		$data = 
+			_furnace()->parse_yaml($GLOBALS['furnace']->rootdir . "/app/model/model.yml");
+
+		
+		// Retrieve any extension model data
+		$extBasePath = $GLOBALS['furnace']->rootdir . '/app/plugins/extensions';
+		$extDir      = dir($extBasePath);
+		while (false !== ($ext = $extDir->read())) {
+		    // Skip unrelated files and directories
+		    if ('.' == $ext[0] || !is_dir("{$extBasePath}/{$ext}")) { continue; }
+		    
+		    if (is_dir("{$extBasePath}/{$ext}/model") && 
+		        file_exists("{$extBasePath}/{$ext}/model/model.yml")) {
+		            $data = array_merge($data,_furnace()->parse_yaml("{$extBasePath}/{$ext}/model/model.yml"));   
+		        }
+		}
+		
+		return new FModel($data);
 	}
 	
 	protected function getApplicationModel() {
@@ -92,7 +109,19 @@ class Controller extends FController {
 	}
 	
 	protected function writeModelFile($contents) {
-		file_put_contents($GLOBALS['furnace']->rootdir . "/app/model/model.yml",$contents);
+
+	    // Examine contents to determine which physical file they should be written to
+	    if (!is_array($contents)) {
+		    file_put_contents($GLOBALS['furnace']->rootdir . "/app/model/model.yml",$contents);
+	    } else {
+	        foreach ($contents as $location => $data) {
+    	        if ('primary' == $location) {
+        	        file_put_contents($GLOBALS['furnace']->rootdir . "/app/model/model.yml",$contents['primary']);
+        	    } else {
+        	        file_put_contents($GLOBALS['furnace']->rootdir . "/app/plugins/extensions/{$location}/model/model.yml",$data);
+        	    }
+	        }
+	    }
 	}
 }
 ?>

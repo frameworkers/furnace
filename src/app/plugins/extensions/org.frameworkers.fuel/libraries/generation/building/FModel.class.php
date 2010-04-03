@@ -12,6 +12,7 @@ class FModel {
 	public function __construct($modelData) {
 		
 		$this->modelData = $modelData;
+		ksort($this->modelData);
 	
 		// Generate representation of each object and object table
 		foreach ($this->modelData as $model_object_name => $model_object_data) {
@@ -32,116 +33,132 @@ class FModel {
 		return self::exportAsYML();
 	}
 	
-	public function exportAsYML() {
-		$r = "# Auto-generated model file\r\n\r\n";
-		foreach ($this->objects as $object) {	
-			// begin object definition
-			$r .= "{$object->getName()}:\r\n";
-			// handle non-default inheritance
-			if ($object->getParentClass() != "FBaseObject") {
-				$r .= "  extends: {$object->getParentClass()}\r\n";
-			}
-			// write description
-			$r .= "  description: {$object->getDescription()}\r\n";
-			// export attributes
-			$r .= "  attributes:\r\n";
-			foreach ($object->getAttributes() as $attr) {
-				$r .= "    {$attr->getName()}:\r\n"
-					. "      desc: {$attr->getDescription()}\r\n"
-					. "      type: {$attr->getType()}\r\n"
-					. "      size: {$attr->getSize()}\r\n"
-					. "      min:  {$attr->getMin()}\r\n"
-					. "      max:  {$attr->getMax()}\r\n"
-					. "      default: {$attr->getDefaultValue()}\r\n"
-					. "      validation:\r\n";
-					foreach ($attr->getValidation() as $validationInstruction => $instructionParameters) {
-						if ("allowedValues" == $validationInstruction) {
-							$r .= "        allowedValues:\r\n";
-							foreach ($instructionParameters as $av) {
-								$r .= "          - value: {$av['value']}\r\n"
-									. "            label: {$av['label']}\r\n";
-							}
-							continue;
-						}
-						$r .= "        {$validationInstruction}: { ";
-						$parms = array();
-						foreach ($instructionParameters as $k=>$v) {
-							if ($v == null) { continue; }	// skip empty parameters
-							if (true  === $v) {$v = 'y';}	// handle boolean true
-							if (false === $v) {$v = 'n';}	// handle boolean false
-							if ($k == "pattern") {			// patterns need to be in quotes
-								$parms[] = "{$k}: \"{$v}\"";
-							} else {
-								$parms[] = "{$k}: {$v}";
-							}
-						}
-						$r .= implode(' , ', $parms) . " }\r\n";
-					}
-						
-					if ($attr->isUnique()) {
-						$r .= "      unique: yes\r\n";
-					}
-			}
-			// pretty id 
-			$r .= "  prettyId: {$object->getPrettyId()}\r\n";
-			
-			// sort parents by object type
-			$parentsByType = array();
-			foreach ($object->getParents() as $parent) {
-				$parentsByType[$parent->getForeign()][] = $parent;
-			}
-			// export parents
-			$r .= "  parents:\r\n";
-			foreach ($parentsByType as $objectName => $parents) {
-				$r .= "    {$objectName}:\r\n";
-				foreach ($parents as $parent) {
-					$r .= "      {$parent->getName()}:\r\n";
-					$r .= "        desc: {$parent->getDescription()}\r\n";
-					if ($parent->doesReflect() ) {
-						$r .= "        reflects: {$parent->getForeign()}.{$parent->getReflectVariable()}\r\n";
-					}
-					$r .= "        required: " . (($parent->isRequired()) ? "yes" : "no" ) . "\r\n";
-				}
-			}
-			
-			// sort peers by object type
-			$peersByType = array();
-			foreach ($object->getPeers() as $peer) {
-				$peersByType[$peer->getForeign()][] = $peer;
-			}
-			// export peers
-			$r .= "  peers:\r\n";
-			foreach ($peersByType as $objectName => $peers) {
-				$r .= "    {$objectName}:\r\n";
-				foreach ($peers as $peer) {
-					$r .= "      {$peer->getName()}:\r\n";
-					$r .= "        desc: {$peer->getDescription()}\r\n";
-					if ($peer->doesReflect()) {
-						$r .= "        reflects: {$peer->getForeign()}.{$peer->getReflectVariable()}\r\n";
-					}
-				}
-			}
-			
-			// sort children by object type
-			$childrenByType = array();
-			foreach ($object->getChildren() as $child) {
-				$childrenByType[$child->getForeign()][] = $child;
-			}
-			// export children
-			$r .= "  children:\r\n";
-			foreach ($childrenByType as $objectName => $children) {
-				$r .= "    {$objectName}:\r\n";
-				foreach ($children as $child) {
-					$r .= "      {$child->getName()}:\r\n";
-					$r .= "        desc: {$child->getDescription()}\r\n";
-					if ($child->doesReflect() ) {
-						$r .= "        reflects: {$child->getForeign()}.{$child->getReflectVariable()}\r\n";
-					}
-				}
-			}
-			// add a space between objects
-			$r .= "\r\n";	
+	protected function exportAsYML() {
+	    
+	    $data = array('primary' => '');
+	    
+		foreach ($this->objects as $object) {
+		    if (false != $object->getExtension()) {
+		        $data[$object->getExtension()] .= self::exportObjectAsYML($object);
+		    } else {
+                $data['primary'] .= self::exportObjectAsYML($object);
+		    } 
 		}
+		return $data;
+	}
+	
+	protected function exportObjectAsYML($object) {
+		// begin object definition
+		$r .= "{$object->getName()}:\r\n";
+		// handle non-default inheritance
+		if ($object->getParentClass() != "FBaseObject") {
+			$r .= "  extends: {$object->getParentClass()}\r\n";
+		}
+		// write extension
+		if ($object->getExtension()) {
+		    $r .= "  extension: {$object->getExtension()}\r\n";
+		}
+		// write description
+		$r .= "  description: {$object->getDescription()}\r\n";
+		// export attributes
+		$r .= "  attributes:\r\n";
+		foreach ($object->getAttributes() as $attr) {
+			$r .= "    {$attr->getName()}:\r\n"
+				. "      desc: {$attr->getDescription()}\r\n"
+				. "      type: {$attr->getType()}\r\n"
+				. "      size: {$attr->getSize()}\r\n"
+				. "      min:  {$attr->getMin()}\r\n"
+				. "      max:  {$attr->getMax()}\r\n"
+				. "      default: {$attr->getDefaultValue()}\r\n"
+				. "      validation:\r\n";
+				foreach ($attr->getValidation() as $validationInstruction => $instructionParameters) {
+					if ("allowedValues" == $validationInstruction) {
+						$r .= "        allowedValues:\r\n";
+						foreach ($instructionParameters as $av) {
+							$r .= "          - value: {$av['value']}\r\n"
+								. "            label: {$av['label']}\r\n";
+						}
+						continue;
+					}
+					$r .= "        {$validationInstruction}: { ";
+					$parms = array();
+					foreach ($instructionParameters as $k=>$v) {
+						if ($v == null) { continue; }	// skip empty parameters
+						if (true  === $v) {$v = 'y';}	// handle boolean true
+						if (false === $v) {$v = 'n';}	// handle boolean false
+						if ($k == "pattern") {			// patterns need to be in quotes
+							$parms[] = "{$k}: \"{$v}\"";
+						} else {
+							$parms[] = "{$k}: {$v}";
+						}
+					}
+					$r .= implode(' , ', $parms) . " }\r\n";
+				}
+					
+				if ($attr->isUnique()) {
+					$r .= "      unique: yes\r\n";
+				}
+		}
+		// pretty id 
+		$r .= "  prettyId: {$object->getPrettyId()}\r\n";
+		
+		// sort parents by object type
+		$parentsByType = array();
+		foreach ($object->getParents() as $parent) {
+			$parentsByType[$parent->getForeign()][] = $parent;
+		}
+		// export parents
+		$r .= "  parents:\r\n";
+		foreach ($parentsByType as $objectName => $parents) {
+			$r .= "    {$objectName}:\r\n";
+			foreach ($parents as $parent) {
+				$r .= "      {$parent->getName()}:\r\n";
+				$r .= "        desc: {$parent->getDescription()}\r\n";
+				if ($parent->doesReflect() ) {
+					$r .= "        reflects: {$parent->getForeign()}.{$parent->getReflectVariable()}\r\n";
+				}
+				$r .= "        required: " . (($parent->isRequired()) ? "yes" : "no" ) . "\r\n";
+			}
+		}
+		
+		// sort peers by object type
+		$peersByType = array();
+		foreach ($object->getPeers() as $peer) {
+			$peersByType[$peer->getForeign()][] = $peer;
+		}
+		// export peers
+		$r .= "  peers:\r\n";
+		foreach ($peersByType as $objectName => $peers) {
+			$r .= "    {$objectName}:\r\n";
+			foreach ($peers as $peer) {
+				$r .= "      {$peer->getName()}:\r\n";
+				$r .= "        desc: {$peer->getDescription()}\r\n";
+				if ($peer->doesReflect()) {
+					$r .= "        reflects: {$peer->getForeign()}.{$peer->getReflectVariable()}\r\n";
+				}
+			}
+		}
+		
+		// sort children by object type
+		$childrenByType = array();
+		foreach ($object->getChildren() as $child) {
+			$childrenByType[$child->getForeign()][] = $child;
+		}
+		// export children
+		$r .= "  children:\r\n";
+		foreach ($childrenByType as $objectName => $children) {
+			$r .= "    {$objectName}:\r\n";
+			foreach ($children as $child) {
+				$r .= "      {$child->getName()}:\r\n";
+				$r .= "        desc: {$child->getDescription()}\r\n";
+				if ($child->doesReflect() ) {
+					$r .= "        reflects: {$child->getForeign()}.{$child->getReflectVariable()}\r\n";
+				}
+			}
+		}
+		// add a space between objects
+		$r .= "\r\n";	
+		
 		// return the complete yml model definition
 		return $r;
 	}

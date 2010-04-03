@@ -54,6 +54,10 @@
  	// The class this class inherits from. The default is <FBaseObject>.
  	private $parentClass;
  	
+ 	// Variable: extension
+ 	// The name of the extension (if any) this object belongs to
+ 	private $extension;
+ 	
  	/*
  	 * Function: __construct
  	 * 
@@ -77,6 +81,11 @@
  		
  		// Store the model data
 		$objectData =& $modelData[$name];
+		
+		// Extension
+		$this->extension   = isset($objectData['extension'])
+ 		    ? $objectData['extension']
+ 		    : false;
 		
 		// Description
  		$this->description = $objectData['description'];
@@ -136,6 +145,10 @@
  	 */
  	public function getName() {
  		return $this->name;	
+ 	}
+ 	
+ 	public function getExtension() {
+ 	    return $this->extension;
  	}
  	
  	public function getDescription() {
