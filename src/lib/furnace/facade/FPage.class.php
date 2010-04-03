@@ -38,9 +38,17 @@
 	// An array of stylesheet declarations to add
 	protected $stylesheets;
 	
+	// Variable: cssraw
+	// Raw (loose) style declaragions injected into the page
+	protected $cssraw;
+	
 	// Array: javascripts
 	// An array of javascript declarations to add
 	protected $javascripts;
+	
+	// Variable: jsraw
+    // Raw (loose) javascript injected into the page
+	protected $jsraw;
  	
  	// Variable: charset
  	// The page character set
@@ -56,6 +64,7 @@
  		$this->stylesheets = array();
  		$this->theme         = 'default';
  		$this->bInheritTheme = false;
+ 		$this->bThemeSet     = false;
  		$this->setLayout($layout);
  		$this->contents    = "";
  	}
@@ -67,8 +76,8 @@
  		// Store the page content so that it is accessible to the layout
  		$this->ref('_content_',$this->contents);
  		$this->set('_title_',  $this->title);
- 		$this->set('_js_',     $this->javascripts);
- 		$this->set('_css_',    $this->stylesheets);
+ 		$this->set('_js_',     $this->buildJavascript());
+ 		$this->set('_css_',    $this->buildCSS());
  		$this->set('_flashes_',_furnace()->read_flashes());
  		
  		// Compile the layout to form the final page
@@ -80,7 +89,29 @@
  		} else {
  			return $finalContent;
  		}
- 	}	
+ 	}
+
+ 	private function buildJavascript() {
+ 	    $s = '';
+ 	    foreach ($this->javascripts as $js) {
+ 	        $s .= "<script type=\"text/javascript\" src=\"{$js}\"></script>\r\n";
+ 	    }
+ 	    if ('' != $this->jsraw ) {
+ 	        $s .= "<script type=\"text/javascript\">\r\n{$this->jsraw}\r\n</script>\r\n";
+ 	    }
+ 	    return $s;
+ 	}
+ 	
+ 	private function buildCSS() {
+ 	    $s = '';
+ 	    foreach ($this->stylesheets as $css) {
+ 	        $s .= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"{$css}\"/>\r\n";
+ 	    }
+ 	    if ('' != $this->cssraw ) {
+ 	        $s .= "<style type=\"text/css\">\r\n{$this->cssraw}\r\n</style>\r\n";
+ 	    }
+ 	    return $s;
+ 	}
  	
  	public function setLayout($layout) {
  		$this->layout = file_get_contents(
@@ -128,29 +159,36 @@
 	    } else {
 	        $localPath = $this->page_data['_local_'];
 	        $path = "{$localPath}/{$path}";
-	        //TODO: add ability to programmatically add local stylesheet
 	    }
 		$this->stylesheets[] = $path;
 	}
 	
 	protected function extensionAddStylesheet($extension,$path,$bLocal = false) {
 	    if (!$bLocal) {
-	        $path = "extensions/{$extension}/themes/{$this->theme}/css/{$path}";
+	        $path = "/extensions/{$extension}/themes/{$this->theme}/css/{$path}";
 	    } else {
-	        $path = "extensions/{$extension}{$path}";
+	        $localPath = $this->page_data['_local_'];
+	        $path = "{$localPath}/{$path}";
 	    }
 	    $this->stylesheets[] = $path;
 	}
 	
 	protected function addJavascript($path,$bLocal = false) {
 		if (!$bLocal) {
-	      $path = "/assets/themes/{$this->theme}/js/{$path}\r\n";   
+	      $path = "/assets/themes/{$this->theme}/js/{$path}";   
 	    } else {
-	        //TODO: add ability to programmatically add local javascript
 	        $localPath = $this->page_data['_local_'];
 	        $path = "{$localPath}/{$path}";
 	    }
 		$this->javascripts[] = $path;
+	}
+	
+	public function injectJS($code) {
+	    $this->jsraw .= $code;
+	}
+	
+	public function injectCSS($style) {
+	    $this->cssraw .= $style;
 	}
 	
 	public function getStylesheets() {
