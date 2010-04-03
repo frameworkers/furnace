@@ -59,6 +59,8 @@ abstract class FObjectCollection {
     protected $objectTypeTable;
     protected $query;
     protected $output;
+    protected $baseFilter;
+    protected $lookupTables;
     
     public $data;
     
@@ -68,27 +70,14 @@ abstract class FObjectCollection {
     public function __construct($objectType,$lookupTables = array(),$baseFilter = null,$data=array()) {
         $this->data            = $data;
         $this->objectType      = $objectType;
-        $this->query      = new FQuery();
+        $this->objectTypeTable = strtolower($this->objectType[0]).substr($this->objectType,1);
+        $this->filterKeyTable  = $this->objectTypeTable;
         
-        // An array of tables was provided, add them all
-        if (is_array($lookupTables) && !empty($lookupTables)) {
-            $this->objectTypeTable = strtolower($this->objectType[0]).substr($this->objectType,1);
-            foreach ($lookupTables as $lt) {
-                $this->query->addTable($lt);
-            }
-        // A single scalar value was provided
-        } else if (!is_array($lookupTables) && '' != $lookupTables) {
-            $this->objectTypeTable = $lookupTables;
-            $this->query->addTable($lookupTables);
-        // The default (blank) was provided, use the objectType as table name
-        } else {
-            $this->query->addTable(FModel::standardizeTableName($objectType));
-        }
-
-        $this->output = 'objects';
-        if ( $baseFilter ) {
-            $this->query->addCondition(null,$baseFilter);
-        }
+        $this->query        = new FQuery();
+        $this->baseFilter   = $baseFilter;
+        $this->lookupTables = $lookupTables; 
+        $this->output       = 'objects';
+        
     }
 
     // Specifies the type of data returned by 'get' calls
@@ -152,6 +141,37 @@ abstract class FObjectCollection {
     // Empty this collection of previously retrieved data
     public function purge() {
         $this->data = array();
+        return $this;
+    }
+    
+    // Completely reset the collection to its pristine state
+    public function reset() {
+        $this->data = array();
+        $this->query = new FQuery();
+        
+        // An array of tables was provided, add them all
+        if (is_array($this->lookupTables) && !empty($this->lookupTables)) {
+            
+            foreach ($this->lookupTables as $lt) {
+                $this->query->addTable($lt);
+            }
+        // A single scalar value was provided
+        } else if (!is_array($this->lookupTables) && '' != $this->lookupTables) {
+            $this->objectTypeTable = $this->lookupTables;
+            $this->query->addTable($this->lookupTables);
+        // The default (blank) was provided, use the objectType as table name
+        } else {
+            $this->query->addTable(FModel::standardizeTableName($this->objectType));
+        }
+
+        if ( $this->baseFilter ) {
+            $this->query->addCondition(null,$this->baseFilter);
+        }
+        
+        if ($this->baseFilter) {
+            $this->query->addCondition(null,$this->baseFilter);
+        }
+        return $this;
     }
 
 
@@ -255,7 +275,7 @@ abstract class FObjectCollection {
                     
                     
                     if ($origK == 'id' || _model()->$ot->attributeInfo($k)) {   
-                        $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}`='{$v}' ");
+                        $this->query->addCondition(null, "`{$this->filterKeyTable}`.`{$k}`='{$v}' ");
                     }
                     
                     // If the requested key represents an external relationship, then...
@@ -273,10 +293,22 @@ abstract class FObjectCollection {
                                 }
                                 
                                 $this->query->addTable($info['table_l']);
+                                
+                                // FACCOUNT special handling.. would be so nice to have this in FAccountCollection
+                                if ($info['base_f'] == "FAccount" && 
+                                   (($rk == "username") || ($rk=="password") || ($rk=="emailAddress"))) {
+                                   // Join app_accounts
+                                   $this->query->addTable('app_accounts');
+                                   $this->query->addCondition('AND', "`app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id` ");
+                                   $this->query->addCondition('AND', "`app_accounts`.`{$rk}`= '{$v}' ");
+                                } else {
+                                    $this->query->addCondition('AND',
+                                        "`{$info['table_l']}`.`{$rk}` = '{$v}' ");
+                                } 
+                                
                                 $this->query->addCondition('AND',
                                 	"`{$info['table_f']}`.`{$info['column_f']}`=`{$info['table_l']}`.`{$info['table_l']}_id`");
-                                $this->query->addCondition('AND',
-                                    "`{$info['table_l']}`.`{$rk}` = '{$v}' ");
+                                
                             }
                             if ($info['role_l'] == 'MM') {
                                 // Filtering on a Peer relation
@@ -311,7 +343,7 @@ abstract class FObjectCollection {
                 if ($k == 'id') { $k = $this->getRealId(); }
                 if (empty($this->data)) {
                     // Add a condition to the query
-                    $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}` {$c} {$v} ");
+                    $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}` {$c} '{$v}' ");
                 } else {
                     // Filter the existing data points
                 }
@@ -540,6 +572,7 @@ abstract class FObjectCollection {
 
 
     public function get(/* variable arguments accepted */) {
+        $this->reset();
         $num_args = func_num_args();
         switch ($num_args) {
             case 0:
@@ -603,6 +636,8 @@ abstract class FObjectCollection {
             switch ($output) {
                 case 'array':
                     return $result;
+                case 'count':
+                    return count($result);
                 case 'objects':
                 default:
                     $response = array();
@@ -613,6 +648,16 @@ abstract class FObjectCollection {
                     $this->data = $response;
                     break;
             }
+        }
+    }
+    
+    // Provide a count of the number of objects in the collection
+    public function count() {
+
+        if (count($this->data) > 0) {
+            return count($this->data);
+        } else {
+            return $this->runQuery('count');
         }
     }
 }

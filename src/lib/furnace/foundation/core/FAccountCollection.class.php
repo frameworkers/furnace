@@ -21,8 +21,48 @@ abstract class FAccountCollection extends FObjectCollection {
         
         parent::__construct($objectType,$lookupTable,$baseFilter,$data);
         
+        
+    }
+    
+    public function reset() {
+        parent::reset();
         $this->query->addJoin('LEFT JOIN','`app_accounts`',
         	'`app_accounts`.`faccount_id`=`'.$this->objectTypeTable.'`.`faccount_id`');
+    }
+    
+    public function filter() {
+        $num_args = func_num_args();
+        switch ($num_args) {
+            case 1:
+                $k = func_get_arg(0);
+                return parent::filter($k);
+            case 2:
+                $k = func_get_arg(0);
+                $v = func_get_arg(1);
+                switch ($k) {
+                    case 'username':
+                    case 'password':
+                    case 'emailAddress':
+                        $this->filterKeyTable = 'app_accounts';
+                        break;
+                }
+                return parent::filter($k,$v);
+            case 3:
+                $k = func_get_arg(0);
+                $c = func_get_arg(1);
+                $v = func_get_arg(2);
+                switch ($k) {
+                    case 'username':
+                    case 'password':
+                    case 'emailAddress':
+                        $this->filterKeyTable = 'app_accounts';
+                        break;
+                }
+                return parent::filter($k,$c,$v);
+            default:
+                throw new FException("Unexpected number of arguments for FAccountCollection::filter()");
+                break;    
+        }
     }
 }
 
