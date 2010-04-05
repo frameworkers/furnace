@@ -182,6 +182,16 @@
 	    }
 		$this->javascripts[] = $path;
 	}
+     
+	protected function extensionAddJavascript($extension,$path,$bLocal = false) {
+	    if (!$bLocal) {
+	        $path = "/extensions/{$extension}/themes/{$this->theme}/js/{$path}";
+	    } else {
+	        $localPath = $this->page_data['_local_'];
+	        $path = "{$localPath}/{$path}";
+	    }
+	    $this->javascripts[] = $path;
+	}
 	
 	public function injectJS($code) {
 	    $this->jsraw .= $code;
