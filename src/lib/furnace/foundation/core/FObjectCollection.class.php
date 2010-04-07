@@ -217,141 +217,151 @@ abstract class FObjectCollection {
         
         
         
-        $num_args = func_num_args();
+        $num_args      = func_num_args();
+        $joining_op    = 'AND'; 
+        $comparison_op = '=';
         switch ($num_args) {
             case 1:
                 // Process an FCriteria object
+                $fcrit = func_get_arg(0);
+                if ($fcrit instanceof FCriteria) {
+                    $k = $fcrit->field;
+                    $c = $fcrit->comp;
+                    $v = $fcrit->value;
+                    $joining_op = $fcrit->prior_op;
+                    $comparison_op = $c;
+                } else {
+                    throw new FException("Invalid object passed as parameter to FObjectCollection::filter(), expected FCriteria or derivative");
+                }
                 break;
             case 2:
                 // Process a key=val filter
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
-                
-                // BEGIN 'k' PRE-PROCESSING
-                // This is necessary when 'extended'
-                // filters are being used. An extended filter is one that filters
-                // on the value of an attribute of a *relative* of the current object.
-                //
-                // Example: 
-                //   objects: bug, release
-                //   rels:    bug has a M:1 (child-parent) relationship to release called 'target'
-                //
-                //   to filter those bugs targeted for a particular release:
-                // 
-                //   $bugCollection->filter('target',31) where 31 is the id of the release. This isn't
-                //   always ideal (most times the id is internal) so, to allow searching on the 'name'
-                //   of the release, for example:
-                //
-                //   $bugCollection->filter('target[name]','0.8.1-beta');
-                //
-                //   using the example above,
-                //     rk=name     (remote key)
-                //      k=target   (key)
-                //
-                //
-                $rk = false;
-                if (false !== ($rkstart = strpos($k,'['))) {
-                    if (false !== ($rkend = strpos($k,']',$rkstart))) {
-                        $rk = substr($k,$rkstart+1,($rkend-($rkstart+1)));
-                        $k = substr($k,0,$rkstart);
-                    }
-                }
-                // Finally, if k == 'id' it needs to be expanded to its full schema equivalent
-                //   of '<tablename>_id'
-                $origK = $k;
-                if ($k == 'id') { $k = $this->getRealId(); }
-                //
-                // END 'k' PRE-PROCESSING
-                
-                
-                
-                if (empty($this->data)) {
-                    
-                    // If the requested key represents a local attribute, then 
-                    // the request can be satisfied by adding a simple condition to
-                    // the query object:
-                    $ot  = $this->objectType;
-                    $otm = "{$ot}Model";  
-                    
-                    
-                    if ($origK == 'id' || _model()->$ot->attributeInfo($k)) {   
-                        $this->query->addCondition(null, "`{$this->filterKeyTable}`.`{$k}`='{$v}' ");
-                    }
-                    
-                    // If the requested key represents an external relationship, then...
-                    else {
-                        $fn = "get{$k}Info";;
-                        if (is_callable(array($otm,$fn))) {
-                            $info = _model()->$ot->$fn();
-                            if ($info['role_l'] == 'M1') {
-                                // Filtering on a Parent relation
-                                // If the remote key (rk) === false, it means that no 
-                                // remote key was specified, and that we should default to the 
-                                // id of the remote object
-                                if (false === $rk) {
-                                    $rk = "{$info['table_l']}_id";
-                                }
-                                
-                                $this->query->addTable($info['table_l']);
-                                
-                                // FACCOUNT special handling.. would be so nice to have this in FAccountCollection
-                                if ($info['base_f'] == "FAccount" && 
-                                   (($rk == "username") || ($rk=="password") || ($rk=="emailAddress"))) {
-                                   // Join app_accounts
-                                   $this->query->addTable('app_accounts');
-                                   $this->query->addCondition('AND', "`app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id` ");
-                                   $this->query->addCondition('AND', "`app_accounts`.`{$rk}`= '{$v}' ");
-                                } else {
-                                    $this->query->addCondition('AND',
-                                        "`{$info['table_l']}`.`{$rk}` = '{$v}' ");
-                                } 
-                                
-                                $this->query->addCondition('AND',
-                                	"`{$info['table_f']}`.`{$info['column_f']}`=`{$info['table_l']}`.`{$info['table_l']}_id`");
-                                
-                            }
-                            if ($info['role_l'] == 'MM') {
-                                // Filtering on a Peer relation
-                                die("Extended filtering on PEER relations not supported yet");
-                            }
-                            if ($info['role_l'] == '1M') {
-                                // Filtering on a Child relation
-                                die("Extended filtering on CHILD relations not supported yet");
-                            }
-                        }
-                    }
-                
-                
-                } else {
-                    // Filter the existing data points
-                    $keys = array_keys($this->data);
-                    $count= 0;
-                    $fn   = "get{$k}";
-                    foreach ($this->data as $d) {
-                        if ($d->$fn() != $v) {
-                            unset($this->data[$keys[$count]]);
-                        }
-                        $count++;
-                    }
-                }
+                $comparison_op = '=';
                 break;
             case 3:
                 // Process a key,comp,val filter
                 $k = func_get_arg(0);
                 $c = func_get_arg(1);
                 $v = func_get_arg(2);
-                if ($k == 'id') { $k = $this->getRealId(); }
-                if (empty($this->data)) {
-                    // Add a condition to the query
-                    $this->query->addCondition(null, "`{$this->objectTypeTable}`.`{$k}` {$c} '{$v}' ");
-                } else {
-                    // Filter the existing data points
-                }
+                $comparison_op = $c;
                 break;
             default:
                 throw new FException("Unexpected number of arguments for FObjectCollection::filter()");
                 break;
         }
+                
+                
+        // BEGIN 'k' PRE-PROCESSING
+        // This is necessary when 'extended'
+        // filters are being used. An extended filter is one that filters
+        // on the value of an attribute of a *relative* of the current object.
+        //
+        // Example: 
+        //   objects: bug, release
+        //   rels:    bug has a M:1 (child-parent) relationship to release called 'target'
+        //
+        //   to filter those bugs targeted for a particular release:
+        // 
+        //   $bugCollection->filter('target',31) where 31 is the id of the release. This isn't
+        //   always ideal (most times the id is internal) so, to allow searching on the 'name'
+        //   of the release, for example:
+        //
+        //   $bugCollection->filter('target[name]','0.8.1-beta');
+        //
+        //   using the example above,
+        //     rk=name     (remote key)
+        //      k=target   (key)
+        //
+        //
+        $rk = false;
+        if (false !== ($rkstart = strpos($k,'['))) {
+            if (false !== ($rkend = strpos($k,']',$rkstart))) {
+                $rk = substr($k,$rkstart+1,($rkend-($rkstart+1)));
+                $k = substr($k,0,$rkstart);
+            }
+        }
+        // Finally, if k == 'id' it needs to be expanded to its full schema equivalent
+        //   of '<tablename>_id'
+        $origK = $k;
+        if ($k == 'id') { $k = $this->getRealId(); }
+        //
+        // END 'k' PRE-PROCESSING
+        
+        
+        
+        if (empty($this->data)) {
+            
+            // If the requested key represents a local attribute, then 
+            // the request can be satisfied by adding a simple condition to
+            // the query object:
+            $ot  = $this->objectType;
+            $otm = "{$ot}Model";  
+            
+            
+            if ($origK == 'id' || _model()->$ot->attributeInfo($k)) {   
+                $this->query->addCondition($joining_op, "`{$this->filterKeyTable}`.`{$k}`{$comparison_op}'{$v}' ");
+            }
+            
+            // If the requested key represents an external relationship, then...
+            else {
+                $fn = "get{$k}Info";;
+                if (is_callable(array($otm,$fn))) {
+                    $info = _model()->$ot->$fn();
+                    if ($info['role_l'] == 'M1') {
+                        // Filtering on a Parent relation
+                        // If the remote key (rk) === false, it means that no 
+                        // remote key was specified, and that we should default to the 
+                        // id of the remote object
+                        if (false === $rk) {
+                            $rk = "{$info['table_l']}_id";
+                        }
+                        
+                        $this->query->addTable($info['table_l']);
+                        
+                        // FACCOUNT special handling.. would be so nice to have this in FAccountCollection
+                        if ($info['base_f'] == "FAccount" && 
+                           (($rk == "username") || ($rk=="password") || ($rk=="emailAddress"))) {
+                           // Join app_accounts
+                           $this->query->addTable('app_accounts');
+                           $this->query->addCondition($joining_op, "( `app_accounts`.`{$rk}`{$comparison_op} '{$v}' AND `app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id`  ");
+                        } else {
+                            $this->query->addCondition($joining_op,
+                                "(`{$info['table_l']}`.`{$rk}` {$comparison_op} '{$v}' ");
+                        } 
+                        
+                        $this->query->addCondition('AND',
+                        	"`{$info['table_f']}`.`{$info['column_f']}`=`{$info['table_l']}`.`{$info['table_l']}_id`)");
+                        
+                    }
+                    if ($info['role_l'] == 'MM') {
+                        // Filtering on a Peer relation
+                        die("Extended filtering on PEER relations not supported yet");
+                    }
+                    if ($info['role_l'] == '1M') {
+                        // Filtering on a Child relation
+                        die("Extended filtering on CHILD relations not supported yet");
+                    }
+                }
+            }
+        } else {
+            // Filter the existing data points
+            if ($comparison_op == '=') {
+                $keys = array_keys($this->data);
+                $count= 0;
+                $fn   = "get{$k}";
+                foreach ($this->data as $d) {
+                    if ($d->$fn() != $v) {
+                        unset($this->data[$keys[$count]]);
+                    }
+                    $count++;
+                }
+            } else {
+                throw new FException("filtering on existing data points with comparison other than '=' not supported yet");
+            }
+        }
+                
         return $this;
     }
     
@@ -366,58 +376,31 @@ abstract class FObjectCollection {
         return $this;
     }
     
-    public function filterOr(/*variable args accepted*/) {
+    public function filterOr() {
+        throw new FException("FObjectCollection::filterOr() deprecated. Use FObjectCollection::or_filter()");
+    }
+    
+    public function or_filter(/*variable args accepted*/) {
         $num_args = func_num_args();
         switch ($num_args) {
             case 1:
                 // Process an FCriteria object
+                return $this->filter(func_get_arg(0));
                 break;
             case 2:
                 // Process a key=val filter
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
-                if ($k == 'id') { $k = $this->getRealId(); }
+                $fcrit = new FCriteria('OR',$k,$v,'=');
+                return $this->filter($fcrit);
                 
-                if (empty($this->data)) {
-                    // Add a condition to the query
-                    $this->query->addCondition('OR', "{$k}='{$v}' ");
-                } else {
-                    // Filter the existing data points
-                    /**
-                     * THIS IS IMPOSSIBLE... right?
-                     * 
-                     * 
-                     *
-                     *
-                    $keys = array_keys($this->data);
-                    $count= 0;
-                    $fn   = "get{$k}";
-                    foreach ($this->data as $d) {
-                        if ($d->$fn() != $v) {
-                            unset($this->data[$keys[$count]]);
-                        }
-                        $count++;
-                    }
-                    */
-                    throw new FException("Unsupported use of ->filterOr()");
-                    break;
-                }
-                break;
             case 3:
                 // Process a key,comp,val filter
                 $k = func_get_arg(0);
                 $c = func_get_arg(1);
                 $v = func_get_arg(2);
-                if ($k == 'id') { $k = $this->getRealId(); }
-                if (empty($this->data)) {
-                    // Add a condition to the query
-                    $this->query->addCondition(null, "{$k} {$c} {$v} ");
-                } else {
-                    // Filter the existing data points
-                    throw new FException("Unsupported use of ->filterOr()");
-                    break;
-                }
-                break;
+                $fcrit = new FCriteria('OR',$k,$v,$c);
+                return $this->filter($fcrit);
             default:
                 throw new FException("Unexpected number of arguments for FObjectCollection::filter()");
                 break;
