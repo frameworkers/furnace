@@ -167,10 +167,6 @@ abstract class FObjectCollection {
         if ( $this->baseFilter ) {
             $this->query->addCondition(null,$this->baseFilter);
         }
-        
-        if ($this->baseFilter) {
-            $this->query->addCondition(null,$this->baseFilter);
-        }
         return $this;
     }
 
