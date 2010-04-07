@@ -66,7 +66,7 @@ class FApplicationResponse {
         $page_root = (false == $this->extension && file_exists(
             "{$this->projectRootDir}/app/themes/{$this->currentTheme}/pages/{$group}/{$page}/{$page}.html"))
             ? "{$this->projectRootDir}/app/themes/{$this->currentTheme}"
-            : "{$this->projectRootDir}/app/pages";
+            : "{$this->projectRootDir}/app";
         
         // Determine the correct path to the page
         $path = (false !== $this->extension)
