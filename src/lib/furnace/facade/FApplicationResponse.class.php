@@ -61,10 +61,17 @@ class FApplicationResponse {
     }
     
     public function setPage($group,$page) {
+        
+        // Determine if a theme-specific view override for the requested page exists
+        $page_root = (false == $this->extension && file_exists(
+            "{$this->projectRootDir}/app/themes/{$this->currentTheme}/pages/{$group}/{$page}/{$page}.html"))
+            ? "{$this->projectRootDir}/app/themes/{$this->currentTheme}"
+            : "{$this->projectRootDir}/app/pages";
+        
         // Determine the correct path to the page
         $path = (false !== $this->extension)
             ? "{$this->projectRootDir}/app/plugins/extensions/{$this->extension}/pages/{$group}/{$page}/{$page}.html"
-            : "{$this->projectRootDir}/app/pages/{$group}/{$page}/{$page}.html";
+            : "{$page_root}/pages/{$group}/{$page}/{$page}.html";
             
         // Attempt to load the page content
         try {
