@@ -396,6 +396,20 @@ class FModel {
  				. "\t\t{$s->getVisibility()} \${$s->getName()};\r\n\r\n";	
  		}
  		
+ 		// add static (defined) variables
+ 		foreach ($object->getAttributes() as $a) {
+ 		    $vc = $a->getValidation();
+ 		    if (isset($vc['allowedValues'])) {
+ 		        $aupper = strtoupper($a->getName());
+ 		        $r .= "\t\t//Allowed values for '{$a->getName()}': \r\n";
+ 		        foreach ($vc['allowedValues'] as $d) {
+ 		            $dupper = strtoupper(str_replace(' ','',$d['label']));
+ 		            $r .= "\t\tpublic static \${$aupper}_{$dupper} = \"{$d['value']}\";\r\n";
+ 		        }
+ 		        $r .= "\r\n";
+ 		    }
+ 		}
+ 		
  		// constructor
 		$r .= "\t\tpublic function __construct(\$data=array()) {\r\n";	
 		$r .= "\t\t\t\$this->id          = isset(\$data['".FModel::standardizeTableName($object->getName())."_id']) ? \$data['".FModel::standardizeTableName($object->getName())."_id'] : 0;\r\n";
@@ -566,6 +580,26 @@ class FModel {
 				. "\t\t}\r\n\r\n";
 			
 		}
+		
+		// DECODER
+		// Decode (map) allowed values for attributes
+ 		foreach ($object->getAttributes() as $a) {
+ 		    $vc = $a->getValidation();
+ 		    if (isset($vc['allowedValues'])) {
+ 		        $r .= "\t\tpublic static function Decode".self::standardizeName($a->getName())."(\$val) {\r\n";
+ 		        $r .= "\t\t\tswitch (\$val) {\r\n";
+ 		        $aupper = strtoupper($a->getName());
+ 		        $r .= "\t\t\t\t//Allowed values for '{$a->getName()}': \r\n";
+ 		        foreach ($vc['allowedValues'] as $d) {
+ 		            $dupper = strtoupper(str_replace(' ','',$d['label']));
+ 		            $r .= "\t\t\t\tcase self::\${$aupper}_{$dupper}:  return \"{$d['label']}\";\r\n";
+ 		        }
+ 		        $r .= "\t\t\t\tdefault: return 'Unknown';\r\n"
+ 		        	. "\t\t\t}\r\n"
+ 		        	. "\t\t}\r\n";
+ 		        $r .= "\r\n";
+ 		    }
+ 		}
 		
 		
 		// LOADER
