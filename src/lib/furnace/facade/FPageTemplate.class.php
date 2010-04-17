@@ -325,9 +325,14 @@ class FPageTemplate extends TadpoleEngine {
 							        $result = $flashlight->$privateMethod();
 							    }
 							    if (is_object($result) && $result instanceof FObjectCollection) {
-							        return $result->output();
+							        return $result->output();            // return the objects in the collection
 							    } else {
-							        return $result;
+							        if (isset($commands['decode'])) {
+							            $decodeFn = "Decode{$segment}";  // Decode the object before returning   
+							            return $flashlight->$decodeFn($result);
+							        } else {
+							            return $result;
+							        }
 							    }
 							
 							// If the object does not have a private method defined, try to return the public attribute
