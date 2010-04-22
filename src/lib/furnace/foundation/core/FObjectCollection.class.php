@@ -243,6 +243,25 @@ abstract class FObjectCollection {
                 $v = func_get_arg(2);
                 $comparison_op = $c;
                 break;
+            case 6:
+                // Process a nested (grouped) key,comp,val filter
+                $k1 = func_get_arg(0);
+                $c1 = func_get_arg(1);
+                $v1 = func_get_arg(2);
+                $k2 = func_get_arg(3);
+                $c2 = func_get_arg(4);
+                $v2 = func_get_arg(5);
+                
+                
+                $cond1 = new FCriteria(null,$k1,$v1,$c1);
+                $cond2 = new FCriteria('AND',$k2,$v2,$c2);
+                $this->query->startConditionGroup('OR');
+                $this->filter($cond1);
+                $this->filter($cond2);
+                $this->query->endConditionGroup();
+                break;
+                
+                
             default:
                 throw new FException("Unexpected number of arguments for FObjectCollection::filter()");
                 break;
@@ -314,7 +333,7 @@ abstract class FObjectCollection {
                             $rk = "{$info['table_l']}_id";
                         }
                         
-                        $this->query->addTable($info['table_l']);
+                        $this->query->addTable($info['table_l'],array($rk));
                         
                         // FACCOUNT special handling.. would be so nice to have this in FAccountCollection
                         if ($info['base_f'] == "FAccount" && 
@@ -397,6 +416,21 @@ abstract class FObjectCollection {
                 $v = func_get_arg(2);
                 $fcrit = new FCriteria('OR',$k,$v,$c);
                 return $this->filter($fcrit);
+            case 6:
+                // Process a nested (grouped) key,comp,val filter
+                $k1 = func_get_arg(0);
+                $c1 = func_get_arg(1);
+                $v1 = func_get_arg(2);
+                $k2 = func_get_arg(3);
+                $c2 = func_get_arg(4);
+                $v2 = func_get_arg(5);
+                
+                $this->query->startConditionGroup('AND');
+                $this->filter( new FCriteria(null,$k1,$v1,$c1));
+                $this->filter( new FCriteria('OR',$k2,$v2,$c2));
+                $this->query->endConditionGroup();
+                
+                break;
             default:
                 throw new FException("Unexpected number of arguments for FObjectCollection::filter()");
                 break;

@@ -21,9 +21,18 @@ class FQuery {
          
     }
 
-    public function addTable($name) {
+    public function addTable($name,$fields = '*') {
         // hashing on the name prevents the same table from being added 2x
         $this->tables[$name] = $name;
+        $this->fields[$name] = $fields;
+    }
+    
+    public function addFields($table,$fields) {
+        if (isset ($this->fields[$table])) {
+            $this->fields[$table] = (is_array($this->fields['table']))
+                ? array_merge($this->fields[$table],$fields)
+                : $fields;
+        }
     }
 
     public function addCondition($previousOp, $condition) {
@@ -33,6 +42,13 @@ class FQuery {
         } else {
             $this->conditions[] = array("pOp" => $previousOp, "cond" => $condition);
         }
+    }
+    
+    public function startConditionGroup($previousOp) {
+        $this->conditions[] = array("pOp" => $previousOp,"cond" => "(");
+    }
+    public function endConditionGroup() {
+        $this->conditions[] = array("pOp" => null,"cond" => ")");
     }
     
     public function addJoin($joinType,$target,$on) {
@@ -58,27 +74,41 @@ class FQuery {
         $qstring = "SELECT ";
 
         // Field List
-        if (sizeof($this->fields) == 0) { $qstring .= " * "; }
-        else {
-            for ($i = 0; $i < sizeof($this->fields); $i++) {
-                // Check for aliases
-                $aliasValue = '';
-                foreach($this->aliases as $f=>$a){
-                    if ($f == $this->fields[$i]){
-                        $aliasValue = $a;
-                        break;
+        $fieldList = array();
+        foreach ($this->tables as $table) {
+            if (!is_array($this->fields[$table])) {
+                $fieldList[] =  " `{$table}`.* ";
+            } else {
+                foreach ($this->fields[$table] as $field) {
+                    if (is_array($field)) { // Handle an aliased field
+                        $fieldList[] = " `{$table}`.`{$field[0]}` AS `{$field[1]}` ";
+                    } else {
+                        $fieldList[] = " `{$table}`.`{$field}` ";
                     }
-                }
-                $fieldValue = $this->fields[$i] . ((empty($aliasValue))?  "" : " AS $aliasValue");
-                if ($i < sizeof($this->fields) - 1) {
-                    $qstring .= $fieldValue . ', ';
-                } else {
-                    $qstring .= $fieldValue;
                 }
             }
         }
+//        if (sizeof($this->fields) == 0) { $qstring .= " * "; }
+//        else {
+//            for ($i = 0; $i < sizeof($this->fields); $i++) {
+//                // Check for aliases
+//                $aliasValue = '';
+//                foreach($this->aliases as $f=>$a){
+//                    if ($f == $this->fields[$i]){
+//                        $aliasValue = $a;
+//                        break;
+//                    }
+//                }
+//                $fieldValue = $this->fields[$i] . ((empty($aliasValue))?  "" : " AS $aliasValue");
+//                if ($i < sizeof($this->fields) - 1) {
+//                    $qstring .= $fieldValue . ', ';
+//                } else {
+//                    $qstring .= $fieldValue;
+//                }
+//            }
+//        }
 
-        $qstring .= " FROM ";
+        $qstring .= implode(',',$fieldList) . " FROM ";
 
         // Table List
         $qstring .= '`' . implode('`,`',$this->tables) .'`';
@@ -90,11 +120,25 @@ class FQuery {
         
         // WHERE Clauses, if any
         if (sizeof($this->conditions) > 0){
-            $qstring .= " WHERE ";
+            $qstring   .= " WHERE ";
+            $groupStart = false;
             for($i = 0, $ccount = count($this->conditions); $i < $ccount; $i++) {
-                $qstring .= (null == $this->conditions[$i]['pOp'])
-                ? (($i > 0) ? " AND " : "" )    . " {$this->conditions[$i]['cond']} "
-                : $this->conditions[$i]['pOp' ] . " {$this->conditions[$i]['cond']} ";
+                // Handle a condition group start
+                if ($this->conditions[$i]['cond'] == '(') {
+                    $qstring .= (($i == 0) ? '' : $this->conditions[$i]['pOp'] ) . ' (';
+                    $groupStart = true;
+                }
+                // Handle a condition group end
+                else if ($this->conditions[$i]['cond'] == ')') {
+                    $qstring .= ') ';
+                }
+                // Handle a basic condition
+                else {
+                    $qstring .= (null == $this->conditions[$i]['pOp'])
+                        ? (($i > 0 && !$groupStart) ? " AND " : "" )    . " {$this->conditions[$i]['cond']} "
+                        : $this->conditions[$i]['pOp' ] . " {$this->conditions[$i]['cond']} ";
+                    if ($groupStart) $groupStart = false;
+                }
             }
         }
 
