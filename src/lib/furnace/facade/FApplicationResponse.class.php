@@ -27,6 +27,7 @@ class FApplicationResponse {
         $this->controller->ref('_server', $_SERVER);
         $this->controller->ref('_session',$_SESSION);
         $this->controller->ref('_user',_user());
+        $this->controller->set('_now',date('Y-m-d G:i:s'));
         
         // Determine theme and local urls for assets
         if (false === $extension) {
