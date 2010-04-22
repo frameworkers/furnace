@@ -243,7 +243,7 @@ class FPageTemplate extends TadpoleEngine {
     /**
      * OVERRIDE
      */
-    protected function get_recursively($needle,$commands,&$rejected,$iter_data=array()) { 
+    protected function get_recursively($needle,&$commands,&$rejected,$iter_data=array()) { 
 
 		//NOTES:
 		// If iteration data has been provided, it is to be used with all "relative" tags, ie those
@@ -328,7 +328,8 @@ class FPageTemplate extends TadpoleEngine {
 							        return $result->output();            // return the objects in the collection
 							    } else {
 							        if (isset($commands['decode'])) {
-							            $decodeFn = "Decode{$segment}";  // Decode the object before returning   
+							            $decodeFn = "Decode{$segment}";  // Decode the object before returning
+							            $commands['nocache'] = true;     // Do not cache the decoded result;   
 							            return $flashlight->$decodeFn($result);
 							        } else {
 							            return $result;
