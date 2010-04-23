@@ -11,6 +11,18 @@ class _DefaultController extends Controller {
         //
 
     }
+    
+    
+    public function login() {
+        $this->loadHelper('org.frameworkers','LoginBox');
+        $lb = new LoginBoxHelper($this,'/');
+        $this->set('loginBox',$lb->render());
+    }
+    
+    public function logout() {
+        FSessionManager::doLogout();
+        $this->redirect("/");
+    }
 
     
     // Error page to display on 404 errors
