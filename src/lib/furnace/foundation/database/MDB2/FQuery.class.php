@@ -51,8 +51,11 @@ class FQuery {
         $this->conditions[] = array("pOp" => null,"cond" => ")");
     }
     
-    public function addJoin($joinType,$target,$on) {
-        $this->joins[] = "{$joinType} {$target} ON {$on} ";
+    public function addJoin($joinType,$target,$on,$fields = '*') {
+        $this->joins[] = array('joinType' => $joinType,
+                               'target'   => $target,
+                               'on'       => $on);                    
+        $this->fields[$target] = $fields;
     }
     
     public function setLimit($limit,$offset) {
@@ -88,6 +91,20 @@ class FQuery {
                 }
             }
         }
+        foreach ($this->joins as $j) {
+            if (!is_array($this->fields[$j['target']])) {
+                $fieldList[] = " `{$j['target']}`.* ";
+            } else {
+                foreach ($this->fields[$j['target']] as $field) {
+                    if (is_array($field)) { // Handle an aliased field
+                        $fieldList[] = " `{$table}`.`{$field[0]}` AS `{$field[1]}` ";
+                    } else {
+                        $fieldList[] = " `{$table}`.`{$field}` ";
+                    }
+                }
+            }
+        }
+        
 //        if (sizeof($this->fields) == 0) { $qstring .= " * "; }
 //        else {
 //            for ($i = 0; $i < sizeof($this->fields); $i++) {
@@ -115,7 +132,11 @@ class FQuery {
 
         // JOIN Clauses, if any
         if (sizeof($this->joins) > 0) {
-            $qstring .= ' '.implode(' ',$this->joins).' ';
+            $joinArray = array();
+            foreach ($this->joins as $j) {
+                $joinArray[] = "{$j['joinType']} `{$j['target']}` ON {$j['on']} ";
+            }
+            $qstring .= ' '.implode(' ',$joinArray).' ';
         }
         
         // WHERE Clauses, if any

@@ -26,7 +26,7 @@ abstract class FAccountCollection extends FObjectCollection {
     
     public function reset() {
         parent::reset();
-        $this->query->addJoin('LEFT JOIN','`app_accounts`',
+        $this->query->addJoin('LEFT JOIN','app_accounts',
         	'`app_accounts`.`faccount_id`=`'.$this->objectTypeTable.'`.`faccount_id`');
     }
     
