@@ -52,6 +52,10 @@ class FDatabaseSchema {
 		$this->datasource->exec($stmt);
 	}
 	
+	public function tableExists($tableName,$bIsLookupTable = false) {
+	    return isset($this->tables[FModel::standardizeTableName($tableName,$bIsLookupTable)]);
+	}
+	
 	private function discoverTables() {
 		$results = $this->datasource->query("SHOW TABLES");
 		

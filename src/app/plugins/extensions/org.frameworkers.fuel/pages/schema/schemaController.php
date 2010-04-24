@@ -13,9 +13,7 @@ class SchemaController extends Controller {
 		
 		$this->init();		// Load required files
 		
-		
-		
-	    try {
+		try {
 		    $d = new FDatabaseSchema();
     		$d->discover('default');
     		$model = $this->getModel();
@@ -65,7 +63,11 @@ class SchemaController extends Controller {
     		
     		// Analyze differences MODEL vs DATABASE
     		foreach ($d->getTables() as $dt) {
-    			
+    		    // Skip framework tables
+    			if ($dt->getName() == 'app_accounts') { continue; }
+    		    if ($dt->getName() == 'app_logs')     { continue; }
+    		    if ($dt->getName() == 'app_roles')    { continue; }
+    		
     			$bFound = false;
     			foreach ($model->tables as $mt) {
     				if (strtolower($mt->getName()) == strtolower($dt->getName())) {
@@ -86,6 +88,11 @@ class SchemaController extends Controller {
     		$this->set("existingTableNames",$existingTableNames);
     		$this->set("tables",$tables);
     		$this->set("notices",$notices);
+    		
+    		// Check for existance of required framework tables
+    		$this->set('app_accountsExists',$d->tableExists('app_accounts'));
+    		$this->set('app_rolesExists',$d->tableExists('app_roles'));
+    		$this->set('app_logsExists',$d->tableExists('app_logs'));
 		}
 	}
 	public function deleteDbTable($tableName='') {
@@ -299,6 +306,20 @@ class SchemaController extends Controller {
 		$schema->executeStatement($query);
 		$this->flash("Column Dropped Successfully");
 		$this->redirect("{$this->prefix}/schema/compareFields/{$data['tableName']}");
+	}
+	
+	public function addFWTable($which) {
+	    
+	    // Create a missing framework table in the database
+	    $path = dirname(dirname(dirname(__FILE__))) .'/libraries/generation/schemas/'.$which.'.sql';
+	    if (file_exists($path)) {
+	        _db()->exec(file_get_contents($path));
+	        $this->flash("Created required framework table '{$which}' ");
+	        $this->redirect("{$this->prefix}/schema/");
+	    } else {
+	        $this->flash("Unable to create unknown framework table '{$which}' ","error");
+	        $this->redirect("{$this->prefix}/schema/");
+	    }
 	}
 }
 ?>

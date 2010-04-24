@@ -1312,7 +1312,7 @@ and developer_project_projects.project_id = project.project_id
   	} 
 
   	public static function standardizeTableName($name,$bIsLookupTable = false) {
-  		if ("app_accounts" == $name || "app_roles" == $name) { return $name; }
+  		if ("app_accounts" == $name || "app_roles" == $name || "app_logs" == $name) { return $name; }
   		if ($bIsLookupTable) {
   			// A lookup table needs to maintain its '_' characters (which are
 			// otherwise illegal. Standardize the 3 components, but leave the 

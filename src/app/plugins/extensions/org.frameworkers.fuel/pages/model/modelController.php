@@ -105,44 +105,15 @@ class ModelController extends Controller {
 			fwrite($sqlOutputFile,$t->toSqlString()."\r\n\r\n");
 		 }
 		 
+		 // Add any required framework tables
 		 if ($model->use_accounts) {
-		 	$fAccount = <<<END
--- 
--- Table structure for table `app_account`
--- 
+		 	$fAccount .= file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_accounts.sql');
+		 	$fAccount .= file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_roles.sql');
+		 	$fAccount .= file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_logs.sql');
+			fwrite($sqlOutputFile,$fAccount."\r\n\r\n");	    	    
+		 }
 
-CREATE TABLE `app_account` (
-  `faccount_id` int(11) unsigned NOT NULL auto_increment COMMENT 'The unique id of this object in the database',
-  `username` varchar(20) NOT NULL COMMENT 'The username associated with this account',
-  `password` varchar(160) NOT NULL COMMENT 'The password for the account',
-  `emailAddress` varchar(80) NOT NULL COMMENT 'The email address associated with this account',
-  `status` varchar(20) NOT NULL COMMENT 'The status of this account',
-  `secretQuestion` varchar(160) NOT NULL COMMENT 'The secret question for access to this account',
-  `secretAnswer` varchar(160) NOT NULL COMMENT 'The secret answer for the secret question',
-  `objectClass` varchar(50) NOT NULL COMMENT 'The class of the primary object associated with this account',
-  `objectId` int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
-  `created` datetime NOT NULL COMMENT 'When this account was created',
-  `modified` datetime NOT NULL COMMENT 'When this account was last modified',
-  `lastLogin` datetime NOT NULL COMMENT 'The last time this account logged in',
-  `newPasswordKey` varchar(25) NOT NULL COMMENT 'A key for verifying forgot password attempts',
-  PRIMARY KEY  (`faccount_id`),
-  UNIQUE KEY `username` (`username`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
-
-
--- 
--- Table structure for table `app_role`
--- 
-
-CREATE TABLE `app_role` (
-  `faccount_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`faccount_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
-
-END;
-		 } // END if(model->use_accounts)
-
-		 fwrite($sqlOutputFile,$fAccount."\r\n\r\n");
+		 // Close the output file
 		 fclose($sqlOutputFile);
 		 
 		 $output[] =  "</ul>";
@@ -206,64 +177,27 @@ END;
 			// If the object is derived from FAccount:
 			if ("FAccount" == $objectParent) {
 				
-				// Verify that `app_accounts` and `app_roles` tables exist in the db
-				$results = _db()->query("SHOW TABLES");
-				$foundAppAccounts = false;
-				$foundAppRoles    = false;
-				while ($r = $results->fetchRow()) {
-					if ("app_accounts" == $r[0]) {
-						$foundAppAccounts = true;
-					} else if ("app_roles" == $r[0]) {
-						$foundAppRoles    = true;
-					}
-					if ($foundAppRoles && $foundAppAccounts) {
-						break;
-					}
-				}
+				// Verify that the required framework tables exist in the database
+				$schema = $this->getSchema();
 				
-				// If they do not, create them:
-				if (!$foundAppAccounts) {
-					$appAccountsSql = <<<END
--- 
--- Table structure for table `app_accounts`
--- 
-
-CREATE TABLE `app_accounts` (
-  `faccount_id`     int(11) unsigned NOT NULL auto_increment COMMENT 'The unique id of this object in the database',
-  `username`       varchar(20) NOT NULL COMMENT 'The username associated with this account',
-  `password`       varchar(160) NOT NULL COMMENT 'The password for the account',
-  `emailAddress`   varchar(80) NOT NULL COMMENT 'The email address associated with this account',
-  `status`         varchar(20) NOT NULL COMMENT 'The status of this account',
-  `secretQuestion` varchar(160) NOT NULL COMMENT 'The secret question for access to this account',
-  `secretAnswer`   varchar(160) NOT NULL COMMENT 'The secret answer for the secret question',
-  `objectClass`    varchar(50) NOT NULL COMMENT 'The class of the primary object associated with this account',
-  `objectId`       int(11) unsigned NOT NULL COMMENT 'The id of the primary object associated with this account',
-  `created`        datetime NOT NULL COMMENT 'When this account was created',
-  `modified`       datetime NOT NULL COMMENT 'When this account was last modified',
-  `lastLogin`      datetime NOT NULL COMMENT 'The last time this account logged in',
-  `newPasswordKey` varchar(25) NOT NULL COMMENT 'A key for verifying forgot password attempts',
-  PRIMARY KEY  (`faccount_id`),
-  UNIQUE KEY `username` (`username`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
-END;
-					_db()->exec($appAccountsSql);
-					$this->flash("Created required `app_accounts` table");
+				if (!$schema->tableExists('app_accounts')) {
+				    $sql = file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_accounts.sql');
+				    _db()->exec($sql);
+				    $this->flash("Created required `app_accounts` table");
 				}
-				if (!$foundAppRoles) {
-					$appRolesSql = <<<END
--- 
--- Table structure for table `app_roles`
--- 
-
-CREATE TABLE `app_roles` (
-  `faccount_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY  (`faccount_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
-END;
-					_db()->exec($appRolesSql);
-					$this->flash("Created required `app_roles` table");
+			    if (!$schema->tableExists('app_roles')) {
+				    $sql = file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_roles.sql');
+				    _db()->exec($sql);
+				    $this->flash("Created required `app_roles` table");
+				}
+			    if (!$schema->tableExists('app_logs')) {
+				    $sql = file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_logs.sql');
+				    _db()->exec($sql);
+				    $this->flash("Created required `app_logs` table");
 				}
 			}
+				
+			// Create the object table itself
 			_db()->exec($m->tables[$tableName]->toSqlString());
 			
 			

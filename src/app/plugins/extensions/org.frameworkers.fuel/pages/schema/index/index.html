@@ -58,6 +58,14 @@
 			
 		</div>
 		<div class="innerBox">
+			<h2>Required Framework Tables</h2>
+			<ul style="line-height:18px;">
+			  <li class="[assert:!app_accountsExists;content='error']" style="padding:5px;margin-bottom:5px;">app_accounts: [if:app_accountsExists;content='ok';else='missing'] <span>[assert:!app_accountsExists;block=span](<a href="[_prefix_]/schema/addFWTable/app_accounts"/>add</a>)</span></li>
+			  <li class="[assert:!app_logsExists;content='error']" style="padding:5px;margin-bottom:5px;">app_logs:     [if:app_logsExists;content='ok';else='missing']  <span>[assert:!app_logsExists;block=span](<a href="[_prefix_]/schema/addFWTable/app_logs"/>add</a>)</span></li>
+			  <li class="[assert:!app_rolesExists;content='error']" style="padding:5px;margin-bottom:5px;">app_roles:    [if:app_rolesExists;content='ok';else='missing'] <span>[assert:!app_rolesExists;block=span](<a href="[_prefix_]/schema/addFWTable/app_roles"/>add</a>)</span></li>
+			</ul>
+		</div>
+		<div class="innerBox">
 			<h2>Schema Notices</h2>
 			<ul>
 			 <li class="ff_notice notice">[notices;block=li;noerror]Notice: Existing database table `[@.name]` was <strong>Not Found</strong> in the model! [ <a href="[_prefix_]/schema/deleteDbTable/[@.name]">delete this table</a> ]</li>
