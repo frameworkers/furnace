@@ -27,7 +27,7 @@ class MenuListHelper extends FPageFragment {
         $menu = "<ul id=\"{$this->id}\" class=\"{$this->class}\">";
         foreach ($this->menuItems as $mi) {
             // Determine if this is the active top-level menu item
-            $active = (_furnace()->request == $mi[1])
+            $active = (_furnace()->request->raw == $mi[1])
                 ? 'class="active"'
                 : '';
             // Draw the item and any nested sub items

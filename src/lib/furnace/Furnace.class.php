@@ -114,7 +114,7 @@ class Furnace {
         $this->rawRequest = $request;
         
         // Create an FApplicationRequest object to hold request details
-        $this->request = new FApplicationRequest();
+        $this->request = new FApplicationRequest($request);
                	
         // Determine the route to take
         $this->request->route = Furnace::route($this->rawRequest,$this->routes);
@@ -440,13 +440,16 @@ function is_assoc_callback($a, $b) {
 
 class FApplicationRequest {
     
+    public $raw;
     public $env;
     public $get;
     public $post;
     public $form;
     public $route;
     
-    public function __construct() {
+    public function __construct($rawRequest) {
+        
+        $this->raw  = $rawRequest;
         
         $this->get  =& $_GET;
         
