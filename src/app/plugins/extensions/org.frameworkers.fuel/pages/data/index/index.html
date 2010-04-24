@@ -7,7 +7,14 @@
 	<div id="col1">
 		<div id="col1Content">
 			<h2>Application Data</h2>
+			<div class="ff_message error" style="margin-top:16px;">
+				[assert:!dbConnectOk;block=div]
+				<strong>Error</strong><br/>
+				There was a problem connecting to the database.
+				Check your database settings in <a href="[_prefix_]/config">application configuration</a>
+			</div>
 			<div class="modelObjectSummaries">
+			  [assert:dbConnectOk;block=div]
 			  <div class="modelObjectSummary">
 			  	[theModel.objects;block=div]
 			  	<a href="[_prefix_]/data/objects/[@.name]" class="objectName">[@.name]</a><br/>
@@ -26,7 +33,7 @@
 				  <tr>
 				    <td>
 <div class="modelTable">
-	[tables;block=div]
+	[tables;block=div;noerror]
 	<div class="modelTableIcon">
 		<img src="[_theme_]/images/[if:@.found;content=[@.status];else=missing].png" alt="[if:@.found;content=[@.status];else=missing]"/>
 	</div>
