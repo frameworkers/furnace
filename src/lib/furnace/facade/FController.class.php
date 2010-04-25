@@ -54,7 +54,7 @@ class FController extends FPage {
 	}
 	
     protected function loadHelper($provider,$label) {
-		$path = _furnace()->rootdir . "/app/scripts/helpers/{$provider}/{$label}Helper/{$label}Helper.php";
+		$path = _furnace()->rootdir . "/app/scripts/helpers/{$provider}/{$label}/{$label}.php";
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
@@ -64,13 +64,13 @@ class FController extends FPage {
 		}	
 	}
 	
-	protected function loadLibrary($uri) {
-	    $path = _furnace()->rootdir . "/app/plugins/libraries/{$uri}";
+	protected function loadLibrary($provider,$label) {
+	    $path = _furnace()->rootdir . "/app/plugins/libraries/{$provider}/{$label}.lib.php";
 	    if (file_exists($path)) {
 	        require_once($path);
 	    } else {
 	        die(
-	            "The page requested a library ({$uri}) that does not exist or is not installed correctly."
+	            "The page requested a library ({$provider}.{$label}) that does not exist or is not installed correctly."
 	        );
 	    }
 	}
