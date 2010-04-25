@@ -196,6 +196,13 @@
 	public function injectJS($code) {
 	    $this->jsraw .= $code;
 	}
+	public function setJS($var,$value,$addQuotes = true) {
+	    if ($addQuotes) {
+	        $this->jsraw .= "var {$var} = \"{$value}\";\r\n";
+	    } else {
+	        $this->jsraw .= "var {$var} = {$value};\r\n";
+	    }
+	}
 	
 	public function injectCSS($style) {
 	    $this->cssraw .= $style;
