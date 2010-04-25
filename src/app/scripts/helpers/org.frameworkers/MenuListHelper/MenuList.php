@@ -1,6 +1,6 @@
 <?php
 // Renders an HTML list from the provided data array
-class MenuListHelper extends FPageFragment {
+class MenuList extends FPageFragment {
     
     private $menuItems;
     private $id;

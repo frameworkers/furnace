@@ -1,5 +1,5 @@
 <?php
-class LoginBoxHelper extends FPageFragment {
+class LoginBox extends FPageFragment {
     
     private $errors     = array();
     private $successURI = '/';
