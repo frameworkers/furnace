@@ -66,7 +66,7 @@ class FQuery {
     
     public function orderBy($var,$order) {
         if (strtoupper($order) == "RANDOM") {
-            $this->orderBy = "ORDER BY RANDOM(`{$var}`) ";
+            $this->orderBy = "ORDER BY RAND() ";
         } else {
             $this->orderBy = "ORDER BY `{$var}` ".strtoupper($order)." ";
         }

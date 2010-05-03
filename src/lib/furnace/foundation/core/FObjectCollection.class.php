@@ -112,7 +112,11 @@ abstract class FObjectCollection {
     }
     
     public function orderBy($var,$order='asc') {
-        $this->query->orderBy($var,$order);
+        if (func_num_args() == 1 && strtoupper($var) == "RANDOM") {
+            $this->query->orderBy(null,'RANDOM');
+        } else {
+            $this->query->orderBy($var,$order);
+        }
         return $this;
     }
     
@@ -582,7 +586,34 @@ abstract class FObjectCollection {
     protected function getRealId() {
         return $this->objectTypeTable . '_id';
     }
-
+    
+    public function getUnique(/* variable arguments accepted */) {
+        $this->reset();
+        $num_args = func_num_args();
+        switch($num_args) {
+            case 1:
+                $id = func_get_arg(0);
+                if (false !== ($obj = $this->getSingleObjectByObjectId($id))) {
+                    $this->data = array("{$obj->getId()}" => $obj);
+                    return $obj;
+                } else {
+                    return false;
+                }
+            case 2:
+                // Get the first matching object using the provided key/value pair
+                $k = func_get_arg(0);
+                $v = func_get_arg(1);
+                if (false !== ($obj = $this->getSingleObjectByAttribute($k,$v))) {
+                    $this->data = array("{$obj->getId()}" => $obj);
+                    return $obj;
+                } else {
+                    return false;
+                }
+            default:
+                throw new FException("Unexpected number of arguments for FObjectCollection::getUnique()");
+                return false;
+        }
+    }
 
     public function get(/* variable arguments accepted */) {
         $this->reset();
@@ -604,12 +635,11 @@ abstract class FObjectCollection {
                 }
                 break;
             case 2:
-                // Get a single object using the provided key/value pair
+                // Get objects matching the provided key/value pair
                 $k = func_get_arg(0);
                 $v = func_get_arg(1);
-                if (false !== ($obj = $this->getSingleObjectByAttribute($k,$v))) {
-                    $this->data = array("{$obj->getId()}" => $obj);
-                }
+                $this->filter($k,$v);
+                
                 break;
             default:
                 throw new FException("Unexpected number of arguments for FObjectCollection::get()");
