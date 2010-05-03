@@ -153,7 +153,7 @@
 		$this->title = $value;
 	}
 	
-	protected function addStylesheet($path,$bLocal = false) {
+	public function addStylesheet($path,$bLocal = false) {
 		if (!$bLocal) {
 	        $path = "/assets/themes/{$this->theme}/css/{$path}";   
 	    } else {
@@ -163,7 +163,7 @@
 		$this->stylesheets[] = $path;
 	}
 	
-	protected function extensionAddStylesheet($extension,$path,$bLocal = false) {
+	public function extensionAddStylesheet($extension,$path,$bLocal = false) {
 	    if (!$bLocal) {
 	        $path = "/extensions/{$extension}/themes/{$this->theme}/css/{$path}";
 	    } else {
@@ -173,7 +173,7 @@
 	    $this->stylesheets[] = $path;
 	}
 	
-	protected function addJavascript($path,$bLocal = false) {
+	public function addJavascript($path,$bLocal = false) {
 		if (!$bLocal) {
 	      $path = "/assets/themes/{$this->theme}/js/{$path}";   
 	    } else {
@@ -183,7 +183,7 @@
 		$this->javascripts[] = $path;
 	}
      
-	protected function extensionAddJavascript($extension,$path,$bLocal = false) {
+	public function extensionAddJavascript($extension,$path,$bLocal = false) {
 	    if (!$bLocal) {
 	        $path = "/extensions/{$extension}/themes/{$this->theme}/js/{$path}";
 	    } else {
