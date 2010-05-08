@@ -1,4 +1,17 @@
 <?php
+
+/* GLOBAL DEFINITIONS *******************************************************/
+define(FF_ROOT_DIR,    dirname(dirname(__FILE__)));
+define(FF_CONFIG_FILE, FF_ROOT_DIR . '/app/config/app.yml');
+define(FF_LIB_DIR,     FF_ROOT_DIR . '/lib');
+define(FF_LOG_DIR,     FF_ROOT_DIR . '/app/data/logs');
+
+/* GLOBAL DATA STRUCTURES ***************************************************/
+
+ $_datasources = array("production"=>array(),"debug"=>array());
+ $_logmgr      = false;    // Initialized in {FF_ROOT_DIR}/etc/app.php
+
+
 /* GLOBAL UTILITY FUNCTIONS  ************************************************/
 
  
@@ -7,7 +20,7 @@
  //  insulates against API changes that will probably come as a result
  //  of a future need to support additional database connection mechanisms.
  // 
- $_datasources = array("production"=>array(),"debug"=>array());
+
  
  function _db($which='default') {
     global $_datasources;
@@ -121,6 +134,12 @@ function _readUserInput($field) {
         unset($_SESSION['_userform'][$field]);
     }
 	return $data;
+}
+
+// FUNCTION _log(which)
+//   Returns the appropriate logger
+function _log($which) {
+    return $_logmgr->getLog($which);
 }
 
 
