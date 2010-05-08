@@ -1,6 +1,6 @@
 <?php
 require_once 'PHPUnit/Framework.php';
-require_once 's;rc/lib/furnace/request/FApplicationRequest.class.php';
+require_once 'src/lib/furnace/request/FApplicationRequest.class.php';
 
 class FApplicationRequestTest extends PHPUnit_Framework_TestCase {
     
