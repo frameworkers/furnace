@@ -9,13 +9,14 @@
  */
 
 /**
- * This is the main Furnace class
+ * Furnace
  * 
  * This class provides the high-level functionality needed to direct the
  * handling of an {@link FApplicationRequest}. It handles the set-up and
  * tear-down of the Furnace environment and manages the transfer of control 
  * between lower elements of the Furnace library in the process of 
  * satisfying the user request.
+ * 
  */
 class Furnace {
 	/**
@@ -78,17 +79,12 @@ class Furnace {
     public $model;
     public $user;
 
-    public function __construct($type = 'app') {
+    public function __construct($config) {
         	
         // Compute the project root directory
-        $startTime = microtime(true);
-        $this->rootdir = dirname(dirname(dirname(__FILE__)));
+        $this->rootdir = FF_ROOT_DIR;
         $this->paths['rootdir'] = $this->rootdir;
-        	
         
-        //Include the yml parser
-        include($this->rootdir . '/lib/yaml/spyc-0.4.1.php');
-
         // Load the YML route definitions
         $this->routes = self::yaml($this->rootdir . '/app/config/routes.yml');
 
@@ -109,18 +105,24 @@ class Furnace {
         }
     }
 
+    /**
+     * Process an {@link FApplicationRequest} and generate an 
+     * {@link FApplicationResponse}
+     * 
+     * @param  FApplicationRequest  The {@link FApplicationRequest} object to process
+     * @return FApplicationResponse The resulting {@link FApplicationResponse} object
+     */
     public function process($request) {
     
-        /* PROCESS A REQUEST  */ 
         if ($this->config['debug_level'] > 0) {
-            $this->bm_envsetupstart = microtime(true);
+            $request->stats['proc_setup_start'] = microtime(true);
         }
         
-        // Make the request available to controllers via _furnace()->request
-        $this->rawRequest = $request;
+        // Store the FApplicationRequest object 
+        $this->request = $request;
         
-        // Create an FApplicationRequest object to hold request details
-        $this->request = new FApplicationRequest($request);
+        // Make the raw request available to controllers via _furnace()->request
+        $this->rawRequest = $request->raw;
                	
         // Determine the route to take
         $this->request->route = Furnace::route($this->rawRequest,$this->routes);
@@ -145,7 +147,8 @@ class Furnace {
             $GLOBALS['_model'] = new ApplicationModel();
             
             if ($this->config['debug_level'] > 0) {
-                $this->bm_envsetupend = $this->bm_processstart = microtime(true);
+                $request->stats['proc_setup_end'] = 
+                    $request->stats['proc_proc_start'] = microtime(true);
             }
             
             // Determine if an extension is being requested and set the file path
@@ -175,7 +178,7 @@ class Furnace {
             @include_once($controllerFilePath);
             
             if ($this->config['debug_level'] > 0) {
-                $this->bm_envsetupend = microtime(true);
+                $request->stats['proc_end'] = microtime(true);
             }
 
             // Does the requested controller class exist?
@@ -214,7 +217,7 @@ class Furnace {
 
                 // Call the handler
                 if ($this->config['debug_level'] > 0) {
-                    $this->bm_processstart = microtime(true);
+                    $request->stats['handler_start'] = microtime(true);
                 }   
                 try {
                     $this->response->run($this->request->route['action'],$this->request->route['parameters']);
@@ -242,7 +245,8 @@ class Furnace {
                 }
                 	
                 if ($this->config['debug_level'] > 0) {
-                    $this->bm_processend   = microtime(true);
+                    $request->stats['handler_end'] = 
+                        $request->stats['proc_proc_end']  = microtime(true);
                 }
                 	
                 // Set the referringPage attribute in the session. This
@@ -261,23 +265,7 @@ class Furnace {
                     $this->bm_renderend  = $this->bm_reqend = microtime(true);
                 }
                 	
-                if ($this->config['debug_level'] > 1) {
-                    echo '<div id="ff-debug"><table>';
-                    echo "<tr><th>TOTAL REQUEST TIME: </th><td> " . ($this->bm_reqend - $this->bm_reqstart) . " seconds</td></tr>\r\n";
-                    echo "<tr><th>REQUEST BREAKDOWN:  </th><td><table><tr><th>SETUP TIME: </th><td>" . ($this->bm_envsetupend - $this->bm_envsetupstart) . "</td></tr>\r\n";
-                    echo "<tr><th>PROCESS TIME: </th><td>" . ($this->bm_processend - $this->bm_processstart) . "</td></tr>\r\n";
-                    echo "<tr><th>QUERY DELAY:  </th><td>" . count($this->queries) . " queries<br/>\r\n<span style='font-size:90%;'>";
-                    $qd = 0;
-                    foreach ($this->queries as $q) {
-                        echo "&nbsp;&nbsp;{$q['delay']}s\t{$q['sql']}<br/>\r\n";
-                        $qd += $q['delay'];
-                    }
-                    echo "</span><br/>\r\n&nbsp;&nbsp;" . count($this->queries) . " queries took {$qd} seconds.</td></tr>\r\n";
-                    echo "<tr><th>RENDER  TIME:  </th><td>" . ($this->bm_renderend - $this->bm_renderstart) . "</td></tr>\r\n";
-                    echo "</table></td></tr>";
-                    echo "</table>";
-                    echo '</div>';
-                }
+                
                 // Clean up
                 // TODO: free memory, etc
 
@@ -442,34 +430,5 @@ class Furnace {
 // Temporary location for this utility function
 function is_assoc_callback($a, $b) {
     return $a === $b ? $a + 1 : 0;
-}
-
-class FApplicationRequest {
-    
-    public $raw;
-    public $env;
-    public $get;
-    public $post;
-    public $form;
-    public $route;
-    
-    public function __construct($rawRequest) {
-        
-        $this->raw  = $rawRequest;
-        
-        $this->get  =& $_GET;
-        
-        $this->post =& $_POST;
-        
-        $this->processPostedData();
-        
-    }
-    
-    private function processPostedData() {
-		// Store a pointer to the recently submitted data 
-		$this->form =& $_POST;
-		// Clear old validation errors from the session
-		$_SESSION['_validationErrors'] = array();
-	}  
 }
 ?>
