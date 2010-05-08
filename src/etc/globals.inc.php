@@ -138,7 +138,8 @@ function _readUserInput($field) {
 
 // FUNCTION _log(which)
 //   Returns the appropriate logger
-function _log($which) {
+function _log($which = 'default') {
+    global $_logmgr;
     return $_logmgr->getLog($which);
 }
 
