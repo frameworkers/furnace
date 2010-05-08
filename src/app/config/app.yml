@@ -30,6 +30,14 @@ db_engine: MDB2
 debug_level: 1
 
 #
+# LOGGING
+#
+logging:
+    console:
+      type: console
+      mask: DEBUG
+
+#
 # DATASOURCES
 # Application datasources are divided at the top level among
 # those that are for "debug"/development use, and those that 
