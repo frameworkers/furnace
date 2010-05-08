@@ -9,21 +9,40 @@
  * AppEntrance.php
  * Created on Jul 24, 2008
  * 
- * Modified significantly on Mar 14, 2008
+ * Modified significantly on Mar 14, 2009
  *
  * Copyright 2008 Frameworkers.org. 
  * http://www.frameworkers.org
  */
 
- /* LOAD GLOBAL FUNCTIONS */
+ /* INCLUDE REQUIRED FILES */
+ require('../lib/furnace/Furnace.class.php');
+ require('../lib/furnace/config/FApplicationConfig.class.php');
+ require('../lib/furnace/request/FApplicationRequest.class.php');
+ require('../lib/yaml/spyc-0.4.1.php');
+ require('Log.php');
+
+ /* LOAD GLOBAL FUNCTIONS, STRUCTURES, AND DEFINITIONS */
  include('globals.inc.php');
+ 
+ /* LOAD APPLICATION CONFIGURATION */
+ $config  = new FApplicationConfig(Furnace::yaml(FF_CONFIG_FILE));
+ 
+ /* START UP THE APPLICATION LOG MANAGER */
+ $_logmgr = new FApplicationLogManager($config);
+ _log()->log("Processing request: {$_SERVER['REQUEST_URI']} from {$_SERVER['REMOTE_ADDR']}");
+ 
+ /* CREATE A REQUEST OBJECT */
+ $request = new FApplicationRequest($_SERVER['REQUEST_URI']);
 
  /* INITIALIZE FURNACE */
- include('../lib/furnace/Furnace.class.php');
- $furnace = new Furnace('app');
+ $furnace  = new Furnace($config);
  
- /* PROCESS A REQUEST  */
- $furnace->process($_SERVER['REQUEST_URI']);
+ /* PROCESS THE REQUEST OBJECT */
+ $response = $furnace->process($request);
+ 
+ /* SEND THE RESPONSE */
+ $furnace->send($response);
  
  /* CLEAN UP */
  unset($furnace);
