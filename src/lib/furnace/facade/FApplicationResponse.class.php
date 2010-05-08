@@ -8,6 +8,7 @@ class FApplicationResponse {
     
     private $controller     = '';
     private $extension      = '';
+    private $request        = '';
     
     public $pageOverrideDetected = false;
     
@@ -59,6 +60,10 @@ class FApplicationResponse {
         
         // Inject the furnace javascript variables into the page
         $this->controller->injectJS($this->prepareFurnaceJS($app));
+    }
+    
+    public function setRequest($request) {
+        $this->request = $request;
     }
     
     public function setPage($group,$page) {
