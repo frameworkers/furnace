@@ -154,22 +154,31 @@ class Furnace {
             // Determine if an extension is being requested and set the file path
             // to the appropriate controller
             if ('' != $this->request->route['extension']) {
-                $controllerFilePath = "{$this->rootdir}/app/plugins/extensions/{$this->request->route['extension']}/pages/{$this->request->route['controller']}/{$this->request->route['controller']}Controller.php";
+                $controllerFilePath = "{$this->rootdir}/app/plugins/extensions/"
+                    . "{$this->request->route['extension']}/pages/"
+                    . "{$this->request->route['controller']}/"
+                    . "{$this->request->route['controller']}Controller.php";
             } else {
-                $controllerFilePath = "{$this->rootdir}/app/pages/{$this->request->route['controller']}/{$this->request->route['controller']}Controller.php";        
+                $controllerFilePath = "{$this->rootdir}/app/pages/"
+                    . "{$this->request->route['controller']}/"
+                    . "{$this->request->route['controller']}Controller.php";        
             }
             
             // Ensure that the requested controller actually exists
             if (!file_exists($controllerFilePath)) {
                 ( $this->config['debug_level'] > 0 ) 
-                    ? $this->process("/_debug/errors/noController/".str_replace('/','+',$controllerFilePath))
+                    ? $this->process("/_debug/errors/noController/"
+                        .str_replace('/','+',$controllerFilePath))
                     : $this->process("/_default/http404");
                 exit();
             }        
             
             // Include the base controller
-            if ($this->request->route['extension'] && file_exists("{$this->rootdir}/app/plugins/extensions/{$this->request->route['extension']}/pages/Controller.class.php")) {
-                include_once("{$this->rootdir}/app/plugins/extensions/{$this->request->route['extension']}/pages/Controller.class.php");
+            if ($this->request->route['extension'] && file_exists(
+            		 "{$this->rootdir}/app/plugins/extensions/"
+                    ."{$this->request->route['extension']}/pages/Controller.class.php")) {
+                include_once("{$this->rootdir}/app/plugins/extensions/"
+                    ."{$this->request->route['extension']}/pages/Controller.class.php");
             } else {
                 include_once("{$this->rootdir}/app/pages/Controller.class.php");
             }
@@ -189,7 +198,9 @@ class Furnace {
             try {
                 // Create a response object to hold response details
                 $controllerClassName = "{$this->request->route['controller']}Controller";
-                $this->response = new FApplicationResponse($this,new $controllerClassName(),$this->request->route['extension']);
+                $this->response = new FApplicationResponse(
+                    $this,new $controllerClassName(),$this->request->route['extension']);
+                $this->response->setRequest($this->request);
             
                 // Attempt to load the page template
                 $pageExists = $this->response->setPage(
@@ -220,16 +231,18 @@ class Furnace {
                     $request->stats['handler_start'] = microtime(true);
                 }   
                 try {
-                    $this->response->run($this->request->route['action'],$this->request->route['parameters']);
+                    $this->response->run($this->request->route['action'],
+                        $this->request->route['parameters']);
                     // Display error if expected view template does not exist..
-                    if ($pageExists !== true && !$this->response->pageOverrideDetected) {
+                    if ($pageExists !== true 
+                            && !$this->response->pageOverrideDetected) {
                         $this->process(
                             (($this->config['debug_level'] > 0) 
                                 ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
                                 : '/_default/http404')
-                    );
-                    exit();
-                }   
+                        );
+                        exit();
+                    }   
                 } catch (FDatabaseException $fde) {
                     $_SESSION['_exception'] = $fde;
                     echo $fde;
@@ -259,20 +272,17 @@ class Furnace {
                     $this->bm_renderstart = microtime(true);
                 }
                 
-                $this->response->send();
-                
                 if ($this->config['debug_level'] > 0) {
                     $this->bm_renderend  = $this->bm_reqend = microtime(true);
                 }
-                	
                 
-                // Clean up
-                // TODO: free memory, etc
-
+                return $this->response;
                 
             } else {
                 if ($this->config['debug_level'] > 0) {
-                    $this->process("/_debug/errors/noControllerFunction/".str_replace('/','+',$controllerFilePath)."/{$this->request->route['action']}");
+                    $this->process("/_debug/errors/noControllerFunction/"
+                        . str_replace('/','+',$controllerFilePath)
+                        . "/{$this->request->route['action']}");
                 } else {
                     $this->process("/_default/http404");
                 } 
@@ -287,6 +297,18 @@ class Furnace {
 
              die("Unexpected error {$e}");  
         } 
+    }
+    
+    /**
+     * Send
+     * 
+     * Begins the process of sending a response back to the requestor
+     * 
+     * @param  FApplicationResponse The response object to send
+     * @return void
+     */
+    public function send($response) {
+        $response->send();
     }
 
 
