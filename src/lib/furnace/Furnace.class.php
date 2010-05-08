@@ -1,21 +1,27 @@
 <?php
 /**
+ * Furnace Rapid Application Development Framework
+ * 
+ * @package   Furnace
+ * @copyright Copyright (c) 2008-2010, Frameworkers.org
+ * @license   http://furnace.frameworkers.org/license
+ *
+ */
+
+/**
  * This is the main Furnace class
  * 
- * Provides the high-level functionality needed to direct the
- * handling of a Furnace application request. It handles the set-up and
- * tear-down of the Furnace environment, including benchmarking if necessary,
- * and manages the transfer of control between lower elements of the Furnace
- * library in the process of satisfying the user request.
- * 
- * @package Furnace
- * @author andrew <andrew@frameworkers.org>
- *
+ * This class provides the high-level functionality needed to direct the
+ * handling of an {@link FApplicationRequest}. It handles the set-up and
+ * tear-down of the Furnace environment and manages the transfer of control 
+ * between lower elements of the Furnace library in the process of 
+ * satisfying the user request.
  */
 class Furnace {
 	/**
-     * The path to the project root directory. This value is
-     * automatically computed.
+     * The path to the project root directory. 
+     * 
+     * Note that this value is automatically computed.
      * 
      * @var string
      */
