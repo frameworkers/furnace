@@ -403,7 +403,8 @@ class FModel {
  		        $aupper = strtoupper($a->getName());
  		        $r .= "\t\t//Allowed values for '{$a->getName()}': \r\n";
  		        foreach ($vc['allowedValues'] as $d) {
- 		            $dupper = strtoupper(str_replace(' ','',$d['label']));
+ 		            $dupper = strtoupper(str_replace(array(' ',"'"),'',$d['label']));
+ 		            $dupper = str_replace("-","_",$dupper);
  		            $r .= "\t\tpublic static \${$aupper}_{$dupper} = \"{$d['value']}\";\r\n";
  		        }
  		        $r .= "\r\n";
@@ -591,7 +592,8 @@ class FModel {
  		        $aupper = strtoupper($a->getName());
  		        $r .= "\t\t\t\t//Allowed values for '{$a->getName()}': \r\n";
  		        foreach ($vc['allowedValues'] as $d) {
- 		            $dupper = strtoupper(str_replace(' ','',$d['label']));
+ 		            $dupper = strtoupper(str_replace(array(' ',"'"),'',$d['label']));
+ 		            $dupper = str_replace("-","_",$dupper);
  		            $r .= "\t\t\t\tcase self::\${$aupper}_{$dupper}:  return \"{$d['label']}\";\r\n";
  		        }
  		        $r .= "\t\t\t\tdefault: return 'Unknown';\r\n"
