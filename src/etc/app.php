@@ -18,6 +18,7 @@
  /* INCLUDE REQUIRED FILES */
  require('../lib/furnace/Furnace.class.php');
  require('../lib/furnace/config/FApplicationConfig.class.php');
+ require('../lib/furnace/logging/FApplicationLogManager.class.php');
  require('../lib/furnace/request/FApplicationRequest.class.php');
  require('../lib/yaml/spyc-0.4.1.php');
  require('Log.php');
