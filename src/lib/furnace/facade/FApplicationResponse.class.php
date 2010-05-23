@@ -19,11 +19,11 @@ class FApplicationResponse {
  
         $this->currentTheme   = $app->theme;
         $this->projectRootDir = $app->rootdir;
-        $this->url_base       = $app->config['url_base'];
+        $this->url_base       = $app->config->url_base;
         
         // Provide view access to Furnace, Application, and Model config vars and $_SERVER superglobal
         $this->controller->ref('_furnace',$app);
-        $this->controller->ref('_app',    $app->config);
+        $this->controller->ref('_app',    $app->config->data);
         $this->controller->ref('_model',  $GLOBALS['fApplicationModel']);
         $this->controller->ref('_server', $_SERVER);
         $this->controller->ref('_session',$_SESSION);

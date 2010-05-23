@@ -29,7 +29,7 @@ class FController extends FPage {
 	public function redirect($url='',$external=false) {
 		// If 'external' is indicated, don't preface with url_base
 		if (!$external) {
-			header("Location: ".$GLOBALS['furnace']->config['url_base'] . ltrim($url,'/'));
+			header("Location: ".$GLOBALS['furnace']->config->url_base . ltrim($url,'/'));
 			exit();
 		} else {
 			header("Location: {$url}");

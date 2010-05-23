@@ -121,7 +121,7 @@
  	
  	public function extensionSetLayout($extension,$layout) {
  	    if ($this->bInheritTheme) {
- 	        $baseTheme = _furnace()->config['app_theme'];
+ 	        $baseTheme = _furnace()->config->data['app_theme'];
  	        $this->layout = file_get_contents(
  	            _furnace()->rootdir . "/app/themes/{$baseTheme}/layouts/{$layout}.html"
  	        );
