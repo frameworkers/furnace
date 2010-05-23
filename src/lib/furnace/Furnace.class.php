@@ -89,18 +89,16 @@ class Furnace {
         $this->routes = self::yaml($this->rootdir . '/app/config/routes.yml');
 
         // Load the YML application configuration file
-        $this->config = self::yaml($this->rootdir . '/app/config/app.yml');
+        $this->config = $config;
 
         // Set the theme
-        $this->theme  = (isset($this->config['theme'])) 
-            ? $this->config['theme']
-            : 'default';
+        $this->theme  = $this->config->theme;
         
         // Initialize the session
         session_start();
         	
         // If benchmarking, set the start time
-        if ($this->config['debug_level'] > 0) {
+        if ($this->config->debug_level > 0) {
             $this->bm_reqstart = $startTime;
         }
     }
@@ -114,7 +112,7 @@ class Furnace {
      */
     public function process($request) {
     
-        if ($this->config['debug_level'] > 0) {
+        if ($this->config->debug_level > 0) {
             $request->stats['proc_setup_start'] = microtime(true);
         }
         
@@ -146,7 +144,7 @@ class Furnace {
             $GLOBALS['fApplicationModel'] = new ApplicationModel();
             $GLOBALS['_model'] = new ApplicationModel();
             
-            if ($this->config['debug_level'] > 0) {
+            if ($this->config->debug_level > 0) {
                 $request->stats['proc_setup_end'] = 
                     $request->stats['proc_proc_start'] = microtime(true);
             }
@@ -166,7 +164,7 @@ class Furnace {
             
             // Ensure that the requested controller actually exists
             if (!file_exists($controllerFilePath)) {
-                ( $this->config['debug_level'] > 0 ) 
+                ( $this->config->debug_level > 0 ) 
                     ? $this->process("/_debug/errors/noController/"
                         .str_replace('/','+',$controllerFilePath))
                     : $this->process("/_default/http404");
@@ -186,7 +184,7 @@ class Furnace {
             // Include the controller file
             @include_once($controllerFilePath);
             
-            if ($this->config['debug_level'] > 0) {
+            if ($this->config->debug_level > 0) {
                 $request->stats['proc_end'] = microtime(true);
             }
 
@@ -227,7 +225,7 @@ class Furnace {
             if ($handlerExists) {
 
                 // Call the handler
-                if ($this->config['debug_level'] > 0) {
+                if ($this->config->debug_level > 0) {
                     $request->stats['handler_start'] = microtime(true);
                 }   
                 try {
@@ -237,7 +235,7 @@ class Furnace {
                     if ($pageExists !== true 
                             && !$this->response->pageOverrideDetected) {
                         $this->process(
-                            (($this->config['debug_level'] > 0) 
+                            (($this->config->debug_level > 0) 
                                 ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
                                 : '/_default/http404')
                         );
@@ -257,7 +255,7 @@ class Furnace {
                     exit();
                 }
                 	
-                if ($this->config['debug_level'] > 0) {
+                if ($this->config->debug_level > 0) {
                     $request->stats['handler_end'] = 
                         $request->stats['proc_proc_end']  = microtime(true);
                 }
@@ -268,18 +266,18 @@ class Furnace {
                 $_SESSION['referringPage'] = $this->rawRequest;
                 	
                 // Send the rendered content out over the wire
-                if ($this->config['debug_level'] > 0) {
+                if ($this->config->debug_level > 0) {
                     $this->bm_renderstart = microtime(true);
                 }
                 
-                if ($this->config['debug_level'] > 0) {
+                if ($this->config->debug_level > 0) {
                     $this->bm_renderend  = $this->bm_reqend = microtime(true);
                 }
                 
                 return $this->response;
                 
             } else {
-                if ($this->config['debug_level'] > 0) {
+                if ($this->config->debug_level > 0) {
                     $this->process("/_debug/errors/noControllerFunction/"
                         . str_replace('/','+',$controllerFilePath)
                         . "/{$this->request->route['action']}");
@@ -289,7 +287,7 @@ class Furnace {
                 exit();
             }
             
-            if ($this->config['debug_level'] > 0) {
+            if ($this->config->debug_level > 0) {
                 $this->bm_processend = microtime(true);
             }
         } catch (Exception $e) {
@@ -335,105 +333,108 @@ class Furnace {
         $parts = explode('/',ltrim($request,'/'));
         
         $the_route = array();
-        if (FF_DEBUG) { debug("Will process a maximum of ".count($routes)." routes"); }
+        
+        _log()->log("Will process a maximum of ".count($routes)." routes",FF_DEBUG);
         foreach ( $routes as $r => $route ) {
-        if ($r[0] == '_') {
-          if (FF_DEBUG) { debug("Found extension {$route['path']} with prefix {$route['prefix']} and ".count($route['routes'])." routes");}
-          $extPath   = $route['path'];
-          $extPrefix = $route['prefix'];
-          $result    = self::route($request,$route['routes'],$extPrefix);
-          if ( $result ) {
-            $result['extension'] = $extPath;
-            $result['theme']     = isset($route['theme']) ? $route['theme'] : 'default';
-            return $result;
-          }
-          // Route not found in this extension
-          if (FF_DEBUG) { debug("No match among routes for: {$route['path']}"); }
-          continue;
-        }
-        
-        if (FF_DEBUG) { debug("Trying route: {$route['url']}"); }
-        $rp = explode('/',ltrim($prefix.$route['url'],'/'));
-        $wildcards  = array();
-        $parameters = array();
-        
-        // If the number of defined segments does not match,
-        // ignore this route
-        if ( count($rp) > count($parts) ) {
-          continue;
-        }
-        
-        // Test each non-wildcard part for a match
-        // Wildcards are * and :text
-        $matched = true;
-        for ($j = 0, $c = count($rp); $j < $c; $j++ ) {
-          // Just ignore unnamed wildcards
-          if ($rp[$j] == '*') {
-            if ('' != $parts[$j]) { $parameters[] = $parts[$j]; }
-            continue;
-          }
-          // Capture named wildcards in the 'wildcards' array
-          if ($rp[$j][0] == ':') {
-            $wildcards[trim($rp[$j],':')] = $parts[$j];
-            if ( ':view' != $rp[$j] && 
-        	':action' != $rp[$j] && 
-        	':controller' != $rp[$j] ) {
-              $parameters[$rp[$j] ] = $parts[$j];
-            }
-            continue;
-          }
-          // Test for equality between non-wildcard parts
-          if ($rp[$j] != $parts[$j]) {
-            $matched = false;
-            break;
-          }
-        }
-        
-        if ( $matched ) {
-          // Capture additional view arguments (in the case that the 
-          // url contained more parts than the matching route rule
-          for ( $k = count($rp), $l = count($parts); $k < $l; $k++ ) {
-            if ('' != $parts[$k] ) { $parameters[] = $parts[$k]; }
-          }
-          
-          // Build the expanded/replaced prefix if it contains :xx variables
-          if(strpos($prefix,':')) {
-              $prefixParts = explode('/',$prefix);
-              foreach ($prefixParts as &$p) {
-                  if ($p[0] == ':') {
-                      $p = $parameters[$p];
-                      break;
-                  }
+            if ($r[0] == '_') {
+              _log()->log("Found extension {$route['path']} with prefix {$route['prefix']} and "
+                  .count($route['routes'])." routes",FF_DEBUG);
+              $extPath   = $route['path'];
+              $extPrefix = $route['prefix'];
+              $result    = self::route($request,$route['routes'],$extPrefix);
+              if ( $result ) {
+                $result['extension'] = $extPath;
+                $result['theme']     = isset($route['theme']) ? $route['theme'] : 'default';
+                return $result;
               }
-              $prefix = implode('/',$prefixParts);
-          }
-        
-          // Build the resulting route data array
-          $the_route = array(
-            'prefix'     => $prefix,
-            'controller' => ((isset($wildcards['controller']) && 
-        		  !empty($wildcards['controller']))
-               ? $wildcards['controller']
-               : (isset($route['map']['controller'])
-                  ? $route['map']['controller']
-                  : '_default')),
-            'action'     => ((isset($wildcards['view']) &&
-                              !empty($wildcards['view']))
-               ? $wildcards['view']
-               : (isset($route['map']['view'])
-                 ? $route['map']['view']
-                 : 'index')),
-            'parameters' => $parameters,
-            'extension'  => false
-          );
-          if (FF_INFO) {info("Matched route: {$route['url']}");}
-          return $the_route;
-        }
+              // Route not found in this extension
+              _log()->log("No match among routes for: {$route['path']}",FF_DEBUG);
+              continue;
+            }
+            
+            _log()->log("Trying route: {$prefix}{$route['url']}",FF_DEBUG);
+            $rp = explode('/',ltrim($prefix.$route['url'],'/'));
+            $wildcards  = array();
+            $parameters = array();
+            
+            // If the number of defined segments does not match,
+            // ignore this route
+            if ( count($rp) > count($parts) ) {
+              continue;
+            }
+            
+            // Test each non-wildcard part for a match
+            // Wildcards are * and :text
+            $matched = true;
+            for ($j = 0, $c = count($rp); $j < $c; $j++ ) {
+              // Just ignore unnamed wildcards
+              if ($rp[$j] == '*') {
+                if ('' != $parts[$j]) { $parameters[] = $parts[$j]; }
+                continue;
+              }
+              // Capture named wildcards in the 'wildcards' array
+              if ($rp[$j][0] == ':') {
+                $wildcards[trim($rp[$j],':')] = $parts[$j];
+                if ( ':view' != $rp[$j] && 
+            	':action' != $rp[$j] && 
+            	':controller' != $rp[$j] ) {
+                  $parameters[$rp[$j] ] = $parts[$j];
+                }
+                continue;
+              }
+              // Test for equality between non-wildcard parts
+              if ($rp[$j] != $parts[$j]) {
+                $matched = false;
+                break;
+              }
+            }
+            
+            if ( $matched ) {
+              // Capture additional view arguments (in the case that the 
+              // url contained more parts than the matching route rule
+              for ( $k = count($rp), $l = count($parts); $k < $l; $k++ ) {
+                if ('' != $parts[$k] ) { $parameters[] = $parts[$k]; }
+              }
+              
+              // Build the expanded/replaced prefix if it contains :xx variables
+              if(strpos($prefix,':')) {
+                  $prefixParts = explode('/',$prefix);
+                  foreach ($prefixParts as &$p) {
+                      if ($p[0] == ':') {
+                          $p = $parameters[$p];
+                          break;
+                      }
+                  }
+                  $prefix = implode('/',$prefixParts);
+              }
+            
+              // Build the resulting route data array
+              $the_route = array(
+                'prefix'     => $prefix,
+                'controller' => ((isset($wildcards['controller']) && 
+            		  !empty($wildcards['controller']))
+                   ? $wildcards['controller']
+                   : (isset($route['map']['controller'])
+                      ? $route['map']['controller']
+                      : '_default')),
+                'action'     => ((isset($wildcards['view']) &&
+                                  !empty($wildcards['view']))
+                   ? $wildcards['view']
+                   : (isset($route['map']['view'])
+                     ? $route['map']['view']
+                     : 'index')),
+                'parameters' => $parameters,
+                'extension'  => false
+              );
+              _log()->log("Routing {$request} to {$the_route['controller']}::{$the_route['action']}(".implode(',',$parameters).")",FF_INFO);
+              return $the_route;
+            }
         }
         // Invalid route specified
-        if (FF_WARN) { if ($prefix == '/') {warn("Router could not understand provided route: {$request}");} }
-        return false;
-        
+        if ($prefix == '/') {
+            _log()->log("Router could not understand route: {$request}",FF_NOTICE);
+            return false;
+        }
     }
 
     public function read_flashes($bReset = true) {
@@ -447,6 +448,87 @@ class Furnace {
             return array();
         }
     }
+    
+	/*
+ 	 * Function: standardizeName
+ 	 * 
+ 	 * This function is private. It takes a string and 
+ 	 * standardizes it according to framework naming 
+ 	 * conventions.
+ 	 * 
+ 	 * Parameters:
+ 	 * 
+ 	 *  name - The name string to standardize.
+ 	 * 
+ 	 * Returns:
+ 	 * 
+ 	 *  (string) The standardized name.
+ 	 */
+ 	public static function standardizeName($name) {
+  		// 1. Replace all '_' with ' ';
+  		// 2. Capitalize all words
+  		// 3. Concatenate words
+  		//
+  		// Turns: long_object_name
+  		// into:  LongObjectName
+  		return 
+  			str_replace(" ","",ucwords(str_replace("_"," ",$name)));
+  	}
+  	
+  	/*
+  	 * Function: standardizeAttributeName
+  	 * 
+  	 * This funtion is like <standardizeName> in that it takes
+  	 * a string and standardizes it according to framework
+  	 * naming conventions for object attributes.
+  	 * 
+  	 * Parameters:
+  	 * 
+  	 *  name - The attribute name string to standardize.
+  	 * 
+  	 * Returns:
+  	 * 
+  	 *  (string) The standardized attribute name
+  	 */
+  	public static function standardizeAttributeName($name) {
+  		// 1. Replace all '_' with ' ';
+		// 2. Replace all '-' with ' ';
+  		// 3. Capitalize all words
+  		// 4. Concatenate words
+  		// 5. Make the first letter lowercase
+  		//
+  		// Turns: long_variable_name
+  		// into:  longVariableName
+  		$s = str_replace(" ","",ucwords(str_replace("-"," ",str_replace("_"," ",$name))));
+  		return strtolower($s[0]) . substr($s,1);
+  	} 
+
+  	public static function standardizeTableName($name,$bIsLookupTable = false) {
+  		if ("app_accounts" == $name || "app_roles" == $name || "app_logs" == $name) { return $name; }
+  		if ($bIsLookupTable) {
+  			// A lookup table needs to maintain its '_' characters (which are
+			// otherwise illegal. Standardize the 3 components, but leave the 
+			// '_' separators untouched.
+			list($t1,$t2,$v) = explode("_",$name);
+			return self::standardizeAttributeName($t1)
+				.  "_"
+				.  self::standardizeAttributeName($t2)
+				.  "_"
+				.  self::standardizeAttributeName($v);
+  		} else {
+  			$stdName = self::standardizeAttributeName($name);
+	  		if (isset($GLOBALS['furnace']->config->data['hostOS']) &&
+	  			strtolower($GLOBALS['furnace']->config->data['hostOS']) == 'windows') {
+	  				
+	  			// Windows has a case-insensitive file system, and the default 
+				// settings of MySQL on windows force tablenames to be strictly lowercase
+	  			return strtolower($stdName);	
+	  		} else {
+	  			// In all other environments, just return the standardized name
+				return $stdName;
+	  		}
+  		}
+  	}
 }
 
 // Temporary location for this utility function
