@@ -16,8 +16,15 @@
  require("core/FAccountCollection.class.php");
  require("core/FAccountManager.class.php");
  require("core/FSessionManager.class.php");
- require("database/".$GLOBALS['furnace']->config['db_engine']."/FDatabase.class.php");
- require("database/".$GLOBALS['furnace']->config['db_engine']."/FQuery.class.php");
  require("exceptions/FException.class.php");
  require("validation/FValidator.class.php");
+ 
+ require("core/../../datasources/FQuery.class.php");
+ require("core/../../datasources/FResult.class.php");
+ require("core/../../datasources/FResultFormatter.class.php");
+ require("core/../../datasources/FDatasourceDriver.class.php");
+ require("core/../../datasources/drivers/FMdb2Driver.class.php");
+ require("core/../../datasources/formatters/FObjectResultFormatter.class.php");
+ require("core/../../datasources/formatters/FArrayResultFormatter.class.php");
+ require("core/../../datasources/formatters/FSingleValueResultFormatter.class.php");
 ?>
