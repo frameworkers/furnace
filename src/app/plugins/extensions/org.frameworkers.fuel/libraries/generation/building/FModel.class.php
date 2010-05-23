@@ -170,6 +170,7 @@ class FModel {
 		foreach ($this->objects as $object) {
 			$compiled .= self::generateObjectClass($object);
 			$compiled .= self::generateObjectCollectionClass($object);
+			$compiled .= self::generateObjectResultFormatterClass($object);
 		}
 		return $compiled;
 	}
@@ -205,8 +206,20 @@ class FModel {
 	    foreach ($this->objects as $o) {
 		    $r .= "\t\t\t\$this->{$o->getName()} = new {$o->getName()}Model();\r\n";
 		}
-        $r .= "\t\t}\r\n\r\n"
-			. "\t}\r\n\r\n";
+        $r .= "\t\t}\r\n\r\n";
+        
+        $r .= "\t\tpublic function data(\$objectType) {\r\n"
+		    	. "\t\t\tswitch (strtolower(\$objectType)) {\r\n";
+		    foreach ($this->objects as $obj) {
+		        $r .= "\t\t\t\tcase '".strtolower($obj->getName())."': "
+		        	. "return new {$obj->getName()}Collection(); \r\n";
+		    }
+		    $r .= "\t\t\t\tdefault: throw new FException('Unknown model object ' . \$objectType);\r\n"
+		    	. "\t\t\t\t\tbreak;\r\n"
+		    	. "\t\t\t}\r\n"
+		    	. "\t\t}\r\n\r\n";        
+        
+        $r .= "\t}\r\n\r\n";
 		
 		foreach ($this->objects as $o) {
 		    $r .= "\tclass {$o->getName()}Model {\r\n"
@@ -330,6 +343,25 @@ class FModel {
 	}
 	 */
 	
+	private function generateObjectResultFormatterClass($object) {
+	    $r .= "\tclass {$object->getName()}ResultFormatter extends FObjectResultFormatter {\r\n";
+	    
+	    $r .= "\t\tpublic function format(\$resultObject) {\r\n"
+	    	. "\t\t\tif (! \$resultObject instanceof FResult) {\r\n"
+	    	. "\t\t\t\tthrow new FResultFormatterException(\"input was not an FResult object\");\r\n"
+	    	. "\t\t\t}\r\n"
+	    	. "\t\t\tif (\$resultObject->status != FF_FRESULT_OK) { return false; }\r\n"
+	    	. "\t\t\t\$objects = array();\r\n"
+	    	. "\t\t\tforeach (\$resultObject->data as \$obj_data) {\r\n"
+	    	. "\t\t\t\t\$objects[] = new {$object->getName()}(\$obj_data);\r\n"
+	    	. "\t\t\t}\r\n"
+	    	. "\t\t\treturn \$objects;\r\n"
+	    	. "\t\t}\r\n";
+	    $r .= "\t}\r\n\r\n";
+	    
+	    return $r;
+	}
+	
 	/*
  	 * Function: generateObjectClass
  	 * 
@@ -435,92 +467,98 @@ class FModel {
 		$r .= "\t\t\t\$this->fObjectTableName =  '".FModel::standardizeTableName($object->getName())."';\r\n";
 		$r .= "\t\t\t\$this->fObjectModelData =& \$GLOBALS['fApplicationModel']->{$object->getName()};\r\n";
 		
-		$r .= "\t\t\t// Initialize parents, peers, and children...\r\n";
-		$r .= "\t\t\t\$this->_initNonlocalAttributes(\$data);\r\n"
- 			. "\t\t\t// Initialize local attributes...\r\n";
+
+ 		$r .= "\r\n\t\t\t// Initialize local attributes...\r\n";
 	    foreach ($object->getAttributes() as $a) {
  			$r .= "\t\t\t\$this->{$a->getName()} = isset(\$data['{$a->getName()}']) ? \$data['{$a->getName()}'] : \"{$a->getDefaultValue()}\";\r\n";
+ 		}
+ 		$r .= "\r\n\t\t\t// Initialize parent ids...\r\n";
+	    foreach ($object->getParents() as $s) {
+			$r .= "\t\t\t\$this->{$s->getName()} = isset(\$data['{$s->getName()}_id']) ? \$data['{$s->getName()}_id'] : 0;\r\n";
  		}
 
  		$r .= "\t\t} // end constructor\r\n\r\n";
  		
- 		$r .= "\t\tprivate function _initNonlocalAttributes(\$data) {\r\n";
-		foreach ($object->getParents() as $s) {
-			$r .= "\t\t\t\$this->{$s->getName()} = isset(\$data['{$s->getName()}_id']) ? \$data['{$s->getName()}_id'] : 0;\r\n";
- 		}
- 		$r .= "\t\t\tif (\$this->id > 0) {\r\n";
- 		foreach ($object->getPeers() as $s) {
- 			$table = self::standardizeTableName($s->getForeign());
- 			if ($s->getOwner() == $s->getForeign()) {
- 				$type = self::standardizeAttributeName($s->getOwner());
- 				$lookup = $s->getLookupTable();
- 				// Set the filter for M:M between two objects of the same type
- 				$filter = "`{$table}`.`{$table}_id` IN ( SELECT (`"
-					. $type . "1_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "2_id`='{\$this->id}') "
-					. "OR ("
-					. $type . "2_id` FROM `{$lookup}` WHERE `{$lookup}`.`" . $type . "1_id`='{\$this->id}') "
-					. ") ";
- 			} else {
- 				// Set the filter for M:M between two different object types
-				$foreignName = self::standardizeAttributeName($s->getForeign());
-				$ownerName   = self::standardizeAttributeName($s->getOwner());
- 				$filter = "`{$table}`.`{$table}_id` IN ( SELECT `{$s->getLookupTable()}`.`"
-					. $foreignName
- 					. "_id` FROM `{$s->getLookupTable()}` WHERE `{$s->getLookupTable()}`.`"
-					. $ownerName
-					. "_id` = '{\$this->id}' )";
- 			}
-			
-			$r .= "\t\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('{$table}',\"{$filter}\");\r\n";
-			//$r .= "\t\t\t\t\$this->{$s->getName()}->setOwnerId(\$this->id);\r\n";
- 		}
- 		foreach ($object->getChildren() as $s) {
- 			$filter = "`".self::standardizeTableName($s->getForeign())."`.`{$s->getReflectVariable()}_id`='{\$this->id}' ";
- 			$r .= "\t\t\t\t\$this->{$s->getName()} = new {$s->getForeign()}Collection('".self::standardizeTableName($s->getLookupTable())."',\"{$filter}\");\r\n";
- 			//$r .= "\t\t\t\t\$this->{$s->getName()}->setOwnerId(\$this->id);\r\n";
- 		}
- 		$r .= "\t\t\t}\r\n";
- 		$r .= "\t\t} // end _initNonlocalAttributes\r\n\r\n";
- 		
  		$r .= "\t\tpublic static function _getObjectClassName() {\r\n"
  			. "\t\t\treturn \"{$object->getName()}\";\r\n"
  			. "\t\t}\r\n";
+ 			
+ 			
+ 	    /**
+ 	     * THE GET FUNCTION
+ 	     */
+ 		$r .= "\t\tpublic function get( \$attribute, \$bIdOnly = false ) {\r\n";
+ 		$r .= "\t\t\tswitch ( strtolower(\$attribute) ) {\r\n";
  		
- 		// Getters
+ 		// Local attributes
+	    foreach ($object->getAttributes() as $a) {
+	 		$r .= "\t\t\t\tcase '".strtolower($a->getName())."':\r\n";
+ 			if ($a->getType() == "string" || $a->getType() == "text") {
+ 				$r .= "\t\t\t\t\treturn stripslashes(\$this->{$a->getName()});\r\n";
+ 			} else {
+ 				$r .= "\t\t\t\t\treturn \$this->{$a->getName()};\r\n";
+ 			}
+ 		}
+ 		
+ 		// Parents
+	    foreach ($object->getParents() as $s) {
+			$r .= "\t\t\t\tcase '".strtolower($s->getName())."': \r\n"
+				. "\t\t\t\t\tif (is_object(\$this->{$s->getName()}) ) {\r\n"
+				. "\t\t\t\t\t\treturn (\$bIdOnly) ? \$this->{$s->getName()}->getId() : \$this->{$s->getName()};\r\n"
+				. "\t\t\t\t\t} else {\r\n"
+				. "\t\t\t\t\t\tif (\$bIdOnly) {\r\n"
+				. "\t\t\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
+				. "\t\t\t\t\t\t} else {\r\n"
+				. "\t\t\t\t\t\t\t\$c = new {$s->getForeign()}Collection();\r\n"
+				. "\t\t\t\t\t\t\t\$this->{$s->getName()} = \$c->unique(\$this->{$s->getName()});\r\n"
+				. "\t\t\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
+				. "\t\t\t\t\t\t}\r\n"
+				. "\t\t\t\t\t}\r\n";
+	    }
+	    
+	    // Peers
+	    foreach ($object->getPeers() as $s) {
+			$r .= "\t\t\t\tcase '".strtolower($s->getName())."':\r\n"
+			    . "\t\t\t\t\t\$c = new {$s->getForeign()}Collection();\r\n"
+			    . "\t\t\t\t\treturn \$c->filter('{$s->getReflectVariable()}',\$this->id);\r\n";
+		}
+		
+		// Children
+	    foreach ($object->getChildren() as $s) {
+ 			$r .= "\t\t\t\tcase '".strtolower($s->getName())."':\r\n"
+ 			    . "\t\t\t\t\t\$c = new {$s->getForeign()}Collection();\r\n"
+ 			    . "\t\t\t\t\treturn \$c->filter('{$s->getReflectVariable()}',\$this->id);\r\n";
+ 		} 
+ 		
+ 		
+ 		
+ 		$r .= "\t\t\t\tdefault: throw new FObjectException('No such attribute');\r\n"
+ 			. "\t\t\t}\r\n";
+ 		$r .= "\t\t}\r\n";	
+ 		/**
+ 		 * END GET FUNCTION 
+ 		 */
+ 		
+ 		// Deprecated Getters
 		foreach ($object->getAttributes() as $a) {
 	 		$r .= "\t\tpublic function get{$a->getFunctionName()}() {\r\n";
- 			if ($a->getType() == "string" || $a->getType() == "text") {
- 				$r .= "\t\t\treturn stripslashes(\$this->{$a->getName()});\r\n";
- 			} else {
- 				$r .= "\t\t\treturn \$this->{$a->getName()};\r\n";
- 			}
+ 			$r .= "\t\t\treturn \$this->get('{$a->getName()}');\r\n";
  			$r .= "\t\t}\r\n\r\n";
  		}
 		foreach ($object->getParents() as $s) {
-			$r .= "\t\tpublic function get{$s->getFunctionName()}(\$bIdOnly = false) {\r\n"
-				. "\t\t\tif (is_object(\$this->{$s->getName()}) ) {\r\n"
-				. "\t\t\t\treturn (\$bIdOnly) ? \$this->{$s->getName()}->getId() : \$this->{$s->getName()};\r\n"
-				. "\t\t\t} else {\r\n"
-				. "\t\t\t\tif (\$bIdOnly) {\r\n"
-				. "\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
-				. "\t\t\t\t} else {\r\n"
-				. "\t\t\t\t\t\$this->{$s->getName()} = _model()->{$s->getForeign()}->get(\$this->{$s->getName()});\r\n"
-				. "\t\t\t\t\treturn \$this->{$s->getName()};\r\n"
-				. "\t\t\t\t}\r\n"
-				. "\t\t\t}\r\n"
-				. "\t\t}\r\n\r\n";	
+			$r .= "\t\tpublic function get{$s->getFunctionName()}(\$bIdOnly = false) {\r\n";
+			$r .= "\t\t\treturn \$this->get('{$s->getName()}',\$bIdOnly);\r\n";
+			$r .= "\t\t}\r\n\r\n";	
  		}
  		foreach ($object->getPeers() as $s) {
-			$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n"
-			    . "\t\t\t\$argv = func_get_args();\r\n"
-				. "\t\t\treturn call_user_func_array(array(\$this->{$s->getName()},'get'),\$argv);\r\n"
-				. "\t\t}\r\n\r\n";
+			$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n";
+			$r .= "\t\t\treturn \$this->get('{$s->getName()}');\r\n";
+		    $r .= "\t\t}\r\n\r\n";
  		}
  		foreach ($object->getChildren() as $s) {
- 			$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n"
- 			    . "\t\t\t\$argv = func_get_args();\r\n"
-				. "\t\t\treturn call_user_func_array(array(\$this->{$s->getName()},'get'),\$argv);\r\n"
-				. "\t\t}\r\n\r\n";
+ 			$r .= "\t\tpublic function get{$s->getFunctionName()}() {\r\n";
+ 			$r .= "\t\t\treturn \$this->get('{$s->getName()}');\r\n";
+			$r .= "\t\t}\r\n\r\n";
  		}
  		
  		
@@ -1327,8 +1365,8 @@ and developer_project_projects.project_id = project.project_id
 				.  self::standardizeAttributeName($v);
   		} else {
   			$stdName = self::standardizeAttributeName($name);
-	  		if (isset($GLOBALS['furnace']->config['hostOS']) &&
-	  			strtolower($GLOBALS['furnace']->config['hostOS']) == 'windows') {
+	  		if (isset($GLOBALS['furnace']->config->data['hostOS']) &&
+	  			strtolower($GLOBALS['furnace']->config->data['hostOS']) == 'windows') {
 	  				
 	  			// Windows has a case-insensitive file system, and the default 
 				// settings of MySQL on windows force tablenames to be strictly lowercase
