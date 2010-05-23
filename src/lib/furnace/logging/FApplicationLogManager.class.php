@@ -19,13 +19,34 @@ class FApplicationLogManager {
     private $logs = array();
     
     public function __construct($applicationConfig) {
-        // Initialize the default log. Because this log is guaranteed to exist
-        // it can be used to log everything else, including exceptions to the 
-        // logging interface itself.
-        $this->logs['default'] = &Log::singleton('file', FF_LOG_DIR . '/furnace.all.log');
         
         foreach ($applicationConfig->data['logging'] as $logname => $logdata) {
-            $this->logs[$logname] = &Log::singleton($logdata['type'],$logdata['path'],$logname);
+            // Process environment variables in paths
+            if (isset($logdata['path'])) {
+                $realPath = str_replace('$LOGDIR',FF_LOG_DIR,$logdata['path']);
+            } else {
+                $realPath = '';
+            }
+            // Process mask criteria
+            if (isset($logdata['mask'])) {
+                switch ($logdata['mask']) {
+                    case 'FF_DEBUG'  : $mask = Log::MAX(FF_DEBUG);  break;
+                    case 'FF_INFO'   : $mask = Log::MAX(FF_INFO);   break;
+                    case 'FF_NOTICE' : $mask = Log::MAX(FF_NOTICE); break;
+                    case 'FF_WARN'   : $mask = Log::MAX(FF_WARN);   break;
+                    case 'FF_ERROR'  : $mask = Log::MAX(FF_ERROR);  break;
+                    case 'FF_CRIT'   : $mask = Log::MAX(FF_CRIT);   break;
+                    case 'FF_ALERT'  : $mask = Log::MAX(FF_ALERT);  break;
+                    case 'FF_EMERG'  : $mask = Log::MAX(FF_EMERG);  break;
+                    default: $mask = Log::MAX(FF_INFO); break;
+                }
+            } else {
+                $mask = Log::MAX(FF_INFO);
+            }
+            $this->logs[$logname] = &Log::singleton($logdata['type'],$realPath,$logname);
+            $this->logs[$logname]->setMask($mask);
+            $this->logs['default']->log(
+            	"Initialized logger \"{$logname}\" with mask {$logdata['mask']}",FF_DEBUG);
         }      
     }
     
@@ -39,11 +60,30 @@ class FApplicationLogManager {
      */
     public function getLog($which = 'default') {
         
-        if (isset($this->logs[$which])) {
-            return $this->logs[$which];
+        if (strtolower($which) == 'default') {
+            return $this;
         } else {
-            throw new Exception(
-            	"Received request to log to undefined logger '{$which}' ");
+            if (isset($this->logs[$which])) {
+                return $this->logs[$which];
+            } else {
+                throw new Exception(
+                	"Received request to log to undefined logger '{$which}' ");
+            }
+        }
+    }
+    
+    /**
+     * log
+     * 
+     * Log a message to *all* managed log interfaces
+     * 
+     * @param string The message to log
+     * @param integer The log level
+     * @return void
+     */
+    public function log($message,$level = FF_INFO) {
+        foreach ($this->logs as $log) {
+            $log->log($message,$level);
         }
     }
 }
