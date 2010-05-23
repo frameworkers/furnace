@@ -28,13 +28,13 @@ class FSessionManager {
 		 $q = "SELECT * FROM `app_accounts` "
 			. "WHERE `username`='{$un}' AND `password`='{$encrypted}' ";
 
-		 $r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
-		 if (is_array($r)) {
+		 $r = _db()->rawQuery($q,array('type'=>'row'));
+		 if ($r->status == FF_FRESULT_OK) {
 		 	// Populate session
-			self::initSession($r);
+			self::initSession($r->data);
 			// Mark the lastLogin time for this account
-			$q = "UPDATE `app_accounts` SET `lastLogin`=NOW() WHERE `faccount_id`='{$r['faccount_id']}' ";
-			_db()->exec($q);
+			$q = "UPDATE `app_accounts` SET `lastLogin`=NOW() WHERE `faccount_id`='{$r->data['faccount_id']}' ";
+			_db()->rawExec($q);
 			return true;
 		 } else {
 		 	return false;

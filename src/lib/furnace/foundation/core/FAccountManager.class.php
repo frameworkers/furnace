@@ -65,8 +65,8 @@ class FAccountManager extends FAccount {
 	}
 	
 	public static function EncryptPassword($pw) {
-	    if (isset(_furnace()->config['password_salt'])) {
-	        $salted = _furnace()->config['password_salt'] . $pw;
+	    if (isset(_furnace()->config->data['password_salt'])) {
+	        $salted = _furnace()->config->data['password_salt'] . $pw;
 	    } else {
 	        $salted = $pw;
 	    }
