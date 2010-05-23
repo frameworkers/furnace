@@ -25,8 +25,8 @@ class Controller extends FController {
     
     public function checkLogin() {
         
-        if ('' == $GLOBALS['furnace']->config['root_username'] || 
-            '' == $GLOBALS['furnace']->config['root_password']) {
+        if ('' == $GLOBALS['furnace']->config->data['root_username'] || 
+            '' == $GLOBALS['furnace']->config->data['root_password']) {
 			// ALWAYS FAIL IF THE ROOT USERNAME & PASSWORD HAVE NOT BEEN SET 
 			// IN THE PROJECT CONFIGURATION FILE!
 			return false;
@@ -37,8 +37,8 @@ class Controller extends FController {
     		$un =& $this->form['rootuser'];
     		$pw =& $this->form['rootpass'];
     		
-    		if (     $un == $GLOBALS['furnace']->config['root_username'] && 
-    		    md5($pw) == md5($GLOBALS['furnace']->config['root_password'])) {
+    		if (     $un == $GLOBALS['furnace']->config->data['root_username'] && 
+    		    md5($pw) == md5($GLOBALS['furnace']->config->data['root_password'])) {
     			$_SESSION['fuel']['loggedin']  = true;
     			$_SESSION['fuel']['timestamp'] = mktime();
     			return true;
@@ -57,10 +57,6 @@ class Controller extends FController {
     }
     
     protected function init() {
-		require_once($GLOBALS['furnace']->rootdir
-			. "/lib/furnace/foundation/database/"
-		    . $GLOBALS['furnace']->config['db_engine']
-		    . "/FDatabase.class.php");
 		
 		$lib_dir = dirname(dirname(__FILE__)) . '/libraries';
 		require_once("{$lib_dir}/generation/core/FObj.class.php");
