@@ -19,4 +19,3 @@ CREATE TABLE `app_accounts` (
   PRIMARY KEY  (`faccount_id`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
-END;
