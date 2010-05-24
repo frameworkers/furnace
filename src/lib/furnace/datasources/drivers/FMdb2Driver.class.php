@@ -434,7 +434,7 @@ class FMdb2Driver extends FDatasourceDriver {
             // If no conditions have been specified, there will be exactly two query_conditions,
             // a '(' and a ')'. In this case, no filtering is necessary so 'WHERE 1' is built
             if (count($this->query_conditions == 2) && $this->query_conditions[0]['cond'] == '(') {
-                $qstring .= '1';
+                $qstring .= ' 1 ';
             } else {
                 for($i = 0, $ccount = count($this->query_conditions); $i < $ccount; $i++) {
                     // Handle a condition group start
