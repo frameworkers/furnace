@@ -313,7 +313,7 @@ class SchemaController extends Controller {
 	    // Create a missing framework table in the database
 	    $path = dirname(dirname(dirname(__FILE__))) .'/libraries/generation/schemas/'.$which.'.sql';
 	    if (file_exists($path)) {
-	        _db()->exec(file_get_contents($path));
+	        _db()->rawExec(file_get_contents($path));
 	        $this->flash("Created required framework table '{$which}' ");
 	        $this->redirect("{$this->prefix}/schema/");
 	    } else {

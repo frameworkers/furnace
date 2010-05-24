@@ -49,7 +49,7 @@ class FDatabaseSchema {
 		}
 	}
 	public function executeStatement($stmt) {
-		$this->datasource->exec($stmt);
+		$this->datasource->rawExec($stmt);
 	}
 	
 	public function tableExists($tableName,$bIsLookupTable = false) {
@@ -57,9 +57,10 @@ class FDatabaseSchema {
 	}
 	
 	private function discoverTables() {
-		$results = $this->datasource->query("SHOW TABLES");
+		$results = $this->datasource->rawQuery("SHOW TABLES",array("mode"=>MDB2_FETCHMODE_NUMERIC));
 		
-		while ($r = $results->fetchRow()) {
+		//while ($r = $results->fetchRow()) {
+		foreach ($results->data as $r) {
 			$bIsLookupTable = ((strpos($r[0],"_") > 0));
 			$this->tables[FModel::standardizeTableName($r[0],$bIsLookupTable)] 
 				= new FSqlTable($r[0],$bIsLookupTable);
@@ -67,9 +68,10 @@ class FDatabaseSchema {
 	}
 	
 	private function discoverAttributes($tableName) {
-		$results = $this->datasource->query("DESCRIBE `{$tableName}`");
+		$results = $this->datasource->rawQuery("DESCRIBE `{$tableName}`",array("mode"=>MDB2_FETCHMODE_NUMERIC));
 		
-		while ($r = $results->fetchRow()) {
+		//while ($r = $results->fetchRow()) {
+		foreach ($results->data as $r) {
 			$bIsAutoinc = (($r[5] != null));
 			$c = new FSqlColumn(
 				$r[0],								// name 
