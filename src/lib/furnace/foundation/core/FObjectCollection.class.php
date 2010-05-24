@@ -175,7 +175,9 @@ class FObjectCollection {
     
     public function first($formatter = null) {
         $result = $this->limit(1)->output($formatter);
-        return $result[0];
+        return ($result[0] === null)
+            ? false
+            : $result[0];
     }
     
     
