@@ -67,9 +67,14 @@ logging:
 #
 datasources:
   debug:
-    default: "driver://user:pass@server/dbname"
+    default: 
+      driver: 'FMdb2Driver'
+      options:
+        dsn: "mysql://user:pass@server/dbname"
   production:
-    default: "driver://user:pass@server/dbname"
+    driver: 'FMdb2Driver'
+      options:
+        dsn: "mysql://user:pass@server/dbname"
 
 
 #
