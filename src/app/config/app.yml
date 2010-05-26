@@ -29,13 +29,20 @@ db_engine: MDB2
 #   0: No errors or warnings, suitable for a production environment.
 debug_level: 1
 
+# Logging:
 #
-# LOGGING
+# $LOGDIR is a constant that can be used when specifying paths for 
+# 'file' type log streams. It will be replaced with: /path/to/app/data/logs
 #
 logging:
-    console:
-      type: console
-      mask: DEBUG
+  default:
+    type: file
+    path: $LOGDIR/furnace.all.log
+    mask: FF_INFO
+  notices:
+    type: file
+    path: $LOGDIR/notices.log
+    mask: FF_NOTICE
 
 #
 # DATASOURCES
