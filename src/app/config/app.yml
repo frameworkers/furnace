@@ -72,7 +72,8 @@ datasources:
       options:
         dsn: "mysql://user:pass@server/dbname"
   production:
-    driver: 'FMdb2Driver'
+    default:
+      driver: 'FMdb2Driver'
       options:
         dsn: "mysql://user:pass@server/dbname"
 
