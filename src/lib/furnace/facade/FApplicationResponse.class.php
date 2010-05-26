@@ -44,7 +44,8 @@ class FApplicationResponse {
  		        .$app->request->route['controller'].'/'
  		        .$app->request->route['action']);
  		    $this->controller->setTheme($app->request->route['theme']);
-            $this->controller->extensionSetLayout($extension,'default',false);
+ 		    list($provider,$package) = explode('/',$extension);
+            $this->controller->extensionSetLayout($provider,$package,'default',false);
         } else {
             // Extension with its own theme
             $this->controller->set('_theme_',"{$this->url_base}extensions/{$extension}/themes/{$app->theme}");
@@ -52,7 +53,8 @@ class FApplicationResponse {
  		        .$app->request->route['controller'].'/'
  		        .$app->request->route['action']);
  		    $this->controller->setTheme($app->request->route['theme']);
-            $this->controller->extensionSetLayout($extension,'default',false);
+ 		    list($provider,$package) = explode('/',$extension);
+            $this->controller->extensionSetLayout($provider,$package,'default',false);
         }
          
         // Determine the prefix for relative links (especially important for extensions)
