@@ -15,7 +15,7 @@ class ModelController extends Controller {
         $m = $this->getModel();
         $this->set('theModel',$m);
 
-		$this->extensionAddStylesheet('org.frameworkers.fuel','index.css',true);
+		$this->extensionAddStylesheet('org.frameworkers','Fuel','index.css',true);
 
 		try {
 		    _db();
@@ -419,7 +419,7 @@ END;
 	
     public function editField($ot='',$attr='') {
 		$this->init();
-		$this->extensionAddStylesheet('org.frameworkers.fuel','/pages/model/editField/editField.css');
+		$this->extensionAddStylesheet('org.frameworkers','Fuel','/pages/model/editField/editField.css');
 		if ($this->form) {
 			
 		} else {

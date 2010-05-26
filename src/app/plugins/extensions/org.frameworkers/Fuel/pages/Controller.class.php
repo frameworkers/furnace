@@ -87,7 +87,7 @@ class Controller extends FController {
 		    if (is_dir("{$extBasePath}/{$ext}/model") && 
 		        file_exists("{$extBasePath}/{$ext}/model/model.yml")) {
 		            $data = array_merge($data,_furnace()->parse_yaml("{$extBasePath}/{$ext}/model/model.yml"));   
-		        }
+		    }
 		}
 		
 		return new FModel($data);
