@@ -119,7 +119,7 @@
  		);
  	}
  	
- 	public function extensionSetLayout($extension,$layout) {
+ 	public function extensionSetLayout($provider,$package,$layout) {
  	    if ($this->bInheritTheme) {
  	        $baseTheme = _furnace()->config->data['app_theme'];
  	        $this->layout = file_get_contents(
@@ -127,7 +127,7 @@
  	        );
  	    } else {
  	        $this->layout = file_get_contents(
- 	            _furnace()->rootdir . "/app/plugins/extensions/{$extension}/themes/{$this->theme}/layouts/{$layout}.html"
+ 	            _furnace()->rootdir . "/app/plugins/extensions/{$provider}/{$package}/themes/{$this->theme}/layouts/{$layout}.html"
  	        );
  	    }
  	}
@@ -163,9 +163,9 @@
 		$this->stylesheets[] = $path;
 	}
 	
-	public function extensionAddStylesheet($extension,$path,$bLocal = false) {
+	public function extensionAddStylesheet($provider,$package,$path,$bLocal = false) {
 	    if (!$bLocal) {
-	        $path = "/extensions/{$extension}/themes/{$this->theme}/css/{$path}";
+	        $path = "/extensions/{$provider}/{$package}/themes/{$this->theme}/css/{$path}";
 	    } else {
 	        $localPath = $this->page_data['_local_'];
 	        $path = "{$localPath}/{$path}";
@@ -183,9 +183,9 @@
 		$this->javascripts[] = $path;
 	}
      
-	public function extensionAddJavascript($extension,$path,$bLocal = false) {
+	public function extensionAddJavascript($provider,$package,$path,$bLocal = false) {
 	    if (!$bLocal) {
-	        $path = "/extensions/{$extension}/themes/{$this->theme}/js/{$path}";
+	        $path = "/extensions/{$provider}/{$package}/themes/{$this->theme}/js/{$path}";
 	    } else {
 	        $localPath = $this->page_data['_local_'];
 	        $path = "{$localPath}/{$path}";
