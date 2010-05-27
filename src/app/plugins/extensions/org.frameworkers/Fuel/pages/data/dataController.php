@@ -99,7 +99,7 @@ class DataController extends Controller {
         $parentInfo = _model()->$name->parentsAsArray(); 
         
         
-        $objectCollection = $oc->get()->limit(self::$PER_PAGE,$page-1);
+        $objectCollection = $oc->limit(self::$PER_PAGE,$page-1);
         //foreach ($parentInfo as $pdata) {
         //    $objectCollection->each()->expand($pdata['name']);
         //}
