@@ -100,6 +100,15 @@ class FMdb2Driver extends FDatasourceDriver {
 		return $result;	
     }
     
+    public function lastInsertId($options = array()) {
+
+		$r = $this->mdb2->lastInsertID();
+		if ( $r instanceof MDB2_Error ) {
+			throw new FDatabaseException($r->message,"\"{$q}\"");
+		}
+		return $r;		
+    }
+    
     public function exec($query) {}
     public function close($options = array()) {}
     
