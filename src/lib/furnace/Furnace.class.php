@@ -164,10 +164,10 @@ class Furnace {
             
             // Ensure that the requested controller actually exists
             if (!file_exists($controllerFilePath)) {
-                ( $this->config->debug_level > 0 ) 
-                    ? $this->process("/_debug/errors/noController/"
-                        .str_replace('/','+',$controllerFilePath))
-                    : $this->process("/_default/http404");
+                return ( $this->config->debug_level > 0 ) 
+                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
+                        .str_replace('/','+',$controllerFilePath)))
+                    : $this->process(new FApplicationRequest("/_default/http404"));
                 exit();
             }        
             
@@ -234,11 +234,11 @@ class Furnace {
                     // Display error if expected view template does not exist..
                     if ($pageExists !== true 
                             && !$this->response->pageOverrideDetected) {
-                        $this->process(
+                        return $this->process(new FApplicationRequest(
                             (($this->config->debug_level > 0) 
                                 ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
                                 : '/_default/http404')
-                        );
+                        ));
                         exit();
                     }   
                 } catch (FDatabaseException $fde) {
