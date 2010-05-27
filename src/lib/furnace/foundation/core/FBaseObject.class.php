@@ -107,7 +107,7 @@
 			$q  = "INSERT INTO `{$this->fObjectTableName}` ";
 			$q .= "({$this->buildSqlUniqueAttributeList()}) ";
 			$q .= "VALUES ({$this->buildSqlUniqueAttributeValueList()}) ";
-			$r = _db()->exec($q);
+			$r = _db()->rawExec($q);
 			$this->id   = _db()->lastInsertID($this->FObjectTableName,"{$this->fObjectTableName}_id");
 			return true; 
 		} else {
@@ -150,7 +150,7 @@
  			. implode(',',$fieldsToSave)
  			. " WHERE `{$this->fObjectTableName}`.`{$this->fObjectTableName}_id` = {$this->id} LIMIT 1";
  			
- 		_db()->exec($q);
+ 		_db()->rawExec($q);
  		
  		return true;
  		
