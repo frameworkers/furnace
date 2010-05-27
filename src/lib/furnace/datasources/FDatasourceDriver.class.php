@@ -36,6 +36,13 @@ abstract class FDatasourceDriver {
     abstract public function query($query);
     
     /**
+     * Return the unique id of the last inserted item
+     * @param  array $options an optional set of options to provide
+     * @return mixed
+     */
+    abstract public function lastInsertId($options = array());
+    
+    /**
      * Process an {@link FQuery} object
      * 
      * This method does not return an {@link FResult} object
