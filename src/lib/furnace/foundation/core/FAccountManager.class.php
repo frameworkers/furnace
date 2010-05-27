@@ -43,7 +43,7 @@ class FAccountManager extends FAccount {
 		// Add entry in app_accounts
 		$q = "INSERT INTO `app_accounts` (`username`,`password`,`emailAddress`,`created`,`modified`) "
 			."VALUES ('{$un}','{$encrypted}','{$em}','{$now}','{$now}')"; 
-		$r = _db()->exec($q);
+		$r = _db()->rawExec($q);
 		if (MDB2::isError($r)) {
 			FDatabaseErrorTranslator::translate($r->getCode());
 		}
@@ -51,7 +51,7 @@ class FAccountManager extends FAccount {
 				
 		// Add entry in app_roles
 		$q = "INSERT INTO `app_roles` (`faccount_id`) VALUES ('{$faccountId}')";
-		$r = _db()->exec($q);
+		$r = _db()->rawExec($q);
 		if (MDB2::isError($r)) {
 			FDatabaseErrorTranslator::translate($r->getCode());
 		}
@@ -75,7 +75,7 @@ class FAccountManager extends FAccount {
 	
     public static function GenerateForgotPasswordKey($emailAddress) {
 	    $q = "SELECT * FROM `app_accounts` WHERE `emailAddress`='{$emailAddress}' ";
-	    $r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
+	    $r = _db()->rawQuery($q,array('type'=>'row'));
 	    
 	    if ($r) {
 	        // Generate the key
@@ -84,8 +84,8 @@ class FAccountManager extends FAccount {
 	            $npk .= $chars[rand(0,61)];
 	        }
 	        // Associate it with the account
-	        $q = "UPDATE `app_accounts` SET `newPasswordKey`='{$npk}' WHERE `objId`={$r['objId']} LIMIT 1";
-	        _db()->exec($q);
+	        $q = "UPDATE `app_accounts` SET `newPasswordKey`='{$npk}' WHERE `faccount_id`={$r['faccount_id']} LIMIT 1";
+	        _db()->rawExec($q);
 	        
 	        return $npk;
 	    }
@@ -95,7 +95,7 @@ class FAccountManager extends FAccount {
 	public static function EmailAddressExists($emailAddress,$bGetObject=false) {
 
 	    $q = "SELECT * FROM `app_accounts` WHERE `emailAddress`='{$emailAddress}' LIMIT 1";
-	    $r = _db()->queryRow($q,FDATABASE_FETCHMODE_ASSOC);
+	    $r = _db()->rawQuery($q,array('type'=>'row'));
 	    
 	    if ($r) {
 	        if ($bGetObject) { 
@@ -113,7 +113,7 @@ class FAccountManager extends FAccount {
 	
 	public static function Delete($username) {
 		$q = "SELECT * FROM `app_accounts` WHERE `username` = '{$username}' ";
-		$data = _db()->queryRow($q);
+		$data = _db()->rawQuery($q,array('type'=>'row'));
 		if ($data) {
 		    // Call the actual object's delete function
 		    call_user_func_array(array($r['objectClass'],'Delete'),array($r['objectId']));
@@ -122,7 +122,7 @@ class FAccountManager extends FAccount {
 	
 	public static function DeleteByAccountId($id) {
 	    $q = "SELECT * FROM `app_accounts` WHERE `faccount_id` = '{$id}' ";
-		$data = _db()->queryRow($q);
+		$data = _db()->rawQuery($q,array('type'=>'row'));
 		if ($data) {
 		    // Call the actual object's delete function
 		    call_user_func_array(array($r['objectClass'],'Delete'),array($r['objectId']));

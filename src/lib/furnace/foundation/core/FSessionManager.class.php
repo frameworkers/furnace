@@ -29,7 +29,7 @@ class FSessionManager {
 			. "WHERE `username`='{$un}' AND `password`='{$encrypted}' ";
 
 		 $r = _db()->rawQuery($q,array('type'=>'row'));
-		 if ($r->status == FF_FRESULT_OK) {
+		 if ($r->status == FF_FRESULT_OK && $r->data != null) {
 		 	// Populate session
 			self::initSession($r->data);
 			// Mark the lastLogin time for this account

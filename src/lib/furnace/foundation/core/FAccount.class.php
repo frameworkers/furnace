@@ -280,7 +280,7 @@ class FAccount extends FBaseObject {
 	    
 	    // Merge FAccount variables into the object
 	    if (isset($data['username'])) { $this->username = $data['username']; }
-	    if (isset($data['password'])) { $this->password = FAccountManager::EncryptPassword($data['password']); }
+	    if (isset($data['password'])) { $this->password = $data['password']; }
 	    if (isset($data['emailAddress'])) { $this->emailAddress = $data['emailAddress']; }
 	    //TODO: same for all other FAccount variables
 	    
@@ -325,7 +325,7 @@ class FAccount extends FBaseObject {
 			. "`newPasswordKey`='{$this->newPasswordKey}' ";
 			$q .= "WHERE `faccount_id`='{$this->faccount_id}'";
 			
-			_db()->exec($q);
+			_db()->rawExec($q);
 			
 		}
 			
@@ -367,9 +367,9 @@ class FAccount extends FBaseObject {
 				$ot_id = "{$this->fObjectTableName}_id";
 				$this->objectId    = $this->id;
 				$q = "UPDATE `{$this->fObjectTableName}` SET `faccount_id`={$this->faccount_id} WHERE `{$ot_id}`={$this->id} LIMIT 1";
-				_db()->exec($q);
+				_db()->rawExec($q);
 				$q = "UPDATE `app_accounts` SET `objectClass`='{$this->fObjectType}', `objectId`={$this->id} WHERE `faccount_id`={$this->faccount_id} LIMIT 1";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			}
 			// All set. Return true
 			return true;
@@ -401,8 +401,8 @@ class FAccount extends FBaseObject {
 	
 	public function grantRole($namedRole) {
 		$q = "UPDATE `app_roles` SET `{$namedRole}`='1' WHERE `faccount_id`='{$this->getFAccountId()}' ";
-		$r = _db()->exec($q);
-		if (MDB2::isError($r)) {
+		$r = _db()->rawExec($q);
+		if ($r instanceof MDB2_Error) {
 			FDatabaseErrorTranslator::translate($r->getCode());
 		}
 		$this->roles[$namedRole] = true;
@@ -417,7 +417,7 @@ class FAccount extends FBaseObject {
 		
 		$q = "UPDATE `app_roles` SET " . implode(",",$roles) 
 		  . " WHERE `faccount_id`='{$this->getFAccountId()}' ";
-		$r = _db()->exec($q);
+		$r = _db()->rawExec($q);
 		if (is_array($this->roles)) {
 			foreach ($namedRoles as $role) {
 				$this->roles[$role] = true;
@@ -427,8 +427,8 @@ class FAccount extends FBaseObject {
 	
 	public function denyRole($namedRole) {
 		$q = "UPDATE `app_roles` SET `{$namedRole}`='0' WHERE `faccount_id`='{$this->getFAccountId()}' ";
-		$r = _db()->exec($q);
-		if (MDB2::isError($r)) {
+		$r = _db()->rawExec($q);
+		if ($r instanceof MDB2_Error) {
 			FDatabaseErrorTranslator::translate($r->getCode());
 		}
 		if (is_array($this->roles) && isset($this->roles[$namedRole])) {
@@ -463,7 +463,7 @@ class FAccount extends FBaseObject {
 	public static function Retrieve($id) {
 		_db()->setFetchMode(FDATABASE_FETCHMODE_ASSOC);
 		$q = "SELECT * FROM `app_accounts` WHERE `faccount_id`='{$id}' LIMIT 1 ";
-		$r = _db()->queryRow($q);
+		$r = _db()->rawQuery($q,array('type'=>'row'));
 		return new FAccount($r);
 	}
 	
@@ -475,7 +475,7 @@ class FAccount extends FBaseObject {
 			WHERE `app_accounts`.`faccount_id`=`app_roles`.`faccount_id` 
 			AND `app_roles`.`{$role}`='{$value}' 
 			AND `app_accounts`.`objectClass`='{$objectClass}'";
-		$results  = _db()->queryAll($q,FDATABASE_FETCHMODE_ASSOC);
+		$results  = _db()->rawQuery($q);
 		$response = array();
 		foreach ($results as $r) {
 			$response[] = $r['objectId'];
@@ -510,12 +510,12 @@ class FAccount extends FBaseObject {
 			$default = 0;
 		}
 		$q = "ALTER TABLE `app_roles` ADD COLUMN `{$name}` INT(11) DEFAULT {$default} ";
-		$r = _db()->exec($q);
+		$r = _db()->rawExec($q);
 	}
 	
 	public static function DeleteRole($name) {
 		$q = "ALTER TABLE `app_roles` DROP COLUMN `{$name}` ";
-		$r = _db()->exec($q);
+		$r = _db()->rawExec($q);
 	}
 	
     protected function buildSqlUniqueAttributeList() {
