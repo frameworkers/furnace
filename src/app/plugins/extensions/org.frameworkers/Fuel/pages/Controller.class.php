@@ -79,14 +79,20 @@ class Controller extends FController {
 		
 		// Retrieve any extension model data
 		$extBasePath = $GLOBALS['furnace']->rootdir . '/app/plugins/extensions';
-		$extDir      = dir($extBasePath);
-		while (false !== ($ext = $extDir->read())) {
+		$providerDir      = dir($extBasePath);
+		while (false !== ($provider = $providerDir->read())) {
 		    // Skip unrelated files and directories
-		    if ('.' == $ext[0] || !is_dir("{$extBasePath}/{$ext}")) { continue; }
+		    if ('.' == $provider[0] || !is_dir("{$extBasePath}/{$provider}")) { continue; }
 		    
-		    if (is_dir("{$extBasePath}/{$ext}/model") && 
-		        file_exists("{$extBasePath}/{$ext}/model/model.yml")) {
-		            $data = array_merge($data,_furnace()->parse_yaml("{$extBasePath}/{$ext}/model/model.yml"));   
+		    $providerExts = dir("{$extBasePath}/{$provider}");
+		    while (false !== ($ext = $providerExts->read())) {
+    		    // Skip unrelated files and directories
+    		    if ('.' == $ext[0] || !is_dir("{$extBasePath}/{$provider}/{$ext}")) { continue; }
+		    
+    		    if (is_dir("{$extBasePath}/{$provider}/{$ext}/model") && 
+    		        file_exists("{$extBasePath}/{$provider}/{$ext}/model/model.yml")) {
+    		            $data = array_merge($data,_furnace()->parse_yaml("{$extBasePath}/{$provider}/{$ext}/model/model.yml"));   
+    		    }
 		    }
 		}
 		
