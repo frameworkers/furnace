@@ -112,17 +112,12 @@ class FMdb2Driver extends FDatasourceDriver {
     public function exec($query) {}
     public function close($options = array()) {}
     
-    public function rawExec($query,$options = array()) {
-        $result = $this->mdb2->exec($query);
-        if ($result instanceof MDB2_Error) {
-            $r = new FResult($this,FF_FRESULT_ERROR);
-            $r->info = $result->userinfo;
-            $r->data = $result;
-            _log()->log("Mdb2Driver: {$r->info}",FF_ERROR);
-        } else {
-            $r = new FResult($this);
-            $r->data = $result;
-        }
+	public function rawExec($query,$options = array()) {
+        $r = $this->mdb2->exec($query);
+        if ($r instanceof MDB2_Error) {
+        	_log()->log("Mdb2Driver: {$r->info}",FF_ERROR);
+        	throw new FDatabaseException($r->message,"\"{$query}\"");
+        } 
         return $r;
     }
     
