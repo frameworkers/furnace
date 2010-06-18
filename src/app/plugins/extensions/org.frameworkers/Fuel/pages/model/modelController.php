@@ -182,23 +182,23 @@ class ModelController extends Controller {
 				
 				if (!$schema->tableExists('app_accounts')) {
 				    $sql = file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_accounts.sql');
-				    _db()->exec($sql);
+				    _db()->rawExec($sql);
 				    $this->flash("Created required `app_accounts` table");
 				}
 			    if (!$schema->tableExists('app_roles')) {
 				    $sql = file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_roles.sql');
-				    _db()->exec($sql);
+				    _db()->rawExec($sql);
 				    $this->flash("Created required `app_roles` table");
 				}
 			    if (!$schema->tableExists('app_logs')) {
 				    $sql = file_get_contents(dirname(dirname(dirname(__FILE__))) . '/libraries/generation/schemas/app_logs.sql');
-				    _db()->exec($sql);
+				    _db()->rawExec($sql);
 				    $this->flash("Created required `app_logs` table");
 				}
 			}
 				
 			// Create the object table itself
-			_db()->exec($m->tables[$tableName]->toSqlString());
+			_db()->rawExec($m->tables[$tableName]->toSqlString());
 			
 			
 			// Regenerate PHP code
@@ -307,7 +307,7 @@ CREATE TABLE `app_account` (
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 COMMENT='table for application accounts' ;
 END;
-					_db()->exec($appAccountsSql);
+					_db()->rawExec($appAccountsSql);
 					$this->flash("Created required `app_account` table");
 				}
 				if (!$foundAppRoles) {
@@ -321,11 +321,11 @@ CREATE TABLE `app_role` (
   PRIMARY KEY  (`accountId`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COMMENT='permissions table for application accounts';
 END;
-					_db()->exec($appRolesSql);
+					_db()->rawExec($appRolesSql);
 					$this->flash("Created required `app_role` table");
 				}
 			}
-			_db()->exec($m->tables[$tableName]->toSqlString());
+			_db()->rawExec($m->tables[$tableName]->toSqlString());
 			
 			
 			// Regenerate PHP code
@@ -400,9 +400,9 @@ END;
 			// Execute SQL commands
 			$tableName = FModel::standardizeTableName($objectClass);
 			try {
-				_db()->exec("ALTER TABLE `{$tableName}` ADD COLUMN {$column->toSqlString()}");
+				_db()->rawExec("ALTER TABLE `{$tableName}` ADD COLUMN {$column->toSqlString()}");
 				if ($attr->isUnique()) {
-					_db()->exec("ALTER TABLE `{$tableName}` ADD UNIQUE (`{$attr->getName()}`) ");
+					_db()->rawExec("ALTER TABLE `{$tableName}` ADD UNIQUE (`{$attr->getName()}`) ");
 				}
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
@@ -501,7 +501,7 @@ END;
 				try {
 					$tableName = FModel::standardizeTableName($objectType);
 					$query = "ALTER TABLE `{$tableName}` CHANGE COLUMN `{$columnOldName}` {$column->toSqlString()}";
-					_db()->exec($query);
+					_db()->rawExec($query);
 				} catch (FDatabaseException $e) {
 					die($e->__toString());	
 				}
@@ -516,7 +516,7 @@ END;
 			    $column->setDefaultValue($this->form['attrNewDefaultValue']);
 			    try {
 			        $query = "ALTER TABLE `{$tableName}` CHANGE COLUMN `{$column->getName()}` {$column->toSqlString()}";
-			        _db()->exec($query);
+			        _db()->rawExec($query);
 			    } catch (FDatabaseException $e) {
 			        echo $e;
 			        exit();
@@ -584,8 +584,8 @@ END;
 			
 			// Execute SQL commands
 			try {
-				_db()->exec("ALTER TABLE `{$tableName}` DROP COLUMN `{$attributeName}` ");
-				_db()->exec("ALTER TABLE `{$tableName}` DROP INDEX  `{$attributeName}` ");
+				_db()->rawExec("ALTER TABLE `{$tableName}` DROP COLUMN `{$attributeName}` ");
+				_db()->rawExec("ALTER TABLE `{$tableName}` DROP INDEX  `{$attributeName}` ");
 			} catch (FDatabaseException $e) {
 				// silently ignore
 			}
@@ -681,7 +681,7 @@ END;
 				$tableName  = FModel::standardizeTableName($objectName);
 				$q = "ALTER TABLE `{$tableName}` "
 					."ADD COLUMN {$column->toSqlString()} AFTER `{$tableName}_id`";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
@@ -758,7 +758,7 @@ END;
 			
 			// Execute SQL Commands
 			try {
-				_db()->exec($lt->toSqlString()); 	
+				_db()->rawExec($lt->toSqlString()); 	
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}							
@@ -813,7 +813,7 @@ END;
 				$q = "ALTER TABLE `{$tableName}` DROP COLUMN `"
 					. FModel::standardizeAttributeName($localAttribute)
 					. "_id` ";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
@@ -854,7 +854,7 @@ END;
 			try {
 				$tableName  = FModel::standardizeTableName($lookupTable,true);
 				$q = "DROP TABLE `{$tableName}`";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
@@ -895,7 +895,7 @@ END;
 				$q = "ALTER TABLE `{$tableName}` DROP COLUMN `"
 					. $child->getReflectVariable()
 					. "_id` ";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
@@ -920,7 +920,7 @@ END;
 				$q = "ALTER TABLE `{$tableName}` DROP COLUMN `"
 					. $parent->getName()
 					. "_id` ";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
@@ -943,7 +943,7 @@ END;
 			// Delete from the database
 			try {
 				$q = "DROP TABLE `{$peer->getLookupTable()}`";
-				_db()->exec($q);
+				_db()->rawExec($q);
 			} catch (FDatabaseException $e) {
 				die($e->__toString());	
 			}
@@ -965,7 +965,7 @@ END;
 		$logMessage .= "<li>DELETING OBJECT: '{$name}' from the model</li></ul>";
 		$tableName   = FModel::standardizeTableName($objectName);
 		$q = "DROP TABLE `{$tableName}` ";
-		_db()->exec($q);
+		_db()->rawExec($q);
 		
 		// Delete the object from the model
 		unset($m->objects[$name]);
