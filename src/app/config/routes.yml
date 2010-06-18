@@ -15,7 +15,7 @@
 ##  a 'routes' (the array of defined routes for this extension)
 ##
 _debug:
-  path:   org.frameworkers.debug
+  path:   org.frameworkers/Debug
   prefix: /_debug
   theme:  inherit
   routes:
@@ -26,7 +26,7 @@ _debug:
       map: { view: index }
       
 _fuel:
-  path:   org.frameworkers.fuel
+  path:   org.frameworkers/Fuel
   prefix: /fuel
   theme:  default
   routes:
