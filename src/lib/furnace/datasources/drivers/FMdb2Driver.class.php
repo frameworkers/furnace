@@ -69,7 +69,7 @@ class FMdb2Driver extends FDatasourceDriver {
         
         // Run the SQL query
         // If there is limit data, MDB2 requires the use of ::setLimit
-        if ($this->query_meta['limit'] > 0) {
+        if (isset($this->query_meta['limit']) && $this->query_meta['limit'] > 0) {
             $this->mdb2->setLimit(
                 $this->query_meta['limit'],$this->query_meta['offset']);
         }
@@ -86,6 +86,7 @@ class FMdb2Driver extends FDatasourceDriver {
         
         
         // Run the actual query
+        _log()->log($q);
         $r = $this->mdb2->queryAll($q,null,MDB2_FETCHMODE_ASSOC);
 		if ( $r instanceof MDB2_Error ) {
             _log()->log("Mdb2Driver: {$r->userinfo}",FF_ERROR);
@@ -382,7 +383,7 @@ class FMdb2Driver extends FDatasourceDriver {
         
         $fieldList = array();
         
-        if ($this->query_meta['countOnly'] === true) {
+        if (isset($this->query_meta['countOnly']) && $this->query_meta['countOnly'] === true) {
             $qstring .= "COUNT(*) ";     
         } else {
 
@@ -461,7 +462,7 @@ class FMdb2Driver extends FDatasourceDriver {
 
         }
 
-        if (strlen($this->query_meta['orderBy']) > 0) {
+        if (isset($this->query_meta['orderBy']) && strlen($this->query_meta['orderBy']) > 0) {
             $qstring .= $this->query_meta['orderBy'] . " ";
         }
         
