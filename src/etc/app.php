@@ -40,10 +40,7 @@
  $furnace  = new Furnace($config);
  
  /* PROCESS THE REQUEST OBJECT */
- $response = $furnace->process($request);
- 
- /* SEND THE RESPONSE */
- $furnace->send($response);
+ $furnace->process($request);
  
  /* CLEAN UP */
  unset($furnace);

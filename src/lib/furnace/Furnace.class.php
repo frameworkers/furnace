@@ -96,11 +96,6 @@ class Furnace {
         
         // Initialize the session
         session_start();
-        	
-        // If benchmarking, set the start time
-        if ($this->config->debug_level > 0) {
-            $this->bm_reqstart = $startTime;
-        }
     }
 
     /**
@@ -274,7 +269,10 @@ class Furnace {
                     $this->bm_renderend  = $this->bm_reqend = microtime(true);
                 }
                 
-                return $this->response;
+                //
+                // SEND THE RESPONSE OUT OVER THE WIRE
+                //
+                $this->response->send();
                 
             } else {
                 if ($this->config->debug_level > 0) {
@@ -297,19 +295,6 @@ class Furnace {
         } 
     }
     
-    /**
-     * Send
-     * 
-     * Begins the process of sending a response back to the requestor
-     * 
-     * @param  FApplicationResponse The response object to send
-     * @return void
-     */
-    public function send($response) {
-        $response->send();
-    }
-
-
     /*
      * YAML
      */

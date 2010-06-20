@@ -39,7 +39,8 @@ class FController extends FPage {
 	
 	public function internalRedirect($url) {
 	    $request = new FApplicationRequest($url);
-		return _furnace()->process($request);
+		_furnace()->process($request);
+		exit();
 	}
 	
 	protected function loadFragment($label) {
