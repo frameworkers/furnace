@@ -148,7 +148,12 @@
   	 *  (string) - The attribute's size
   	 */
   	public function getSize() {
-  		return $this->size;	
+  		// If type is 'string' and size is undefined, pin it to 255
+  		if ("string" == $this->type && '' == $this->size) {
+  			return 255;
+  		} else {
+  			return $this->size;
+  		}
   	}
   	
   	/*
