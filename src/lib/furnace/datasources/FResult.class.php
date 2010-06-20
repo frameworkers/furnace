@@ -9,8 +9,8 @@
  *
  */
 
-define(FF_FRESULT_OK,    100);
-define(FF_FRESULT_ERROR, 101);
+define('FF_FRESULT_OK',    100);
+define('FF_FRESULT_ERROR', 101);
 
 /**
  * FResult

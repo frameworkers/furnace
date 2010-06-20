@@ -1,21 +1,21 @@
 <?php
 
 /* GLOBAL DEFINITIONS *******************************************************/
-define(FF_ROOT_DIR,    dirname(dirname(__FILE__)));
-define(FF_CONFIG_FILE, FF_ROOT_DIR . '/app/config/app.yml');
-define(FF_LIB_DIR,     FF_ROOT_DIR . '/lib');
-define(FF_LOG_DIR,     FF_ROOT_DIR . '/app/data/logs');
+define('FF_ROOT_DIR',    dirname(dirname(__FILE__)));
+define('FF_CONFIG_FILE', FF_ROOT_DIR . '/app/config/app.yml');
+define('FF_LIB_DIR',     FF_ROOT_DIR . '/lib');
+define('FF_LOG_DIR',     FF_ROOT_DIR . '/app/data/logs');
 
 // Logging Constants (requires the PEAR Log package)
 // http://pear.php.net/package/Log/
-define(FF_DEBUG,       PEAR_LOG_DEBUG);
-define(FF_INFO,        PEAR_LOG_INFO);
-define(FF_NOTICE,      PEAR_LOG_NOTICE);
-define(FF_WARNING,     PEAR_LOG_WARNING);
-define(FF_ERROR,       PEAR_LOG_ERR);
-define(FF_CRIT,        PEAR_LOG_CRIT);
-define(FF_ALERT,       PEAR_LOG_ALERT);
-define(FF_EMERG,       PEAR_LOG_EMERG);
+define('FF_DEBUG',       PEAR_LOG_DEBUG);
+define('FF_INFO',        PEAR_LOG_INFO);
+define('FF_NOTICE',      PEAR_LOG_NOTICE);
+define('FF_WARNING',     PEAR_LOG_WARNING);
+define('FF_ERROR',       PEAR_LOG_ERR);
+define('FF_CRIT',        PEAR_LOG_CRIT);
+define('FF_ALERT',       PEAR_LOG_ALERT);
+define('FF_EMERG',       PEAR_LOG_EMERG);
 
 /* GLOBAL DATA STRUCTURES ***************************************************/
 
