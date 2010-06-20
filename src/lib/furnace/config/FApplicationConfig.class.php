@@ -23,10 +23,21 @@ class FApplicationConfig {
      */
     public $data;
     
+    /**
+     * The debug level (0=production,>0 = debugging)
+     * @var integer
+     */
     public $debug_level;
-    
+    /**
+     * The current application theme name
+     * @var string
+     */
     public $theme;
     
+    /**
+     * The base url (default = '/') for the application on the server
+     * @var string
+     */
     public $url_base;
     
     /**
