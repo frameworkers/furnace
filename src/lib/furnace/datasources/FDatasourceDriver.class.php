@@ -21,6 +21,11 @@ abstract class FDatasourceDriver {
     
     /**
      * Initialize a connection to the datasource
+     *  
+     * The data source 
+     * may require additional information. If needed, have the callee
+     * make use of the $options parameter (an associative array) to 
+     * provide a set of additional key-value data to this function.
      * 
      * @param  array $options Any data necessary to establish the connection 
      * @return boolean
@@ -28,7 +33,13 @@ abstract class FDatasourceDriver {
     abstract public function init($options = array());
     
     /**
-     * Process an @see FQuery object and return an {@link FResult}
+     * Process an {@link FQuery} object and return an {@link FResult}
+     * 
+     * Implementations of this function should provide the logic necessary to convert a 
+     * standard {@link FQuery} object into one (or more) native datasource
+     * queries. Furthermore, it must package the response from the
+     * underlying layer as an {@link FResult}, which should be returned
+     * to the callee.
      * 
      * @param  FQuery $query The query to process
      * @return FResult
@@ -45,7 +56,9 @@ abstract class FDatasourceDriver {
     /**
      * Process an {@link FQuery} object
      * 
-     * This method does not return an {@link FResult} object
+     * This method is almost identical to {@link query}, with the
+     * sole exception being that the method does not return an 
+     * {@link FResult} object.
      * 
      * @param  FQuery $query
      * @return nothing
