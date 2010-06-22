@@ -32,9 +32,146 @@ class FPageTemplate extends TadpoleEngine {
             return "fragmentTagHandler";
         }
         
+        if ("eip:" == substr($context['value'],0,4)) {
+        	return "eipTagHandler";
+        }
+        
         // Call the Tadpole Engine's native dispatcher
         return parent::dispatcher($tag,$context);
     }
+    
+    public function eipTagHandler($tag,&$context,$iter_data) {
+    	
+    	// Process the input statement
+		$context['value'] = substr($context['value'],4);
+		
+    	// 1. Get the base object
+		$dotPosition = strrpos($context['value'],'.');
+		if (false !== $dotPosition) {
+			$baseObjectNeedle = $this->compile(substr($context['value'],0,strrpos($context['value'],'.')),$iter_data);
+			$attributeNeedle  = $this->compile(substr($context['value'],  strrpos($context['value'],'.') + 1),$iter_data);
+		} else {
+			$baseObjectNeedle = $context['value'];
+			$attributeNeedle  = '';
+		}
+		
+		// 2. Style pre-processing (replace | with ; in style definition)
+		if (isset($context['commands']['style'])) {
+			$context['commands']['style'] = str_replace('|',';',$context['commands']['style']);
+		}
+		
+		// 3. Generate output
+    	$output = '';
+		$baseObject = $this->get_recursively($baseObjectNeedle,$context['commands'],$rejected,$iter_data);
+		if (!$rejected && is_object($baseObject)) {
+			
+			// Special case for the 'id' attribute:
+			if ('id' == $attributeNeedle) {
+				// check for name override
+				$name   = (isset($context['commands']['name'])) ? $context['commands']['name'] : "{$baseObject->_getObjectClassName()}_id";
+				$this->inputApplyOutput($tag,$context,'');
+				return true;
+			// All other attributes:
+			} else {
+			    $object = $baseObject->_getObjectClassName();
+			    try {
+			        if (false !== ($info = _model()->$object->attributeInfo($attributeNeedle))) {
+			            $this->inputApplyOutput($tag,$context,
+			                $this->eip_helper($baseObject,$attributeNeedle,$info,$context['commands']));
+			            return true;
+			        } else {
+			            $this->inputRejected($tag,$context);
+			            $rejected = true;
+			            return false; // attribute not found
+			        }
+			    } catch (FException $e) {
+			         // swallow the exception
+			         $this->inputRejected($tag,$context);  
+			         $rejected = true;
+			         return false;
+			    }
+			}
+		} else {
+                // Baseobject was rejected or is not an object as required
+                $this->inputRejected($tag,$context);
+                $rejected = true;
+                return false;  
+		}
+	}
+	
+	public function eip_helper($object,$attributeNeedle,$attributeData,$commands) {
+		$value = $object->get($attributeNeedle);
+		$containerStyle = '';
+		
+		// If no user is logged in, no EIP is possible, therefore
+		// simply echo out the value.
+		if (!_user()) {
+			return $value;
+		}
+		
+		// Otherwise, calculate the type of eip element to display
+		$meta  = array();
+		switch ($attributeData['type']) {
+			case 'text':
+				$meta['class'] = 'editable area';
+				$meta['style'] = 
+					(isset($commands['width']) 
+						? "width:{$commands['width']}; "
+						: "width:150px; ") . 
+					(isset($commands['height'])
+						? "height:{$commands['height']}; "
+						: "height:80px; ");
+				break;
+			default:
+				$meta['class'] = 'editable' . ((isset($commands['hint']) ? "-{$commands['hint']} " : ' ')) . (isset($attributeData['allowedValues']) ? 'select' : 'text');
+				$meta['style'] = (isset($commands['width']) 
+					? "width:{$commands['width']}"
+					: "width:150px;");
+					
+				// Prepare a data array if necessary
+				$meta['data'] = array();
+				
+				if (isset($attributeData['allowedValues'])) {
+					// Build an array of key/value pairs
+					foreach ($attributeData['allowedValues'] as $av) {
+						$meta['data']["_{$av['value']}"] = stripslashes($av['label']);
+					}
+					// Translate the current value, while we're at it
+					$value = $meta['data']["_{$value}"];
+				}
+				
+				// Encode the data array
+				$meta['data']  = json_encode($meta['data']);	
+		}
+		
+		// Process any commands
+		if (isset($commands['inline'])) { // Displays the EIP 'inline'
+			$containerStyle .= "display:inline; ";
+		}
+		if (isset($commands['action'])) { // Sends the EIP req. to a custom url
+			$meta['action'] = $commands['action'];
+		}
+		if (isset($commands['callback'])) { // Calls a javascript function afterwards
+			$meta['callback'] = $commands['callback'];
+		}
+		if (isset($commands['hint'])) {	// Formats the value based on the hint
+			if ($commands['hint'] == 'dateonly') {
+				$value = substr($value,0,10);
+			}
+		}
+			
+		// Generate the element itself
+		return '<div class="editable-container" style="'.$containerStyle.'"><div context="'
+			. str_replace(array('{','}'),array('[',']'),$commands['context']) 
+			. '" _attr="'    . $attributeNeedle 
+			. '" style="'    . $meta['style'] 
+			. '" class="'    . $meta['class']
+			. '" action="'   . $meta['action']
+			. '" callback="' . $meta['callback']
+			. '" data="'     . htmlentities($meta['data'])
+			. '" >' . stripslashes($value) . '</div>'
+			. '</div>';	
+	}
     
     public function inputTagHandler($tag,&$context,$iter_data) {
         
@@ -128,15 +265,15 @@ class FPageTemplate extends TadpoleEngine {
 			$value = $_POST[$attributeName];
 		} else if (null !== ($value = _readUserInput($attributeName))) {
 			// reads the value from the previously saved user input
-		} else {
+		} else if (is_object($object)) {
 			// reads the value from the stored object attribute value
-			if (is_object($object)) {
-				$fn = "get{$attributeName}";
-				$value = $object->$fn();
-			} else {
-				// No value provided
-				$value = '';
-			}
+			$fn = "get{$attributeName}";
+			$value = $object->$fn();
+		} else if (isset($commands['value'])) {
+			$value = $this->compile($commands['value']);
+		} else {
+			// No value provided
+			$value = '';
 		}
 		
 		// determine whether any validation errors exist for the attribute
