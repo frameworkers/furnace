@@ -45,7 +45,7 @@ class UpdateController extends Controller {
         if ($this->form) {
             $this->requireLogin();
             
-            $object = _user();
+        	$object = _user();
             // Extract object context
             // Object context always starts with the currently logged in user (_user);
             $contexts = explode(':',$this->form['_obj']);
@@ -85,11 +85,25 @@ class UpdateController extends Controller {
             $attrSetFn = "set{$objectAttr}";
             if (method_exists($object,$attrGetFn)) {
                 $oldAttrVal = $object->$attrGetFn();
-                $newAttrVal = $this->form['_val'];
+                $newAttrVal = addslashes(ltrim($this->form['_val'],'_'));
                 $object->$attrSetFn($newAttrVal);
                 if ($object->save()) {
+                	
+                	// Translate the response value if necessary
+                	$otype = get_class($object);
+                	$attrInfo = _model()->$otype->attributeInfo($objectAttr);
+                	if (isset($attrInfo['allowedValues'])) {
+                		foreach ($attrInfo['allowedValues'] as $av) {
+                			if ($av['value'] == $newAttrVal) {
+                				$newAttrVal = $av['label'];
+                				break;
+                			}
+                		}
+                	}               	
+                	
+                	// Return a response
                     $this->ajaxSuccess('Update Succeeded',
-                        array('oldValue'=>$oldAttrVal,'newVal'=>$newAttrVal));
+                        array('oldValue'=>$oldAttrVal,'newValue'=>stripslashes($newAttrVal)));
                 } else {
                     $this->ajaxFail('Update Failed',
                         array('validatorMessage' => $object->validator));
@@ -101,6 +115,5 @@ class UpdateController extends Controller {
             $this->ajaxFail("This service endpoint only supports 'POST' requests");
         }     
     }
-
 }
 ?>
