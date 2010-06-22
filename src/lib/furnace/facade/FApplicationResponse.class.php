@@ -105,7 +105,7 @@ class FApplicationResponse {
     
     private function prepareFurnaceJS(&$app) {
         $fu_route_extension = (false == $this->extension) ? 'false' : $this->extension; 
-        
+        $fu_user_username   = (_user()) ? "\""._user()->getUsername()."\"" : 'false';
         $js = <<<__END
 var fu_current_theme    = '{$this->currentTheme}';
 var fu_route_action     = '{$app->request->route['action']}';
@@ -113,6 +113,7 @@ var fu_route_controller = '{$app->request->route['controller']}';
 var fu_route_extension  = '{$fu_route_extension}';
 var fu_route_prefix     = '{$app->request->route['prefix']}';
 var fu_url_base         = '{$this->url_base}';
+var fu_user_username    = {$fu_user_username};
 
         
 __END;
