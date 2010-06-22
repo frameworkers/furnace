@@ -75,5 +75,62 @@ class FController extends FPage {
 	        );
 	    }
 	}
+	
+	protected function ajaxContext($c) {
+    		$object = _user();
+            // Extract object context
+            // Object context always starts with the currently logged in user (_user);
+            $c = str_replace(array('{','}'),array('[',']'),$c);
+    		$contexts = explode(':',$c);
+            foreach ($contexts as $context) {
+                // Extract the base
+                $base     = substr($context,0,strpos($context,'['));
+                $baseFn   = "get{$base}";
+                // Obtain the selectors ([foo])
+                $selectors = array();
+                if (preg_match_all('/\[[^\]]+\]/',$context,$selectors)) {
+                    // Use the selectors as filters on the base
+                    if (false !== ($object = $object->$baseFn())) {
+                        
+                        foreach ($selectors[0] as $selector) {
+                            list($k,$v) = explode('|',$selector);
+                            if ($v == null) { $v = $k; $k = 'id'; }
+                            $v = trim($v,'[]');
+                            $k = trim($k,'[]');
+    
+                            $object->filter($k,$v);
+                        }
+                    }
+                }
+                if ( $object instanceof FObjectCollection) {
+                    $object = $object->first();
+                } else {
+                    $this->ajaxFail('Selectors do not reduce scope to single object');
+                }
+                if (false == $object) {
+                    $this->ajaxFail('Object does not exist, or you have insufficient access');
+                }
+            }
+            return $object;
+    }
+	protected function ajaxSuccess($message,$payload = array()) {
+            $response = array();
+            $response['status']  = 'success';
+            $response['message'] = $message;
+            $response['payload'] = $payload;
+            
+            echo json_encode($response);
+            exit();
+    }
+        
+    protected function ajaxFail($message,$payload = array()) {
+            $response = array();
+            $response['status']  = 'fail';
+            $response['message'] = $message;
+            $response['payload'] = $payload;
+            
+            echo json_encode($response);
+            exit();
+    }
 }
 ?>
