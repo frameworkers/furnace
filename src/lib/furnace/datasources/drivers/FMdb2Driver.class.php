@@ -86,7 +86,7 @@ class FMdb2Driver extends FDatasourceDriver {
         
         
         // Run the actual query
-        _log()->log($q);
+        _log()->log("Mdb2Driver: {$q}",FF_DEBUG);
         $r = $this->mdb2->queryAll($q,null,MDB2_FETCHMODE_ASSOC);
 		if ( $r instanceof MDB2_Error ) {
             _log()->log("Mdb2Driver: {$r->userinfo}",FF_ERROR);
@@ -114,6 +114,7 @@ class FMdb2Driver extends FDatasourceDriver {
     public function close($options = array()) {}
     
 	public function rawExec($query,$options = array()) {
+		_log()->log("Mdb2Driver: {$query}",FF_DEBUG);
         $r = $this->mdb2->exec($query);
         if ($r instanceof MDB2_Error) {
         	_log()->log("Mdb2Driver: {$r->info}",FF_ERROR);
@@ -131,6 +132,7 @@ class FMdb2Driver extends FDatasourceDriver {
             ? $options['type']
             : 'all';
             
+        _log()->log("Mdb2Driver: {$query}",FF_DEBUG);
         switch (strtolower($type)) {
             case 'one':
                 $result = $this->mdb2->queryOne($query);
