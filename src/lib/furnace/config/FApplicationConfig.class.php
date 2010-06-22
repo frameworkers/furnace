@@ -54,8 +54,8 @@ class FApplicationConfig {
             ? $data['debug_level']
             : 0;            // Default to production if not provided
             
-        $this->theme = isset($data['theme']) 
-            ? $data['theme']
+        $this->theme = isset($data['app_theme']) 
+            ? $data['app_theme']
             : 'default';    // Default to 'default' if not provided
             
         $this->url_base = isset($data['url_base']) 
