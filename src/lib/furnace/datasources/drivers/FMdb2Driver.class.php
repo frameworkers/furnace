@@ -316,6 +316,8 @@ class FMdb2Driver extends FDatasourceDriver {
                             $this->addCondition('AND',
                             	"`{$info['table_f']}`.`{$info['table_f']}_id`=`{$info['table_l']}`.`{$info['column_l']}`)");
                         }
+                    } else {
+                    	throw new FDatabaseException("Malformed query: unknown attribute '{$e->field}'");
                     }   
                 }
             }
