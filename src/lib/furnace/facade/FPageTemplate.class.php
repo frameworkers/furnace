@@ -280,17 +280,33 @@ class FPageTemplate extends TadpoleEngine {
 		if (isset($_SESSION['_validationErrors'][$attributeName])) { 
 			unset($_SESSION['_validationErrors'][$attributeName]);
 			$bHasErrors = true;
+			// Update the class list to add the inputError class
+			if (!isset($commands['class'])) {
+				$commands['class']  = "inputError";
+			} else {
+				$commands['class'] .= " inputError ";
+			}
 		} else {
 			$bHasErrors = false;
 		}
-		$errorClass = ($bHasErrors) ? "inputError" : '';
+
+		// Input name and max length
+		$name     = " name=\"{$attributeName}\" ";
+		$maxlen   = " maxlen=\"{$attributeData['maxlen']}\" ";
+		
+		// Process commands
+		$id       = (isset($commands['id']))       ? " id=\"{$commands['id']}\" " : '';
+		$class    = (isset($commands['class']))    ? " class=\"{$commands['class']}\" " : '';
+		$style    = (isset($commands['style']))    ? " style=\"{$commands['style']}\" " : '';
+		$title    = (isset($commands['title']))    ? " title=\"{$commands['title']}\" " : '';
+		$tabindex = (isset($commands['tabindex'])) ? " tabindex=\"{$commands['tabindex']}\" " : '';
 		
 		// determine the type of input to create
 		switch ($attributeData['type']) {
 			case 'text':
-				return "<textarea id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">".stripslashes($value)."</textarea>";
+				return "<textarea {$id} {$name} {$class} {$style} {$title} {$tabindex}>".stripslashes($value)."</textarea>";
 			case 'password':
-				return "<input type=\"password\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes($value)."\" />";
+				return "<input type=\"password\" {$id} {$name} {$class} {$style} {$title} {$tabindex} value=\"".stripslashes(htmlentities($value))."\" />";
 			case 'string':
 				if (isset($attributeData['allowedValues'])) {
 					// create a select box
@@ -302,7 +318,7 @@ class FPageTemplate extends TadpoleEngine {
 					        : '';
 						$option .= "<option value=\"{$opt['value']}\" {$selected}>{$opt['label']}</option>";
 					}
-					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
+					return "<select {$id} {$name} {$class} {$style} {$title} {$tabindex}>{$option}</select>";
 					break;	
 				} // otherwise, just draw a normal text box:
 			case 'integer':
@@ -316,12 +332,12 @@ class FPageTemplate extends TadpoleEngine {
 					        : '';
 						$option .= "<option value=\"{$opt['value']}\" {$selected}>{$opt['label']}</option>";
 					}
-					return "<select id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\">{$option}</select>";
+					return "<select {$id} {$name} {$class} {$style} {$title} {$tabindex}>{$option}</select>";
 					break;	
 				} // otherwise, just draw a normal text box:
 			case 'float':
 			default:
-				return "<input type=\"text\" id=\"{$commands['id']}\" class=\"{$commands['class']} {$errorClass}\" style=\"{$commands['style']}\" name=\"{$attributeName}\" value=\"".stripslashes(htmlentities($value))."\" maxlen=\"{$attributeData['size']}\"/>";
+				return "<input type=\"text\" {$id} {$name} {$class} {$style} {$title} {$tabindex} {$maxlen} value=\"".stripslashes(htmlentities($value))."\"/>";
 		}
 	}
     
