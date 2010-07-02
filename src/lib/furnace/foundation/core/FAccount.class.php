@@ -317,8 +317,12 @@ class FAccount extends FBaseObject {
 			. "`status`='{$this->status}', "
 			. "`secretQuestion`='{$this->secretQuestion}', "
 			. "`secretAnswer`='{$this->secretAnswer}', "
+			
+			/* THESE CAN NOT BE CHANGED, SO DON'T BOTHER UPDATING THEM EACH TIME
 			. "`objectClass`='{$this->objectClass}', "
 			. "`objectId`='{$this->objectId}', "
+			*/
+			
 			. "`created`='{$this->created}', "
 			. "`modified`=NOW(), "
 			. "`lastLogin`='{$this->lastLogin}', "
