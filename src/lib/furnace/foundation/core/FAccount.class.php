@@ -321,9 +321,9 @@ class FAccount extends FBaseObject {
 			/* THESE CAN NOT BE CHANGED, SO DON'T BOTHER UPDATING THEM EACH TIME
 			. "`objectClass`='{$this->objectClass}', "
 			. "`objectId`='{$this->objectId}', "
+			. "`created`='{$this->created}', "
 			*/
 			
-			. "`created`='{$this->created}', "
 			. "`modified`=NOW(), "
 			. "`lastLogin`='{$this->lastLogin}', "
 			. "`newPasswordKey`='{$this->newPasswordKey}' ";
