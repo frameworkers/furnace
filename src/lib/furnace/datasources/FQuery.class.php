@@ -120,10 +120,18 @@ class FQuery {
      * @param unknown_type $order
      */
     public function orderBy($var,$order) {
+    	// Determine the table in which to look up the filter key
+        if (in_array($var,array("username","password","emailAddress"))) {
+        	$filterKeyTable = "app_accounts";
+        } else {
+        	$filterKeyTable = Furnace::standardizeTableName($this->targetObjectType);
+        	$var = ('id' == $var) ? "{$filterKeyTable}_{$var}" : $var;
+        }
+    	
         if (strtoupper($order) == "RANDOM") {
             $this->metadata['orderBy'] = "ORDER BY RAND() ";
         } else {
-            $this->metadata['orderBy'] = "ORDER BY `{$var}` ".strtoupper($order)." ";
+            $this->metadata['orderBy'] = "ORDER BY `{$filterKeyTable}`.`{$var}` ".strtoupper($order)." ";
         }
     }
     
