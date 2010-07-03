@@ -18,7 +18,7 @@ class FApplicationResponse {
         $this->extension      = $extension;
  
         $this->currentTheme   = $app->theme;
-        $this->projectRootDir = $app->rootdir;
+        $this->projectRootDir = FURNACE_APP_PATH;
         $this->url_base       = $app->config->url_base;
         
         // Provide view access to Furnace, Application, and Model config vars and $_SERVER superglobal
@@ -27,38 +27,44 @@ class FApplicationResponse {
         $this->controller->ref('_model',  $GLOBALS['fApplicationModel']);
         $this->controller->ref('_server', $_SERVER);
         $this->controller->ref('_session',$_SESSION);
-        $this->controller->ref('_user',_user());
-        $this->controller->set('_now',date('Y-m-d G:i:s'));
+        $this->controller->ref('_user',   _user());
+        $this->controller->set('_now',    date('Y-m-d G:i:s'));
+        
+        
+        // Determine the prefix for relative links (especially important for extensions)
+        $this->controller->set('_prefix_',$app->request->route['prefix']);
         
         // Determine theme and local urls for assets
+        // Extension not present
         if (false === $extension) {
-            // No extension
             $this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
             $this->controller->set('_local_',"{$this->url_base}pages/"
  		        .$app->request->route['controller'].'/'
  		        .$app->request->route['action']);
-        } else if (strtolower($app->request->route['theme'] == 'inherit')) {
-            // Extension with inherited theme
-            $this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
-            $this->controller->set('_local_',"{$this->url_base}extensions/{$extension}/pages/"
- 		        .$app->request->route['controller'].'/'
- 		        .$app->request->route['action']);
- 		    $this->controller->setTheme($app->request->route['theme']);
- 		    list($provider,$package) = explode('/',$extension);
-            $this->controller->extensionSetLayout($provider,$package,'default',false);
-        } else {
-            // Extension with its own theme
-            $this->controller->set('_theme_',"{$this->url_base}extensions/{$extension}/themes/{$app->theme}");
-            $this->controller->set('_local_',"{$this->url_base}extensions/{$extension}/pages/"
- 		        .$app->request->route['controller'].'/'
- 		        .$app->request->route['action']);
- 		    $this->controller->setTheme($app->request->route['theme']);
- 		    list($provider,$package) = explode('/',$extension);
-            $this->controller->extensionSetLayout($provider,$package,'default',false);
+        } 
+        // Extension present
+        else {
+        	$ext    = _furnace()->extensions[$extension];
+        	$global = ($ext['global']) ? 'global/' : '';  
+        	// Extension with inherited theme
+        	if ($ext['theme'] == 'inherit') {
+        		$this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
+        		$this->controller->set('_local_',"{$this->url_base}extensions/{$global}{$extension}/pages/"
+        			. $app->request->route['controller'] . '/'
+        			. $app->request->route['action']);
+        	} 
+        	// Extension with its own theme
+        	else {
+        		$this->controller->set('_theme_',"{$this->url_base}extensions/{$global}{$extension}/themes/{$ext['theme']}");
+        		$this->controller->set('_local_',"{$this->url_base}extensions/{$global}{$extension}/pages/"
+        			. $app->request->route['controller'] . '/'
+        			. $app->request->route['action']);
+        	}
+        	
+        	$this->controller->setTheme($app->request->route['theme']);
+        	list($provider,$package) = explode('/',$extension);
+        	$this->controller->extensionSetLayout($provider,$package,$ext['theme'],false);
         }
-         
-        // Determine the prefix for relative links (especially important for extensions)
-        $this->controller->set('_prefix_',$app->request->route['prefix']);
         
         // Inject the furnace javascript variables into the page
         $this->controller->injectJS($this->prepareFurnaceJS($app));
@@ -72,13 +78,13 @@ class FApplicationResponse {
         
         // Determine if a theme-specific view override for the requested page exists
         $page_root = (false == $this->extension && file_exists(
-            "{$this->projectRootDir}/app/themes/{$this->currentTheme}/pages/{$group}/{$page}/{$page}.html"))
-            ? "{$this->projectRootDir}/app/themes/{$this->currentTheme}"
-            : "{$this->projectRootDir}/app";
+            FURNACE_APP_PATH . "/themes/{$this->currentTheme}/pages/{$group}/{$page}/{$page}.html"))
+            ? "{$this->projectRootDir}/themes/{$this->currentTheme}"
+            : "{$this->projectRootDir}/";
         
         // Determine the correct path to the page
         $path = (false !== $this->extension)
-            ? "{$this->projectRootDir}/app/plugins/extensions/{$this->extension}/pages/{$group}/{$page}/{$page}.html"
+            ? _furnace()->extDirToUse . "/{$this->extension}/pages/{$group}/{$page}/{$page}.html"
             : "{$page_root}/pages/{$group}/{$page}/{$page}.html";
             
         // Attempt to load the page content

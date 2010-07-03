@@ -29,6 +29,7 @@ _fuel:
   path:   org.frameworkers/Fuel
   prefix: /fuel
   theme:  default
+  global: true
   routes:
     login: 
        url: /login

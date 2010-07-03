@@ -115,7 +115,7 @@
  	
  	public function setLayout($layout) {
  		$this->layout = file_get_contents(
- 		    _furnace()->rootdir . "/app/themes/{$this->theme}/layouts/{$layout}.html"
+ 		    _furnace()->rootdir . "/themes/{$this->theme}/layouts/{$layout}.html"
  		);
  	}
  	
@@ -123,12 +123,18 @@
  	    if ($this->bInheritTheme) {
  	        $baseTheme = _furnace()->config->data['app_theme'];
  	        $this->layout = file_get_contents(
- 	            _furnace()->rootdir . "/app/themes/{$baseTheme}/layouts/{$layout}.html"
+ 	            _furnace()->rootdir . "/themes/{$baseTheme}/layouts/{$layout}.html"
  	        );
  	    } else {
- 	        $this->layout = file_get_contents(
- 	            _furnace()->rootdir . "/app/plugins/extensions/{$provider}/{$package}/themes/{$this->theme}/layouts/{$layout}.html"
- 	        );
+ 	    	// Lookup the extension in the registry to determine the path to its files
+ 	    	$ext = _furnace()->extensions["{$provider}/{$package}"];
+ 	    	if ($ext) {
+ 	    		$base = ($ext['global']) ? FURNACE_LIB_PATH : FURNACE_APP_PATH;
+ 	    		$this->layout = file_get_contents(
+ 	    			"{$base}/plugins/extensions/{$provider}/{$package}/themes/{$ext['theme']}/layouts/{$layout}.html");
+ 	    	} else {
+ 	    		throw new FException("extensionSetLayout: Unknown provider or package: {$provider}/{$package}");
+ 	    	}
  	    }
  	}
  	
@@ -164,8 +170,14 @@
 	}
 	
 	public function extensionAddStylesheet($provider,$package,$path,$bLocal = false) {
+		// Look up the extension in the registry:
+		$ext    = _furnace()->extensions["{$provider}/{$package}"];
+		if (!$ext) {
+			throw new FException("extensionAddStylesheet: Unknown provider or package: {$provider}/{$package}");
+		}
+		$global = ($ext['global']) ? "global/" : '';
 	    if (!$bLocal) {
-	        $path = "/extensions/{$provider}/{$package}/themes/{$this->theme}/css/{$path}";
+	        $path = "/extensions/{$global}{$provider}/{$package}/themes/{$ext['theme']}/css/{$path}";
 	    } else {
 	        $localPath = $this->page_data['_local_'];
 	        $path = "{$localPath}/{$path}";
@@ -261,7 +273,7 @@
 	
 	public function loadStrings($namespace,$locale = null) {
 		$localeToUse = ($locale) ? $locale : $GLOBALS['furnace']->config['default_locale'];
-		$fileName    = $GLOBALS['furnace']->rootdir . "/app/i18n/{$localeToUse}/strings/{$namespace}.{$localeToUse}.yml";
+		$fileName    = $GLOBALS['furnace']->rootdir . "/i18n/{$localeToUse}/strings/{$namespace}.{$localeToUse}.yml";
 		if (false !== ($strings = $GLOBALS['furnace']->parse_yaml($fileName))) {
 			// convert the namespace to a nested array structure
 			$parts = explode('.',$namespace);

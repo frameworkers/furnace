@@ -58,6 +58,8 @@ class Furnace {
     public $request;
     public $response;
     public $theme;
+    public $extensions;
+    public $extDirToUse;
     
     
 
@@ -82,11 +84,11 @@ class Furnace {
     public function __construct($config) {
         	
         // Compute the project root directory
-        $this->rootdir = FF_ROOT_DIR;
+        $this->rootdir = FURNACE_APP_PATH;
         $this->paths['rootdir'] = $this->rootdir;
         
         // Load the YML route definitions
-        $this->routes = self::yaml($this->rootdir . '/app/config/routes.yml');
+        $this->routes = self::yaml($this->rootdir . '/config/routes.yml');
 
         // Load the YML application configuration file
         $this->config = $config;
@@ -118,22 +120,22 @@ class Furnace {
         $this->rawRequest = $request->raw;
                	
         // Determine the route to take
-        $this->request->route = Furnace::route($this->rawRequest,$this->routes);
+        $this->request->route = $this->route($this->rawRequest,$this->routes);
 
         try {
             
             // Include Furnace Foundation classes
             set_include_path(get_include_path() . PATH_SEPARATOR .
-            $this->rootdir . '/lib/furnace/foundation');
+            FURNACE_LIB_PATH . '/lib/furnace/foundation');
             include_once('foundation.bootstrap.php');
         
             // Include Furnace Facade classes
             set_include_path(get_include_path() . PATH_SEPARATOR .
-            $this->rootdir . '/lib/furnace/facade');
+            FURNACE_LIB_PATH . '/lib/furnace/facade');
             include_once('facade.bootstrap.php');
             
             // Include application model data
-            include_once("{$this->rootdir}/app/model/model.php");
+            include_once("{$this->rootdir}/model/model.php");
         
             // Instantiate the global model data structure
             $GLOBALS['fApplicationModel'] = new ApplicationModel();
@@ -145,37 +147,61 @@ class Furnace {
             }
             
             // Determine if an extension is being requested and set the file path
-            // to the appropriate controller
+            // to the appropriate controller.
+            // Extensions can live in one of two places:
+            //	1) Inside the application's plugins/extensions directory
+            //	2) Inside the Furnace plugins/extensions directory
+            $appExtDir   = FURNACE_APP_PATH . '/plugins/extensions/';
+            $furExtDir   = FURNACE_LIB_PATH . '/plugins/extensions/';
+            $this->extDirToUse = $appExtDir;             
+            
             if ('' != $this->request->route['extension']) {
-                $controllerFilePath = "{$this->rootdir}/app/plugins/extensions/"
+            	// First try the application extension directory
+                $controllerFilePath = $appExtDir
                     . "{$this->request->route['extension']}/pages/"
                     . "{$this->request->route['controller']}/"
                     . "{$this->request->route['controller']}Controller.php";
+                    
+                if (!file_exists($controllerFilePath)) {
+                	// Try the Furnace plugins directory as a last ditch effort
+                	$controllerFilePath = $furExtDir
+	                    . "{$this->request->route['extension']}/pages/"
+	                    . "{$this->request->route['controller']}/"
+	                    . "{$this->request->route['controller']}Controller.php";
+
+	                    if (!file_exists($controllerFilePath)) {
+		                return ( $this->config->debug_level > 0 ) 
+		                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
+		                        .str_replace('/','+',$controllerFilePath)))
+		                    : $this->process(new FApplicationRequest("/_default/http404"));
+		                exit();
+	                } else {
+	                	$this->extDirToUse = $furExtDir;
+	                }
+                }
             } else {
-                $controllerFilePath = "{$this->rootdir}/app/pages/"
+                $controllerFilePath = "{$this->rootdir}/pages/"
                     . "{$this->request->route['controller']}/"
-                    . "{$this->request->route['controller']}Controller.php";        
-            }
+                    . "{$this->request->route['controller']}Controller.php";  
+                    
+                // Ensure that the requested controller actually exists
+	            if (!file_exists($controllerFilePath)) {
+	                return ( $this->config->debug_level > 0 ) 
+	                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
+	                        .str_replace('/','+',$controllerFilePath)))
+	                    : $this->process(new FApplicationRequest("/_default/http404"));
+	                exit();
+	            }         
+            }     
             
-            // Ensure that the requested controller actually exists
-            if (!file_exists($controllerFilePath)) {
-                return ( $this->config->debug_level > 0 ) 
-                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
-                        .str_replace('/','+',$controllerFilePath)))
-                    : $this->process(new FApplicationRequest("/_default/http404"));
-                exit();
-            }        
-            
-            // Include the base controller
-            if ($this->request->route['extension'] && file_exists(
-            		 "{$this->rootdir}/app/plugins/extensions/"
-                    ."{$this->request->route['extension']}/pages/Controller.class.php")) {
-                include_once("{$this->rootdir}/app/plugins/extensions/"
-                    ."{$this->request->route['extension']}/pages/Controller.class.php");
+            // Include the appropriate base controller
+            if ($this->request->route['extension'] 
+            	&& file_exists($this->extDirToUse ."{$this->request->route['extension']}/pages/Controller.class.php")) {
+            		include_once($this->extDirToUse
+	                    ."{$this->request->route['extension']}/pages/Controller.class.php");
             } else {
-                include_once("{$this->rootdir}/app/pages/Controller.class.php");
+                include_once(FURNACE_APP_PATH . '/pages/Controller.class.php');
             }
-            
             // Include the controller file
             @include_once($controllerFilePath);
             
@@ -313,7 +339,7 @@ class Furnace {
     /*
      * ROUTE
      */
-    public static function route($request,&$routes,$prefix='/') {
+    public function route($request,&$routes,$prefix='/') {
         // split the route into segments
         $parts = explode('/',ltrim($request,'/'));
         
@@ -324,9 +350,12 @@ class Furnace {
             if ($r[0] == '_') {
               _log()->log("Found extension {$route['path']} with prefix {$route['prefix']} and "
                   .count($route['routes'])." routes",FF_DEBUG);
+              // Append to extension registry:
+              $this->extensions[$route['path']] = array("global" => (isset($route['global']) ? $route['global'] : false),
+              											"theme"  => (isset($route['theme'])  ? $route['theme']  : 'default'));
               $extPath   = $route['path'];
               $extPrefix = $route['prefix'];
-              $result    = self::route($request,$route['routes'],$extPrefix);
+              $result    = $this->route($request,$route['routes'],$extPrefix);
               if ( $result ) {
                 $result['extension'] = $extPath;
                 $result['theme']     = isset($route['theme']) ? $route['theme'] : 'default';
