@@ -28,10 +28,6 @@ class FPageTemplate extends TadpoleEngine {
             return "inputTagHandler";
         }
         
-        if ("fragment:" == substr($context['value'],0,9)) {
-            return "fragmentTagHandler";
-        }
-        
         if ("eip:" == substr($context['value'],0,4)) {
         	return "eipTagHandler";
         }
@@ -340,38 +336,6 @@ class FPageTemplate extends TadpoleEngine {
 				return "<input type=\"text\" {$id} {$name} {$class} {$style} {$title} {$tabindex} {$maxlen} value=\"".stripslashes(htmlentities($value))."\"/>";
 		}
 	}
-    
-    
-    public function fragmentTagHandler($tag,&$context,$iter_data) {
-        $which= substr($context['value'],9);
-        $path = _furnace()->rootdir . '/app/scripts/fragments/';
-        $file = $which  . 'Fragment.php';
-        $class= $which  . 'Fragment';
-        if (file_exists($path.$file)) {
-            // Fetch and render the fragment
-            include_once($path.$file);
-            $f      = new $class();
-            $output = $f->render($context['commands']); 
-            
-            // Replace the tag with the rendered fragment
-    		$before   = substr($context['contents'],0,$context['tagStart']);
-    		$after    = substr($context['contents'],$context['tagEnd'] + 1);				
-    		$context['contents'] = $before . $output . $after;
-    		
-    		// Increment offset
-    		$context['offset'] = (false !== $context['outerOffset']) 
-    		    ? $context['outerOffset'] 
-    		    : ($context['tagStart'] + strlen($output));
-    		    
-    		// Move on to the next tag
-    		return true;
-        } else {
-            $context['offset'] = (false !== $context['outerOffset'])
-            ? $context['outerOffset']
-            : ($context['tagEnd'] + 1);
-            return false;
-        }
-    }
     
     private function inputApplyOutput($tag,&$context,$output) {
         // apply the output and update the offset

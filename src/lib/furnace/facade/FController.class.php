@@ -43,17 +43,6 @@ class FController extends FPage {
 		exit();
 	}
 	
-	protected function loadFragment($label) {
-		$path = _furnace()->rootdir . "/scripts/fragments/{$label}Fragment.php";
-		if (file_exists($path)) {
-			require_once($path);
-		} else {
-			die(
-				"The page requested a fragment ({$label}) that does not exist or is not installed correctly."
-			);
-		}	
-	}
-	
     protected function loadWidget($provider,$label) {
 		$path = _furnace()->rootdir . "/plugins/widgets/{$provider}/{$label}/{$label}.php";
 		if (file_exists($path)) {
