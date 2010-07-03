@@ -1,10 +1,10 @@
 <?php
 
 /* GLOBAL DEFINITIONS *******************************************************/
-define('FF_ROOT_DIR',    dirname(dirname(__FILE__)));
-define('FF_CONFIG_FILE', FF_ROOT_DIR . '/app/config/app.yml');
-define('FF_LIB_DIR',     FF_ROOT_DIR . '/lib');
-define('FF_LOG_DIR',     FF_ROOT_DIR . '/app/data/logs');
+define('FF_ROOT_DIR',    FURNACE_LIB_PATH);
+define('FF_CONFIG_FILE', FURNACE_APP_PATH. '/config/app.yml');
+define('FF_LIB_DIR',     FURNACE_LIB_PATH . '/lib');
+define('FF_LOG_DIR',     FURNACE_APP_PATH . '/data/logs');
 
 // Logging Constants (requires the PEAR Log package)
 // http://pear.php.net/package/Log/
