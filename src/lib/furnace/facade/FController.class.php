@@ -44,7 +44,7 @@ class FController extends FPage {
 	}
 	
 	protected function loadFragment($label) {
-		$path = _furnace()->rootdir . "/app/scripts/fragments/{$label}Fragment.php";
+		$path = _furnace()->rootdir . "/scripts/fragments/{$label}Fragment.php";
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
@@ -55,7 +55,7 @@ class FController extends FPage {
 	}
 	
     protected function loadHelper($provider,$label) {
-		$path = _furnace()->rootdir . "/app/scripts/helpers/{$provider}/{$label}/{$label}.php";
+		$path = _furnace()->rootdir . "/scripts/helpers/{$provider}/{$label}/{$label}.php";
 		if (file_exists($path)) {
 			require_once($path);
 		} else {
@@ -66,7 +66,7 @@ class FController extends FPage {
 	}
 	
 	protected function loadLibrary($provider,$label) {
-	    $path = _furnace()->rootdir . "/app/plugins/libraries/{$provider}/{$label}.lib.php";
+	    $path = _furnace()->rootdir . "/plugins/libraries/{$provider}/{$label}.lib.php";
 	    if (file_exists($path)) {
 	        require_once($path);
 	    } else {

@@ -171,8 +171,7 @@
 	
 	public function extensionAddStylesheet($provider,$package,$path,$bLocal = false) {
 		// Look up the extension in the registry:
-		$ext    = _furnace()->extensions["{$provider}/{$package}"];
-		if (!$ext) {
+		if ( ! ($ext = _furnace()->extensions["{$provider}/{$package}"])) {
 			throw new FException("extensionAddStylesheet: Unknown provider or package: {$provider}/{$package}");
 		}
 		$global = ($ext['global']) ? "global/" : '';
@@ -196,8 +195,13 @@
 	}
      
 	public function extensionAddJavascript($provider,$package,$path,$bLocal = false) {
+		// Look up the extension in the registry:
+		if ( ! ($ext = _furnace()->extensions["{$provider}/{$package}"])) {
+			throw new FException("extensionAddStylesheet: Unknown provider or package: {$provider}/{$package}");
+		}
+		$global = ($ext['global']) ? "global/" : '';
 	    if (!$bLocal) {
-	        $path = "/extensions/{$provider}/{$package}/themes/{$this->theme}/js/{$path}";
+	        $path = "/extensions/{$global}{$provider}/{$package}/themes/{$ext['theme']}/js/{$path}";
 	    } else {
 	        $localPath = $this->page_data['_local_'];
 	        $path = "{$localPath}/{$path}";

@@ -63,7 +63,10 @@ class FApplicationResponse {
         	
         	$this->controller->setTheme($app->request->route['theme']);
         	list($provider,$package) = explode('/',$extension);
-        	$this->controller->extensionSetLayout($provider,$package,$ext['theme'],false);
+        	$this->controller->extensionSetLayout($provider,$package,
+        		($ext['theme'] == 'inherit')
+        			? $this->currentTheme 
+        			: $ext['theme'],false);
         }
         
         // Inject the furnace javascript variables into the page
