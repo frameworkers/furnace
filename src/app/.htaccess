@@ -1,22 +1,15 @@
 RewriteEngine On
+RewriteBase /
 
-# EXTENSION ASSETS
-#RewriteRule ^extensions/(.*)/themes/(.*)$ app/plugins/extensions/$1/themes/$2 [NC,L]
-#RewriteRule ^app/plugins/extensions/(.*)  app/plugins/extensions/$1 [NC,L]
+# WEBAPP ASSETS
+RewriteRule ^assets/themes/(.*)$      themes/$1   [NC,L]
+RewriteRule ^themes/(.*)              themes/$1   [NC,L]
 
-# LOCAL (page-related) EXTENSION ASSETS
-#RewriteCond %{REQUEST_URI} !pages\/.*(\.html|\.php)$
-#RewriteRule ^extensions/(.*)/pages/(.*)   app/plugins/extensions/$1/pages/$2 [NC,L]
-#RewriteRule app/plugins/extensions/(.*)  app/plugins/extensions/$1 [NC,L]
+# WEBAPP PAGE-LOCAL ASSETS
+RewriteCond %{REQUEST_URI}          !^pages\/.*(\.html|\.php)$
+RewriteRule ^pages/(.*)/(.*\..*)$    /pages/$1/$2 [NC,L]
+RewriteRule pages/(.*)               /pages/$1    [NC,L]
 
-# APPLICATION ASSETS
-#RewriteRule ^assets/themes/(.*)$ app/themes/$1 [NC,L]
-#RewriteRule ^app/themes/(.*) app/themes/$1 [NC,L]
-
-# LOCAL (page-related) ASSETS
-#RewriteCond %{REQUEST_URI} !^pages\/.*(\.html|\.php)$
-#RewriteRule ^pages/(.*)/(.*\..*)$ app/pages/$1/$2 [NC,L]
-#RewriteRule app/pages/(.*) app/pages/$1 [NC,L]
 
 # WEBAPP
-RewriteRule ^(.*)/?$ index.php [NC,L]
+RewriteRule ^(.*)/?$                 index.php    [NC,L]
