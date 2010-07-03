@@ -14,7 +14,7 @@ class _DefaultController extends Controller {
     
     
     public function login() {
-        $this->loadHelper('org.frameworkers','LoginBox');
+        $this->loadWidget('org.frameworkers','LoginBox');
         $lb = new LoginBox($this,'/');
         $this->set('loginBox',$lb->render());
     }
