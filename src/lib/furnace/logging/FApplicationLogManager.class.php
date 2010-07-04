@@ -46,7 +46,7 @@ class FApplicationLogManager {
             
             /* Ensure that the log directory is writable by the server. 
              */
-            if (!is_writable($realPath)) {
+            if (!is_writable(dirname($realPath))) {
             	die(
             		"<strong>Furnace:</strong> Insufficient permissions to write to destination for log '{$logname}'. \r\n<br/>"
             		."Ensure that your application log directory (/path/to/app/data/logs) is writable by the server:<br/><br/>"
