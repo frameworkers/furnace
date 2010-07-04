@@ -1,6 +1,6 @@
 <?php
 /* FURNACE VERSION INFORMATION **********************************************/
-define('FF_VERSION',     '1.0.0-alpha1');
+define('FF_VERSION',     '1.0.0-alpha2');
 
 /* GLOBAL DEFINITIONS *******************************************************/
 define('FF_ROOT_DIR',    FURNACE_LIB_PATH);
