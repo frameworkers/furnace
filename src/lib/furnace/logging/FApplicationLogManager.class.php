@@ -43,10 +43,22 @@ class FApplicationLogManager {
             } else {
                 $mask = Log::MAX(FF_INFO);
             }
-            $this->logs[$logname] = &Log::singleton($logdata['type'],$realPath,$logname);
-            $this->logs[$logname]->setMask($mask);
-            $this->logs['default']->log(
-            	"Initialized logger \"{$logname}\" with mask {$logdata['mask']}",FF_DEBUG);
+            
+            /* Ensure that the log directory is writable by the server. 
+             */
+            if (!is_writable($realPath)) {
+            	die(
+            		"<strong>Furnace:</strong> Insufficient permissions to write to destination for log '{$logname}'. \r\n<br/>"
+            		."Ensure that your application log directory (/path/to/app/data/logs) is writable by the server:<br/><br/>"
+            		."<code>chgrp -R apache_username /path/to/app/data/logs;</code><br/>"
+            		."<code>chmod -R g+w /path/to/app/data/logs;</code>"
+            	);
+            } else {
+            	$this->logs[$logname] = &Log::singleton($logdata['type'],$realPath,$logname);
+            	$this->logs[$logname]->setMask($mask);
+            	$this->logs['default']->log(
+            		"Initialized logger \"{$logname}\" with mask {$logdata['mask']}",FF_DEBUG);
+            }
         }      
     }
     
