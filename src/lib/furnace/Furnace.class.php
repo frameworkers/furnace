@@ -59,22 +59,7 @@ class Furnace {
     public $response;
     public $theme;
     public $extensions;
-    public $extDirToUse;
-    
-    
-
-
-
-    // Benchmarking variables
-    public $bm_renderstart = 0;
-    public $bm_renderend   = 0;
-    public $bm_reqstart    = 0;
-    public $bm_reqend      = 0;
-    public $bm_envsetupstart = 0;
-    public $bm_envsetupend   = 0;
-    public $bm_processstart  = 0;
-    public $bm_processend    = 0;
-    
+    public $extDirToUse;    
     
     public $paths = array();
     public $db;
@@ -82,7 +67,7 @@ class Furnace {
     public $user;
 
     public function __construct($config) {
-        	
+    		
         // Compute the project root directory
         $this->rootdir = FURNACE_APP_PATH;
         $this->paths['rootdir'] = $this->rootdir;
@@ -109,15 +94,18 @@ class Furnace {
      */
     public function process($request) {
     
-        if ($this->config->debug_level > 0) {
-            $request->stats['proc_setup_start'] = microtime(true);
-        }
+        // Time benchmark
+        $request->stats['proc_setup_start'] = microtime(true);
+        
         
         // Store the FApplicationRequest object 
         $this->request = $request;
         
         // Make the raw request available to controllers via _furnace()->request
         $this->rawRequest = $request->raw;
+        
+        // Build extension registry
+        $this->discoverExtensions($this->routes);
                	
         // Determine the route to take
         $this->request->route = $this->route($this->rawRequest,$this->routes);
@@ -141,10 +129,10 @@ class Furnace {
             $GLOBALS['fApplicationModel'] = new ApplicationModel();
             $GLOBALS['_model'] = new ApplicationModel();
             
-            if ($this->config->debug_level > 0) {
-                $request->stats['proc_setup_end'] = 
-                    $request->stats['proc_proc_start'] = microtime(true);
-            }
+
+            $request->stats['proc_setup_end'] = 
+            	$request->stats['proc_start'] = microtime(true);
+            
             
             // Determine if an extension is being requested and set the file path
             // to the appropriate controller.
@@ -204,10 +192,6 @@ class Furnace {
             }
             // Include the controller file
             @include_once($controllerFilePath);
-            
-            if ($this->config->debug_level > 0) {
-                $request->stats['proc_end'] = microtime(true);
-            }
 
             // Does the requested controller class exist?
             // TODO: Check for the existence of the class within the file
@@ -246,9 +230,8 @@ class Furnace {
             if ($handlerExists) {
 
                 // Call the handler
-                if ($this->config->debug_level > 0) {
-                    $request->stats['handler_start'] = microtime(true);
-                }   
+                $request->stats['handler_start'] = microtime(true);
+                   
                 try {
                     $this->response->run($this->request->route['action'],
                         $this->request->route['parameters']);
@@ -275,30 +258,20 @@ class Furnace {
                     echo $e;
                     exit();
                 }
-                	
-                if ($this->config->debug_level > 0) {
-                    $request->stats['handler_end'] = 
-                        $request->stats['proc_proc_end']  = microtime(true);
-                }
-                	
+                
                 // Set the referringPage attribute in the session. This
                 // allows non-view controller actions to redirect to
                 // the location from which they were called.
-                $_SESSION['referringPage'] = $this->rawRequest;
+                $_SESSION['referringPage'] = $this->rawRequest;                
+                
+                // Time benchmark	
+                $request->stats['handler_end'] = 
+                	$request->stats['proc_end']  = microtime(true);
                 	
-                // Send the rendered content out over the wire
-                if ($this->config->debug_level > 0) {
-                    $this->bm_renderstart = microtime(true);
-                }
                 
-                if ($this->config->debug_level > 0) {
-                    $this->bm_renderend  = $this->bm_reqend = microtime(true);
-                }
-                
-                //
                 // SEND THE RESPONSE OUT OVER THE WIRE
-                //
                 $this->response->send();
+                
                 
             } else {
                 if ($this->config->debug_level > 0) {
@@ -310,10 +283,7 @@ class Furnace {
                 } 
                 exit();
             }
-            
-            if ($this->config->debug_level > 0) {
-                $this->bm_processend = microtime(true);
-            }
+
         } catch (Exception $e) {
              dev_messages();
 
@@ -335,6 +305,17 @@ class Furnace {
     public function parse_yaml($file_path) {
         return self::yaml($file_path);
     }
+    
+    private function discoverExtensions($routes) {
+    	foreach ($routes as $r => $route) {
+    		if ($r[0] == '_') {
+	    		// Append to extension registry:
+	             $this->extensions[$route['path']] = 
+	             	array("global" => (isset($route['global']) ? $route['global'] : false),
+	              		  "theme"  => (isset($route['theme'])  ? $route['theme']  : 'default'));
+    		}
+    	}
+    }
 
     /*
      * ROUTE
@@ -350,9 +331,6 @@ class Furnace {
             if ($r[0] == '_') {
               _log()->log("Found extension {$route['path']} with prefix {$route['prefix']} and "
                   .count($route['routes'])." routes",FF_DEBUG);
-              // Append to extension registry:
-              $this->extensions[$route['path']] = array("global" => (isset($route['global']) ? $route['global'] : false),
-              											"theme"  => (isset($route['theme'])  ? $route['theme']  : 'default'));
               $extPath   = $route['path'];
               $extPrefix = $route['prefix'];
               $result    = $this->route($request,$route['routes'],$extPrefix);

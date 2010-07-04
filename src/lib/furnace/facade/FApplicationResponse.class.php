@@ -140,7 +140,22 @@ __END;
     }
     
     public function send() {
-        $this->controller->render($this->currentTheme);
+    	// Time benchmark
+    	$this->request->stats['render_start'] = microtime(true);
+    	
+        
+    	$contents = $this->controller->render(false);
+    	echo $contents;
+    	
+        
+        $this->request->stats['render_end'] = 
+    		$this->request->stats['req_end'] = microtime(true);
+    		
+    	if (_furnace()->config->debug_level > 1) {
+    		echo "<div id=\"fu_page_stats\">{$this->request->compileStats()}</div>";
+    	}
+    	
+    	_log()->log('Stats: ' . $this->request->compileStats('text'));
     }
 }
 ?>

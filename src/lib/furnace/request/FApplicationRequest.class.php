@@ -49,24 +49,53 @@ class FApplicationRequest {
 	} 
 
 	public function compileStats($outputFormat = 'html') {
-	
+		
+		/*
+		 * Available Statistics:
+		 * 
+		 * 	req_start
+		 *  proc_setup_start
+		 *  
+		 *  proc_setup_end
+		 *  proc_start
+		 *  handler_start
+		 *  
+		 *  handler_end
+		 *  proc_end
+		 *  
+		 *  render_start
+		 *  render_end
+		 *  req_end
+		 */
+		$setupTime   = $this->stats['proc_setup_end'] - $this->stats['req_start'];
+		$handlerTime = $this->stats['handler_end']    - $this->stats['handler_start']; 
+		$renderTime  = $this->stats['render_end']     - $this->stats['render_start'];
+		$totalTime   = $this->stats['req_end']        - $this->stats['req_start'];
+		
+		
 	    switch (strtolower($outputFormat)) {
 	        case 'html':
                 $str .= '<div id="ff-debug"><table>';
-                $str .= "<tr><th>TOTAL REQUEST TIME: </th><td> " . ($this->bm_reqend - $this->bm_reqstart) . " seconds</td></tr>\r\n";
-                $str .= "<tr><th>REQUEST BREAKDOWN:  </th><td><table><tr><th>SETUP TIME: </th><td>" . ($this->bm_envsetupend - $this->bm_envsetupstart) . "</td></tr>\r\n";
-                $str .= "<tr><th>PROCESS TIME: </th><td>" . ($this->bm_processend - $this->bm_processstart) . "</td></tr>\r\n";
+                $str .= "<tr><th>REQUEST BREAKDOWN:  </th><td><table><tr><th>SETUP TIME: </th><td>{$setupTime}</td></tr>\r\n";
+                $str .= "<tr><th>HANDLER TIME: </th><td>{$handlerTime}</td></tr>\r\n";
+                /*
                 $str .= "<tr><th>QUERY DELAY:  </th><td>" . count($this->queries) . " queries<br/>\r\n<span style='font-size:90%;'>";
                 $qd = 0;
                 foreach ($this->queries as $q) {
                     $str .= "&nbsp;&nbsp;{$q['delay']}s\t{$q['sql']}<br/>\r\n";
                     $qd += $q['delay'];
                 }
+                
                 $str .= "</span><br/>\r\n&nbsp;&nbsp;" . count($this->queries) . " queries took {$qd} seconds.</td></tr>\r\n";
-                $str .= "<tr><th>RENDER  TIME:  </th><td>" . ($this->bm_renderend - $this->bm_renderstart) . "</td></tr>\r\n";
+                */
+                $str .= "<tr><th>RENDER  TIME:  </th><td>{$renderTime}</td></tr>\r\n";
+                $str .= "<tr><th>TOTAL REQUEST TIME: </th><td> {$totalTime} seconds</td></tr>\r\n";
                 $str .= "</table></td></tr>";
                 $str .= "</table>";
                 $str .= '</div>';
+                break;
+	        case 'text':
+	        	$str .= "T: {$totalTime} (S: {$setupTime} / H: {$handlerTime} / R: {$renderTime}) ";
 	    }
 	    
 	    return $str;
