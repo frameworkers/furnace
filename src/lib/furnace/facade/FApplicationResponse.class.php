@@ -25,6 +25,7 @@ class FApplicationResponse {
         $this->controller->ref('_furnace',$app);
         $this->controller->ref('_app',    $app->config->data);
         $this->controller->ref('_model',  $GLOBALS['fApplicationModel']);
+        $this->controller->ref('_const',  get_defined_constants());
         $this->controller->ref('_server', $_SERVER);
         $this->controller->ref('_session',$_SESSION);
         $this->controller->ref('_user',   _user());
