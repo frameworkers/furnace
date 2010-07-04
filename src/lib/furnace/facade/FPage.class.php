@@ -197,7 +197,7 @@
 	public function extensionAddJavascript($provider,$package,$path,$bLocal = false) {
 		// Look up the extension in the registry:
 		if ( ! ($ext = _furnace()->extensions["{$provider}/{$package}"])) {
-			throw new FException("extensionAddStylesheet: Unknown provider or package: {$provider}/{$package}");
+			throw new FException("extensionAddJavascript: Unknown provider or package: {$provider}/{$package}");
 		}
 		$global = ($ext['global']) ? "global/" : '';
 	    if (!$bLocal) {
