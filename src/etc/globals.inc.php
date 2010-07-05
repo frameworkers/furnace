@@ -19,6 +19,25 @@ define('FF_CRIT',        PEAR_LOG_CRIT);
 define('FF_ALERT',       PEAR_LOG_ALERT);
 define('FF_EMERG',       PEAR_LOG_EMERG);
 
+
+/* CLASS AUTOLOADING ********************************************************/
+
+function furnaceAutoload ($className) {
+	$path = FURNACE_LIB_PATH . '/lib/' . $className . '.class.php';
+	if (file_exists($path)) {
+		include($path);
+	} else {
+		throw new Exception("Class {$className} not found at: {$path}");
+	}
+}
+
+set_include_path(get_include_path().PATH_SEPARATOR.FURNACE_LIB_PATH.'/lib/');
+spl_autoload_extensions('.class.php');
+spl_autoload_register('furnaceAutoload',true);
+
+require(FURNACE_LIB_PATH . '/lib/yaml/spyc-0.4.1.php');
+require(FURNACE_LIB_PATH . '/lib/yaml/FYamlParser.class.php');
+
 /* GLOBAL DATA STRUCTURES ***************************************************/
 
 $_datasources = array("production"=>array(),"debug"=>array());
@@ -52,7 +71,6 @@ function _db($which='default') {
     if (!isset($_datasources[$debugLevel][$which])) {
         $driverClass = _furnace()->config->data['datasources'][$debugLevel][$which]['driver'];
         $options     = _furnace()->config->data['datasources'][$debugLevel][$which]['options'];
-        require_once (FF_LIB_DIR . "/furnace/datasources/drivers/{$driverClass}.class.php");
         
         $_datasources[$debugLevel][$which] = new $driverClass();
         $_datasources[$debugLevel][$which]->init($options);  

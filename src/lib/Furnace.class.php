@@ -112,16 +112,6 @@ class Furnace {
 
         try {
             
-            // Include Furnace Foundation classes
-            set_include_path(get_include_path() . PATH_SEPARATOR .
-            FURNACE_LIB_PATH . '/lib/furnace/foundation');
-            include_once('foundation.bootstrap.php');
-        
-            // Include Furnace Facade classes
-            set_include_path(get_include_path() . PATH_SEPARATOR .
-            FURNACE_LIB_PATH . '/lib/furnace/facade');
-            include_once('facade.bootstrap.php');
-            
             // Include application model data
             include_once("{$this->rootdir}/model/model.php");
         
