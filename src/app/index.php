@@ -15,13 +15,6 @@ define("FURNACE_LIB_PATH", dirname(dirname(__FILE__)));
 define("FURNACE_APP_PATH", dirname(__FILE__));
 
 /* INCLUDE REQUIRED FILES */
- require(FURNACE_LIB_PATH . '/lib/furnace/Furnace.class.php');
- require(FURNACE_LIB_PATH . '/lib/furnace/config/FApplicationConfig.class.php');
- require(FURNACE_LIB_PATH . '/lib/furnace/logging/FApplicationLogManager.class.php');
- require(FURNACE_LIB_PATH . '/lib/furnace/request/FApplicationRequest.class.php');
- require(FURNACE_LIB_PATH . '/lib/yaml/spyc-0.4.1.php');
- 
- 
  require('Log.php');
 
  /* LOAD GLOBAL FUNCTIONS, STRUCTURES, AND DEFINITIONS */
