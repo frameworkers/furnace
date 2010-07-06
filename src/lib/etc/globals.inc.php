@@ -4,8 +4,8 @@ define('FF_VERSION',     '1.0.0-alpha3');
 
 /* GLOBAL DEFINITIONS *******************************************************/
 define('FF_ROOT_DIR',    FURNACE_LIB_PATH);
-define('FF_CONFIG_FILE', FURNACE_APP_PATH. '/config/app.yml');
-define('FF_LIB_DIR',     FURNACE_LIB_PATH . '/lib');
+define('FF_CONFIG_FILE', FURNACE_APP_PATH . '/config/app.yml');
+define('FF_LIB_DIR',     FURNACE_LIB_PATH);
 define('FF_LOG_DIR',     FURNACE_APP_PATH . '/data/logs');
 
 // Logging Constants (requires the PEAR Log package)
@@ -23,7 +23,7 @@ define('FF_EMERG',       PEAR_LOG_EMERG);
 /* CLASS AUTOLOADING ********************************************************/
 
 function furnaceAutoload ($className) {
-	$path = FURNACE_LIB_PATH . '/lib/' . $className . '.class.php';
+	$path = FURNACE_LIB_PATH . '/' . $className . '.class.php';
 	if (file_exists($path)) {
 		include($path);
 	} else {
@@ -35,8 +35,8 @@ set_include_path(get_include_path().PATH_SEPARATOR.FURNACE_LIB_PATH.'/lib/');
 spl_autoload_extensions('.class.php');
 spl_autoload_register('furnaceAutoload',true);
 
-require(FURNACE_LIB_PATH . '/lib/yaml/spyc-0.4.1.php');
-require(FURNACE_LIB_PATH . '/lib/yaml/FYamlParser.class.php');
+require(FURNACE_LIB_PATH . '/yaml/spyc-0.4.1.php');
+require(FURNACE_LIB_PATH . '/yaml/FYamlParser.class.php');
 
 /* GLOBAL DATA STRUCTURES ***************************************************/
 

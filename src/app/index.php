@@ -5,7 +5,7 @@
  * POINT TO A DIFFERENT VERSION, MODIFY 'FURNACE_LIB_PATH'
  * TO POINT TO THE FULL PATH TO YOUR FURNACE INSTALLATION:
  */
-define("FURNACE_LIB_PATH", dirname(dirname(__FILE__)));
+define("FURNACE_LIB_PATH", dirname(dirname(__FILE__)) . '/lib');
 
 
 /*********************************************************
