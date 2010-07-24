@@ -163,7 +163,7 @@
 		if (!$bLocal) {
 	        $path = "/assets/themes/{$this->theme}/css/{$path}";   
 	    } else {
-	        $localPath = $this->page_data['_local_'];
+	        $localPath = $this->page_data['%local'];
 	        $path = "{$localPath}/{$path}";
 	    }
 		$this->stylesheets[] = $path;
@@ -178,7 +178,7 @@
 	    if (!$bLocal) {
 	        $path = "/extensions/{$global}{$provider}/{$package}/themes/{$ext['theme']}/css/{$path}";
 	    } else {
-	        $localPath = $this->page_data['_local_'];
+	        $localPath = $this->page_data['%local'];
 	        $path = "{$localPath}/{$path}";
 	    }
 	    $this->stylesheets[] = $path;
@@ -188,7 +188,7 @@
 		if (!$bLocal) {
 	      $path = "/assets/themes/{$this->theme}/js/{$path}";   
 	    } else {
-	        $localPath = $this->page_data['_local_'];
+	        $localPath = $this->page_data['%local'];
 	        $path = "{$localPath}/{$path}";
 	    }
 		$this->javascripts[] = $path;
@@ -203,7 +203,7 @@
 	    if (!$bLocal) {
 	        $path = "/extensions/{$global}{$provider}/{$package}/themes/{$ext['theme']}/js/{$path}";
 	    } else {
-	        $localPath = $this->page_data['_local_'];
+	        $localPath = $this->page_data['%local'];
 	        $path = "{$localPath}/{$path}";
 	    }
 	    $this->javascripts[] = $path;

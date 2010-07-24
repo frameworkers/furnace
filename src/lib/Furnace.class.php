@@ -195,7 +195,7 @@ class Furnace {
                     $this,new $controllerClassName(),$this->request->route['extension']);
                 $this->response->setRequest($this->request);
             
-                // Attempt to load the page template
+                // Attempt to load the page template     
                 $pageExists = $this->response->setPage(
                     $this->request->route['controller'],
                     $this->request->route['action']);
@@ -311,8 +311,10 @@ class Furnace {
      * ROUTE
      */
     public function route($request,&$routes,$prefix='/') {
-        // split the route into segments
-        $parts = explode('/',ltrim($request,'/'));
+        // split the route into segments, ignoring any url_base segments
+    	$req = str_replace($this->config->url_base,'/',$request);
+        $parts = explode('/',ltrim($req,'/'));
+        
         
         $the_route = array();
         
@@ -408,7 +410,7 @@ class Furnace {
                 'parameters' => $parameters,
                 'extension'  => false
               );
-              _log()->log("Routing {$request} to {$the_route['controller']}::{$the_route['action']}(".implode(',',$parameters).")",FF_INFO);
+              _log()->log("Routing {$req} to {$the_route['controller']}::{$the_route['action']}(".implode(',',$parameters).")",FF_INFO);
               return $the_route;
             }
         }
