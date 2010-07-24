@@ -33,13 +33,16 @@ class FApplicationResponse {
         
         
         // Determine the prefix for relative links (especially important for extensions)
-        $this->controller->set('_prefix_',$app->request->route['prefix']);
+        $this->controller->set('%prefix', $this->url_base . $app->request->route['prefix']);
+        $this->controller->set('%a',rtrim($this->url_base,'/'));
+        $this->controller->set('_prefix_',$this->url_base . $app->request->route['prefix']); // legacy, deprecated
+        
         
         // Determine theme and local urls for assets
         // Extension not present
         if (false === $extension) {
-            $this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
-            $this->controller->set('_local_',"{$this->url_base}pages/"
+            $this->controller->set('%theme',"{$this->url_base}assets/themes/{$this->currentTheme}");
+            $this->controller->set('%local',"{$this->url_base}pages/"
  		        .$app->request->route['controller'].'/'
  		        .$app->request->route['action']);
         } 
@@ -49,15 +52,15 @@ class FApplicationResponse {
         	$global = ($ext['global']) ? 'global/' : '';  
         	// Extension with inherited theme
         	if ($ext['theme'] == 'inherit') {
-        		$this->controller->set('_theme_',"{$this->url_base}assets/themes/{$this->currentTheme}");
-        		$this->controller->set('_local_',"{$this->url_base}extensions/{$global}{$extension}/pages/"
+        		$this->controller->set('%theme',"{$this->url_base}assets/themes/{$this->currentTheme}");
+        		$this->controller->set('%local',"{$this->url_base}extensions/{$global}{$extension}/pages/"
         			. $app->request->route['controller'] . '/'
         			. $app->request->route['action']);
         	} 
         	// Extension with its own theme
         	else {
-        		$this->controller->set('_theme_',"{$this->url_base}extensions/{$global}{$extension}/themes/{$ext['theme']}");
-        		$this->controller->set('_local_',"{$this->url_base}extensions/{$global}{$extension}/pages/"
+        		$this->controller->set('%theme',"{$this->url_base}extensions/{$global}{$extension}/themes/{$ext['theme']}");
+        		$this->controller->set('%local',"{$this->url_base}extensions/{$global}{$extension}/pages/"
         			. $app->request->route['controller'] . '/'
         			. $app->request->route['action']);
         	}
@@ -87,10 +90,18 @@ class FApplicationResponse {
             : "{$this->projectRootDir}/";
         
         // Determine the correct path to the page
-        $path = (false !== $this->extension)
-            ? _furnace()->extDirToUse . "/{$this->extension}/pages/{$group}/{$page}/{$page}.html"
-            : "{$page_root}/pages/{$group}/{$page}/{$page}.html";
-            
+        if ($this->extension) {
+        	$path = _furnace()->extDirToUse . "/{$this->extension}/pages/{$group}/{$page}/{$page}.html";
+        } else {
+        	// The page will exist in one of two places. If it is a simple page (i.e. 
+            // no locally-defined assets), it will simply exist in the same directory
+            // as the controller. Since most pages are simple pages, check this first:	
+        	if (file_exists("{$page_root}/pages/{$group}/{$page}.html")) {
+        		$path = "{$page_root}/pages/{$group}/{$page}.html";
+        	} else {
+        		$path = "{$page_root}/pages/{$group}/{$page}/{$page}.html";
+        	}
+        }
         // Attempt to load the page content
         try {
             $this->controller->setTemplate($path);
