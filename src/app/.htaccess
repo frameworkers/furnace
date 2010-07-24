@@ -1,19 +1,20 @@
 RewriteEngine On
-RewriteBase /
+RewriteBase   /
 
-# WEBAPP EXTENSIONS ASSETS
-RewriteCond %{REQUEST_URI}                      !^.*(\.html|\.php)$
-RewriteRule ^extensions/(.*)/pages/(.*)$        plugins/extensions/$1/pages/$2  [NC,L]
-RewriteRule ^plugins/extensions/(.*)            plugins/extensions/$1           [NC,L]
+# Global extension assets
+RewriteCond %{REQUEST_URI} !plugins
+RewriteRule ^extensions/global/(.+)$ \./plugins/extensions/global/$1 [L,NC]
 
-# WEBAPP ASSETS
-RewriteRule ^assets/themes/(.*)$ themes/$1                               [NC,L]
-RewriteRule ^themes/(.*)         themes/$1                               [NC,L]
+# Application extension assets
 
-# WEBAPP PAGE-LOCAL ASSETS
-RewriteCond %{REQUEST_URI}          !^pages\/.*(\.html|\.php)$
-RewriteRule ^pages/(.*)/(.*\..*)$    /pages/$1/$2                        [NC,L]
-RewriteRule ^pages/(.*)              /pages/$1                           [NC,L]
+# Application static assets (theme content)
+RewriteCond %{REQUEST_URI} !^pages\/.*(\.html|\.php)$          [NC]
+RewriteRule assets/themes/(.+)$ themes/$1                      [L,NC]
 
-# WEBAPP
-RewriteRule ^(.*)/?$ index.php                                           [NC,L]
+# Application 'do' scripts
+
+# Send all other requests to the main controller
+RewriteCond %{REQUEST_URI} !plugins/extensions/global/.+$      [NC]
+RewriteCond %{REQUEST_URI} !^.+\.(css|js|jpg|jpeg|png|gif|do)$ [NC]
+RewriteCond %{REQUEST_URI} !index\.php/.+$                     [NC]
+RewriteRule ^(.+)$ \./index\.php/$1                            [L,NC]
