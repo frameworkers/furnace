@@ -400,7 +400,7 @@ class Furnace {
                    ? $wildcards['controller']
                    : (isset($route['map']['controller'])
                       ? $route['map']['controller']
-                      : '_default')),
+                      : 'root')),
                 'action'     => ((isset($wildcards['view']) &&
                                   !empty($wildcards['view']))
                    ? $wildcards['view']
