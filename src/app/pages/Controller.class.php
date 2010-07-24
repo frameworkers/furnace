@@ -8,12 +8,12 @@ class Controller extends FController {
   
     // Convenience (short-cut) function for 404 errors
     protected function notfound() {
-        $this->internalRedirect("/_default/http404");
+        $this->internalRedirect("/error/notfound");
     }
     
     // Convenience (short-cut) function for 403 errors
     protected function noauth() {
-        $this->internalRedirect("/_default/http403");
+        $this->internalRedirect("/error/notauthorized");
     }
 }
 ?>

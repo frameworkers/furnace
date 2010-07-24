@@ -151,7 +151,7 @@ class Furnace {
 		                return ( $this->config->debug_level > 0 ) 
 		                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
 		                        .str_replace('/','+',$controllerFilePath)))
-		                    : $this->process(new FApplicationRequest("/_default/http404"));
+		                    : $this->process(new FApplicationRequest("/error/notfound"));
 		                exit();
 	                } else {
 	                	$this->extDirToUse = $furExtDir;
@@ -167,7 +167,7 @@ class Furnace {
 	                return ( $this->config->debug_level > 0 ) 
 	                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
 	                        .str_replace('/','+',$controllerFilePath)))
-	                    : $this->process(new FApplicationRequest("/_default/http404"));
+	                    : $this->process(new FApplicationRequest("/error/notfound"));
 	                exit();
 	            }         
             }     
@@ -231,7 +231,7 @@ class Furnace {
                         return $this->process(new FApplicationRequest(
                             (($this->config->debug_level > 0) 
                                 ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
-                                : '/_default/http404')
+                                : '/error/notfound')
                         ));
                         exit();
                     }   
@@ -269,7 +269,7 @@ class Furnace {
                         . str_replace('/','+',$controllerFilePath)
                         . "/{$this->request->route['action']}");
                 } else {
-                    $this->process("/_default/http404");
+                    $this->process("/error/notfound");
                 } 
                 exit();
             }
