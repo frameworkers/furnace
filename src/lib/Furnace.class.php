@@ -310,7 +310,7 @@ class Furnace {
     /*
      * ROUTE
      */
-    public function route($request,&$routes,$prefix='/') {
+    public function route($request,&$routes,$prefix='') {
         // split the route into segments, ignoring any url_base segments
     	$req = str_replace($this->config->url_base,'/',$request);
         $parts = explode('/',ltrim($req,'/'));
