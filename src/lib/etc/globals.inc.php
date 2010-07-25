@@ -37,6 +37,7 @@ spl_autoload_register('furnaceAutoload',true);
 
 require(FURNACE_LIB_PATH . '/yaml/spyc-0.4.1.php');
 require(FURNACE_LIB_PATH . '/yaml/FYamlParser.class.php');
+require(FURNACE_LIB_PATH . '/FException.class.php');
 
 /* GLOBAL DATA STRUCTURES ***************************************************/
 
