@@ -87,21 +87,22 @@ class FApplicationResponse {
         $page_root = (false == $this->extension && file_exists(
             FURNACE_APP_PATH . "/themes/{$this->currentTheme}/pages/{$group}/{$page}/{$page}.html"))
             ? "{$this->projectRootDir}/themes/{$this->currentTheme}"
-            : "{$this->projectRootDir}/";
+            : "{$this->projectRootDir}";
         
         // Determine the correct path to the page
-        if ($this->extension) {
-        	$path = _furnace()->extDirToUse . "/{$this->extension}/pages/{$group}/{$page}/{$page}.html";
+	$pathBase = ($this->extension)
+		? _furnace()->extDirToUse . "/{$this->extension}" 
+		: $page_root;
+	
+	// The page will exist in one of two places. If it is a simple page (i.e. 
+	// no locally-defined assets), it will simply exist in the same directory
+	// as the controller. Since most pages are simple pages, check this first:	
+        if (file_exists("{$pathBase}/pages/{$group}/{$page}.html")) {
+        	$path = "{$pathBase}/pages/{$group}/{$page}.html";
         } else {
-        	// The page will exist in one of two places. If it is a simple page (i.e. 
-            // no locally-defined assets), it will simply exist in the same directory
-            // as the controller. Since most pages are simple pages, check this first:	
-        	if (file_exists("{$page_root}/pages/{$group}/{$page}.html")) {
-        		$path = "{$page_root}/pages/{$group}/{$page}.html";
-        	} else {
-        		$path = "{$page_root}/pages/{$group}/{$page}/{$page}.html";
-        	}
+        	$path = "{$pathBase}/pages/{$group}/{$page}/{$page}.html";
         }
+
         // Attempt to load the page content
         try {
             $this->controller->setTemplate($path);
