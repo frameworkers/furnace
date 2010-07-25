@@ -4,7 +4,7 @@
 		Incorrect username/password combination provided. Please Try again...
 	</div>
 	<div class="error" style="margin-top:25px">
-		[assert:connectError;block=div]
+		[assert:lb_connectError;block=div]
 		It is not possible to log in to the site at this time. This is usually
 		due to site maintenance and does not last long. Thank you for your patience.
 		<div class="notice">
@@ -18,7 +18,7 @@
 		</div>
 	</div>
 	<div>
-		[assert:!connectError;block=div]
+		[assert:!lb_connectError;block=div]
 		<table class="LoginBox">
 		  <tr>
 		    <td>Username:</td>

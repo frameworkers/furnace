@@ -39,9 +39,10 @@ class LoginBox extends FPageFragment {
 			        . "[{$_SERVER['REMOTE_ADDR']}], username: "
 			        . "{$this->controller->form['username']}",FF_NOTICE);
 			}
+			$this->controller->set('lb_connectError',false);
 			return ($attemptsUsed->data >= 5);
         } catch (FException $e) {
-        	$this->controller->set('connectError',true);
+        	$this->controller->set('lb_connectError',true);
         	_log()->log("LoginBox: login impossible: " . $e->getMessage(),FF_CRIT);
         	return false;
         }
