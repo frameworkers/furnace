@@ -2,10 +2,10 @@ RewriteEngine On
 RewriteBase   /
 
 # Global extension assets
-RewriteCond %{REQUEST_URI} !plugins
 RewriteRule ^extensions/global/(.+)$ \./plugins/extensions/global/$1 [L,NC]
 
 # Application extension assets
+RewriteRule ^extensions/(.+)/(.+)/(.+)$ ./plugins/extensions/$1/$2/$3 [L,NC]
 
 # Application static assets (theme content)
 RewriteCond %{REQUEST_URI} !^pages\/.*(\.html|\.php)$          [NC]
