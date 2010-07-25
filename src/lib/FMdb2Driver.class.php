@@ -51,15 +51,15 @@ class FMdb2Driver extends FDatasourceDriver {
      */
     public function init($options = array()) {
         $this->mdb2 = MDB2::factory($options['dsn']);
-        
-        if (MDB2::isError($this->mdb2)) {
-  			throw new FDatasourceDriverException(
-  				"Could not connect to the database");
-  		}
+
+	if ($this->mdb2 instanceof MDB2_Error) {
+		throw new FDatabaseException("Could not connect to database: " 
+			. $this->mdb2->userinfo);
+	}
   		
         // Turn off case-fixing portability switch
-		$this->mdb2->setOption('portability', 
-		    MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);	
+	$this->mdb2->setOption('portability', 
+	    MDB2_PORTABILITY_ALL ^ MDB2_PORTABILITY_FIX_CASE);	
     }
     
     
@@ -88,26 +88,26 @@ class FMdb2Driver extends FDatasourceDriver {
         // Run the actual query
         _log()->log("Mdb2Driver: {$q}",FF_DEBUG);
         $r = $this->mdb2->queryAll($q,null,MDB2_FETCHMODE_ASSOC);
-		if ( $r instanceof MDB2_Error ) {
+	if ( $r instanceof MDB2_Error ) {
             _log()->log("Mdb2Driver: {$r->userinfo}",FF_ERROR);
-			throw new FDatabaseException($r->message,"\"{$q}\"");	
-		}
+		throw new FDatabaseException($r->message,"\"{$q}\"");	
+	}
 		
-		// Construct an FResult object from the results
-		$result = new FResult($this);
-		$result->load($r);
+	// Construct an FResult object from the results
+	$result = new FResult($this);
+	$result->load($r);
 		
-		// Return the FResult object
-		return $result;	
+	// Return the FResult object
+	return $result;	
     }
     
     public function lastInsertId($options = array()) {
 
-		$r = $this->mdb2->lastInsertID();
-		if ( $r instanceof MDB2_Error ) {
-			throw new FDatabaseException($r->message,"\"{$q}\"");
-		}
-		return $r;		
+	$r = $this->mdb2->lastInsertID();
+	if ( $r instanceof MDB2_Error ) {
+		throw new FDatabaseException($r->message,"\"{$q}\"");
+	}
+	return $r;		
     }
     
     public function exec($query) {}
