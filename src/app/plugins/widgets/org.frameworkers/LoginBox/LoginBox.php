@@ -25,19 +25,26 @@ class LoginBox extends FPageFragment {
         //TODO: parameterize this with something like: login_failure_timeout
         $q = "DELETE FROM `app_logs` WHERE `created` < '" 
             . date('Y-m-d g:i:s',strtotime('1 hour ago')) . "'";
-        _db()->rawExec($q); 
+            
+        try {
+        	_db()->rawExec($q); 
         
-        // Check if this IP can attempt to log in
-        //TODO: parameterize this with something like max_login_failures
-		$q = "SELECT COUNT(*) FROM `app_logs` WHERE `ip`='{$_SERVER['REMOTE_ADDR']}' ";
-		$attemptsUsed = _db()->rawQuery($q,array('type'=>'one'));
-
-		if ($attemptsUsed->data >= 5) {
-		    _log()->log("Attempt to log in from banned IP address "
-		        . "[{$_SERVER['REMOTE_ADDR']}], username: "
-		        . "{$this->controller->form['username']}",FF_NOTICE);
-		}
-		return ($attemptsUsed->data >= 5);
+        	// Check if this IP can attempt to log in
+        	//TODO: parameterize this with something like max_login_failures
+			$q = "SELECT COUNT(*) FROM `app_logs` WHERE `ip`='{$_SERVER['REMOTE_ADDR']}' ";
+			$attemptsUsed = _db()->rawQuery($q,array('type'=>'one'));
+	
+			if ($attemptsUsed->data >= 5) {
+			    _log()->log("Attempt to log in from banned IP address "
+			        . "[{$_SERVER['REMOTE_ADDR']}], username: "
+			        . "{$this->controller->form['username']}",FF_NOTICE);
+			}
+			return ($attemptsUsed->data >= 5);
+        } catch (FException $e) {
+        	$this->controller->set('connectError',true);
+        	_log()->log("LoginBox: login impossible: " . $e->getMessage(),FF_CRIT);
+        	return false;
+        }
     }
 
     private function processLogin() {

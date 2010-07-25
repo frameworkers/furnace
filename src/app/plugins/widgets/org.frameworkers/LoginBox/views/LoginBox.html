@@ -3,18 +3,35 @@
 		[assert:lb_loginError;block=div]
 		Incorrect username/password combination provided. Please Try again...
 	</div>
-	<table class="LoginBox">
-	  <tr>
-	    <td>Username:</td>
-	    <td colspan="2"><input type="text" name="username"/></td>
-	  </tr>
-	  <tr>
-	    <td>Password:</td>
-	    <td><input type="password" name="password"/></td>
-	    <td><input id="LoginBoxLoginButton" type="submit" value="Log In"/></td>
-	  </tr>
-	  <tr>
-	    <td>&nbsp;</td>
-	  </tr>
-	</table>
+	<div class="error" style="margin-top:25px">
+		[assert:connectError;block=div]
+		It is not possible to log in to the site at this time. This is usually
+		due to site maintenance and does not last long. Thank you for your patience.
+		<div class="notice">
+			[assert:_app.debug_level+0;block=div]
+			Developer notice: This message (well, not this part in yellow, just the red bit) will be
+			shown to your users whenever the LoginBox widget is not able to connect
+			to your database. In production use, this may mean the database is
+			temporarily offline, but during development, it usually means you have
+			not yet specified your database details in the application config file,
+			(/app/config/app.yml) or that you have done so, but there is an error.
+		</div>
+	</div>
+	<div>
+		[assert:!connectError;block=div]
+		<table class="LoginBox">
+		  <tr>
+		    <td>Username:</td>
+		    <td colspan="2"><input type="text" name="username"/></td>
+		  </tr>
+		  <tr>
+		    <td>Password:</td>
+		    <td><input type="password" name="password"/></td>
+		    <td><input id="LoginBoxLoginButton" type="submit" value="Log In"/></td>
+		  </tr>
+		  <tr>
+		    <td>&nbsp;</td>
+		  </tr>
+		</table>
+	</div>
 </form>  
