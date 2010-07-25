@@ -33,10 +33,10 @@ _fuel:
   routes:
     login: 
        url: /login
-       map: { controller: _default, view: login }
+       map: { controller: root, view: login }
     logout:
        url: /logout
-       map: { controller: _default, view: logout }
+       map: { controller: root, view: logout }
     default:
       url: /:controller/:view
     default_index:
@@ -50,13 +50,13 @@ _fuel:
 ##
 login: 
   url: /login
-  map: { controller: _default, view: login }
+  map: { controller: root, view: login }
 logout:
   url: /logout
-  map: { controller: _default, view: logout }
+  map: { controller: root, view: logout }
 forgotpass:
   url: /forgotpass
-  map: { controller: _default, view: forgotpass }
+  map: { controller: root, view: forgotpass }
 
 
 
