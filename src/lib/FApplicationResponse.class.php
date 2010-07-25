@@ -33,10 +33,10 @@ class FApplicationResponse {
         
         
         // Determine the prefix for relative links (especially important for extensions)
-        $this->controller->set('%prefix', $this->url_base . $app->request->route['prefix']);
-        $this->controller->set('%a',rtrim($this->url_base,'/'));
-        $this->controller->set('_prefix_',$this->url_base . $app->request->route['prefix']); // legacy, deprecated
-        
+        $trimmedUrlBase = rtrim($this->url_base,'/'); 
+        $this->controller->set('%prefix', $trimmedUrlBase . $app->request->route['prefix']);
+        $this->controller->set('_prefix_',$trimmedUrlBase . $app->request->route['prefix']); // legacy, deprecated
+        $this->controller->set('%a',$trimmedUrlBase);
         
         // Determine theme and local urls for assets
         // Extension not present
