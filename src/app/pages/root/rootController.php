@@ -14,8 +14,11 @@ class rootController extends Controller {
     
     
     public function login() {
+    	$afterLogin = isset($_SESSION['afterLogin'])
+    		? $_SESSION['afterLogin']
+    		: '/';
         $this->loadWidget('org.frameworkers','LoginBox');
-        $lb = new LoginBox($this,'/');
+        $lb = new LoginBox($this,$afterLogin);
         $this->set('loginBox',$lb->render());
     }
     
