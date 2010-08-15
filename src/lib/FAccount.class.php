@@ -308,6 +308,11 @@ class FAccount extends FBaseObject {
 			if (false === $faccount_id) { return false; }	
 			
 		} else {
+
+			// Encrypt the updated password, if one was provided
+			if (isset($data['password'])) {
+				$this->password = FAccountManager::EncryptPassword($this->password);
+			}
 			
 			// Update the FAccount attributes for this object
 			$q = "UPDATE `app_accounts` SET " 
