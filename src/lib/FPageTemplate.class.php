@@ -299,6 +299,9 @@ class FPageTemplate extends TadpoleEngine {
 		
 		// determine the type of input to create
 		switch ($attributeData['type']) {
+			case 'boolean':
+				$checked = ($value === true) ? ' checked="checked" ' : '';
+				return "<input type=\"checkbox\" {$id} {$name} {$class} {$style} {$title} {$tabindex} {$checked}/>";
 			case 'text':
 				return "<textarea {$id} {$name} {$class} {$style} {$title} {$tabindex}>".stripslashes($value)."</textarea>";
 			case 'password':
