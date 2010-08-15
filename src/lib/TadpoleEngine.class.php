@@ -838,6 +838,14 @@ class TadpoleEngine {
 				    break;
 				case 'stripslashes':
 				    $value = stripslashes($value);
+				case 'strtolower': 
+					$value = strtolower($value);
+					break;
+				case 'strtoupper':
+					$value = strtoupper($value);
+					break;
+				case 'urlencode':
+					$value = urlencode($value);
 				    break;
 				case "nl2br":
 					$value = nl2br($value);
