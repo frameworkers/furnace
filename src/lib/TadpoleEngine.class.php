@@ -830,6 +830,9 @@ class TadpoleEngine {
 							break;
 					}
 					break;
+				case "urlify":
+					$value = str_replace(' ','-',ucwords($value));
+					break;
 				case "htmlentities":
 					$value = htmlentities($value);
 					break;
