@@ -225,7 +225,7 @@ class FMdb2Driver extends FDatasourceDriver {
                 // the query object:
                 if ($e->field == 'id' || _model()->$otClass->attributeInfo($realK)) {
                     $this->addCondition($e->prior_op, 
-                    	"`{$filterKeyTable}`.`{$realK}`{$e->comp}'{$e->value}' ");
+                    	"`{$filterKeyTable}`.`{$realK}`{$e->comp}'".addslashes($e->value)."' ");
                 }
                 
                 // If the requested key represents an external relationship, then...
@@ -249,10 +249,10 @@ class FMdb2Driver extends FDatasourceDriver {
                                (($remoteK == "username") || ($remoteK=="password") || ($remoteK=="emailAddress"))) {
                                // Join app_accounts
                                $this->addTable('app_accounts');
-                               $this->addCondition($e->prior_op, "( `app_accounts`.`{$remoteK}`{$e->comp} '{$e->value}' AND `app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id`  ");
+                               $this->addCondition($e->prior_op, "( `app_accounts`.`{$remoteK}`{$e->comp} '".addslashes($e->value)."' AND `app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id`  ");
                             } else {
                                 $this->addCondition($e->prior_op,
-                                    "(`{$info['table_l']}`.`{$remoteK}` {$e->comp} '{$e->value}' ");
+                                    "(`{$info['table_l']}`.`{$remoteK}` {$e->comp} '".addslashes($e->value)."' ");
                             } 
                             
                             $this->addCondition('AND',
@@ -286,7 +286,7 @@ class FMdb2Driver extends FDatasourceDriver {
                             // This has been handled already before reaching the 'filter' stage
 
                             // 4) Limit the results to those foreign objects whose remote key matches v
-                            $this->addCondition('AND',"`{$info['table_l']}`.`{$remoteK}`{$e->comp}'{$e->value}')");
+                            $this->addCondition('AND',"`{$info['table_l']}`.`{$remoteK}`{$e->comp}'".addslashes($e->value)."')");
                             
                             
                         } else 
@@ -307,10 +307,10 @@ class FMdb2Driver extends FDatasourceDriver {
                                (($remoteK == "username") || ($remoteK=="password") || ($remoteK=="emailAddress"))) {
                                // Join app_accounts
                                $this->addTable('app_accounts');
-                               $this->addCondition($e->prior_op, "( `app_accounts`.`{$remoteK}`{$e->comp} '{$e->value}' AND `app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id`  ");
+                               $this->addCondition($e->prior_op, "( `app_accounts`.`{$remoteK}`{$e->comp} '".addSlashes($e->value)."' AND `app_accounts`.`faccount_id`=`{$info['table_l']}`.`faccount_id`  ");
                             } else {
                                 $this->addCondition($e->prior_op,
-                                    "(`{$info['table_l']}`.`{$remoteK}` {$e->comp} '{$e->value}' ");
+                                    "(`{$info['table_l']}`.`{$remoteK}` {$e->comp} '".addslashes($e->value)."' ");
                             } 
                             
                             $this->addCondition('AND',
@@ -329,7 +329,6 @@ class FMdb2Driver extends FDatasourceDriver {
 
     
     protected function parseKey($k) {
-        
         // Discover remote key for extended filter. An extended filter is one that filters
         // on the value of an attribute of a *relative* of the current object.
         //

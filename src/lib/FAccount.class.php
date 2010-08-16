@@ -565,7 +565,7 @@ class FAccount extends FBaseObject {
  		        : $this->$p['name'];
  		}
  		foreach (_model()->$ot->attributeInfo() as $a) {
- 			$arrayComponents[$a['name'] ] = $this->$a['column'];
+ 			$arrayComponents[$a['name'] ] = addslashes($this->$a['column']);
  		}
  		
  		unset($arrayComponents['username']);

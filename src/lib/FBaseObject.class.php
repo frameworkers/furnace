@@ -139,8 +139,8 @@
  		$parents = _model()->$ot->parentsAsArray();
  		foreach ($this->_dirtyTable as $attr => $val) {
  		    $fieldsToSave[] = isset($parents[$attr])
- 		        ? "`{$attr}_id` = '".$val."' "
- 		        : "`{$attr}`    = '".$val."' ";
+ 		        ? "`{$attr}_id` = '".addslashes($val)."' "
+ 		        : "`{$attr}`    = '".addslashes($val)."' ";
  		}
  		
  		// If nothing to save, don't bother making a round trip to the db
@@ -204,7 +204,7 @@
  		        : $this->$p['name'];
  		}
  		foreach (_model()->$ot->attributeInfo() as $a) {
- 			$arrayComponents[] = $this->$a['column'];
+ 			$arrayComponents[] = addslashes($this->$a['column']);
  		}
  		
  		$s .= implode("','",$arrayComponents);
