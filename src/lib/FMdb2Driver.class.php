@@ -230,7 +230,7 @@ class FMdb2Driver extends FDatasourceDriver {
                 
                 // If the requested key represents an external relationship, then...
                 else {
-                    $fn = "get{$e->field}Info";
+                    $fn = "get{$realK}Info";
                     if (is_callable(array($otModel,$fn))) {
                         $info = _model()->$otClass->$fn();
                         if ($info['role_l'] == 'M1') {
