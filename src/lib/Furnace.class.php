@@ -86,12 +86,12 @@ class Furnace {
     }
 
     public function loadApplicationModel() {
-	// Include application model data
-	include_once("{$this->rootdir}/model/model.php");
-
-	// Instantiate the global model data structure
-	$GLOBALS['fApplicationModel'] = new ApplicationModel();
-	$GLOBALS['_model'] = new ApplicationModel();
+		// Include application model data
+		include_once("{$this->rootdir}/model/model.php");
+	
+		// Instantiate the global model data structure
+		$GLOBALS['fApplicationModel'] = new ApplicationModel();
+		$GLOBALS['_model'] = new ApplicationModel();
     }
 
     private function determineController() {
