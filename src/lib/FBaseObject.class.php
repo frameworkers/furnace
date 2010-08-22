@@ -108,7 +108,7 @@
 			$q .= "({$this->buildSqlUniqueAttributeList()}) ";
 			$q .= "VALUES ({$this->buildSqlUniqueAttributeValueList()}) ";
 			$r = _db()->rawExec($q);
-			$this->id   = _db()->lastInsertID($this->FObjectTableName,"{$this->fObjectTableName}_id");
+			$this->id   = _db()->lastInsertID($this->fObjectTableName,"{$this->fObjectTableName}_id");
 			return true; 
 		} else {
 			return $this->update($data,false);	// Validation already handled above
