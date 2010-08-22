@@ -85,6 +85,83 @@ class Furnace {
         session_start();
     }
 
+    public function loadApplicationModel() {
+	// Include application model data
+	include_once("{$this->rootdir}/model/model.php");
+
+	// Instantiate the global model data structure
+	$GLOBALS['fApplicationModel'] = new ApplicationModel();
+	$GLOBALS['_model'] = new ApplicationModel();
+    }
+
+    private function determineController() {
+
+	    // Determine if an extension is being requested and set the file path
+	    // to the appropriate controller.
+	    // Extensions can live in one of two places:
+	    //	1) Inside the application's plugins/extensions directory
+	    //	2) Inside the Furnace plugins/extensions directory
+            $appExtDir   = FURNACE_APP_PATH . '/plugins/extensions/';
+            $furExtDir   = FURNACE_LIB_PATH . '/plugins/extensions/';
+            $this->extDirToUse = $appExtDir;             
+            
+            if ('' != $this->request->route['extension']) {
+            	// First try the application extension directory
+                $controllerFilePath = $appExtDir
+                    . "{$this->request->route['extension']}/pages/"
+                    . "{$this->request->route['controller']}/"
+                    . "{$this->request->route['controller']}Controller.php";
+                    
+                if (!file_exists($controllerFilePath)) {
+                	// Try the Furnace plugins directory as a last ditch effort
+                	$controllerFilePath = $furExtDir
+	                    . "{$this->request->route['extension']}/pages/"
+	                    . "{$this->request->route['controller']}/"
+	                    . "{$this->request->route['controller']}Controller.php";
+
+	                    if (!file_exists($controllerFilePath)) {
+		                ( $this->config->debug_level > 0 ) 
+		                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
+		                        .str_replace('/','+',$controllerFilePath)))
+		                    : $this->process(new FApplicationRequest("/error/notfound"));
+		                exit();
+	                } else {
+	                	$this->extDirToUse = $furExtDir;
+	                }
+                }
+            } else {
+                $controllerFilePath = "{$this->rootdir}/pages/"
+                    . "{$this->request->route['controller']}/"
+                    . "{$this->request->route['controller']}Controller.php";  
+                    
+                // Ensure that the requested controller actually exists
+	            if (!file_exists($controllerFilePath)) {
+	                ($this->config->debug_level > 0 ) 
+	                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
+	                        .str_replace('/','+',$controllerFilePath)))
+	                    : $this->process(new FApplicationRequest("/error/notfound"));
+	                exit();
+	            }         
+            }  
+	
+	    // Include the appropriate base controller
+            if ($this->request->route['extension'] 
+            	&& file_exists($this->extDirToUse ."{$this->request->route['extension']}/pages/Controller.class.php")) {
+            		include_once($this->extDirToUse
+	                    ."{$this->request->route['extension']}/pages/Controller.class.php");
+            } else {
+                include_once(FURNACE_APP_PATH . '/pages/Controller.class.php');
+            }
+            // Include the controller file
+            @include_once($controllerFilePath);
+
+            // Does the requested controller class exist?
+            // TODO: Check for the existence of the class within the file
+
+	    $controllerClassName = "{$this->request->route['controller']}Controller";
+	    return $controllerClassName;
+    }
+
     /**
      * Process an {@link FApplicationRequest} and generate an 
      * {@link FApplicationResponse}
@@ -112,93 +189,74 @@ class Furnace {
 
         try {
             
-            // Include application model data
-            include_once("{$this->rootdir}/model/model.php");
-        
-            // Instantiate the global model data structure
-            $GLOBALS['fApplicationModel'] = new ApplicationModel();
-            $GLOBALS['_model'] = new ApplicationModel();
+            
             
 
             $request->stats['proc_setup_end'] = 
             	$request->stats['proc_start'] = microtime(true);
             
-            
-            // Determine if an extension is being requested and set the file path
-            // to the appropriate controller.
-            // Extensions can live in one of two places:
-            //	1) Inside the application's plugins/extensions directory
-            //	2) Inside the Furnace plugins/extensions directory
-            $appExtDir   = FURNACE_APP_PATH . '/plugins/extensions/';
-            $furExtDir   = FURNACE_LIB_PATH . '/plugins/extensions/';
-            $this->extDirToUse = $appExtDir;             
-            
-            if ('' != $this->request->route['extension']) {
-            	// First try the application extension directory
-                $controllerFilePath = $appExtDir
-                    . "{$this->request->route['extension']}/pages/"
-                    . "{$this->request->route['controller']}/"
-                    . "{$this->request->route['controller']}Controller.php";
-                    
-                if (!file_exists($controllerFilePath)) {
-                	// Try the Furnace plugins directory as a last ditch effort
-                	$controllerFilePath = $furExtDir
-	                    . "{$this->request->route['extension']}/pages/"
-	                    . "{$this->request->route['controller']}/"
-	                    . "{$this->request->route['controller']}Controller.php";
 
-	                    if (!file_exists($controllerFilePath)) {
-		                return ( $this->config->debug_level > 0 ) 
-		                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
-		                        .str_replace('/','+',$controllerFilePath)))
-		                    : $this->process(new FApplicationRequest("/error/notfound"));
-		                exit();
-	                } else {
-	                	$this->extDirToUse = $furExtDir;
-	                }
-                }
-            } else {
-                $controllerFilePath = "{$this->rootdir}/pages/"
-                    . "{$this->request->route['controller']}/"
-                    . "{$this->request->route['controller']}Controller.php";  
-                    
-                // Ensure that the requested controller actually exists
-	            if (!file_exists($controllerFilePath)) {
-	                return ( $this->config->debug_level > 0 ) 
-	                    ? $this->process(new FApplicationRequest("/_debug/errors/noController/"
-	                        .str_replace('/','+',$controllerFilePath)))
-	                    : $this->process(new FApplicationRequest("/error/notfound"));
-	                exit();
-	            }         
-            }     
-            
-            // Include the appropriate base controller
-            if ($this->request->route['extension'] 
-            	&& file_exists($this->extDirToUse ."{$this->request->route['extension']}/pages/Controller.class.php")) {
-            		include_once($this->extDirToUse
-	                    ."{$this->request->route['extension']}/pages/Controller.class.php");
-            } else {
-                include_once(FURNACE_APP_PATH . '/pages/Controller.class.php');
-            }
-            // Include the controller file
-            @include_once($controllerFilePath);
+	    $controllerClassName = $this->determineController();
 
-            // Does the requested controller class exist?
-            // TODO: Check for the existence of the class within the file
 
-            // Create an instance of the requested controller
+            // Create an instance of the requested controller and load the template
             $pageExists = true;
             try {
                 // Create a response object to hold response details
-                $controllerClassName = "{$this->request->route['controller']}Controller";
                 $this->response = new FApplicationResponse(
                     $this,new $controllerClassName(),$this->request->route['extension']);
                 $this->response->setRequest($this->request);
-            
-                // Attempt to load the page template     
-                $pageExists = $this->response->setPage(
+
+		// Does the requested controller function (handler) exist?
+        	if( $this->response->handlerExists($this->request->route['action']) ) {
+
+                    $request->stats['handler_start'] = microtime(true);
+
+		    // Attempt to load the page template     
+                    $pageExists = $this->response->setPage(
                     $this->request->route['controller'],
                     $this->request->route['action']);
+
+		    // Execute the handler
+		    $this->response->run($this->request->route['action'],
+                        $this->request->route['parameters']);
+                    
+		    // Display error if expected view template does not exist..
+                    if ($pageExists !== true 
+                            && !$this->response->pageOverrideDetected) {
+                        $this->process(new FApplicationRequest(
+                            (($this->config->debug_level > 0) 
+                                ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
+                                : '/error/notfound')
+                        ));
+                        exit();
+                    } 
+
+			// Set the referringPage attribute in the session. This
+                	// allows non-view controller actions to redirect to
+                	// the location from which they were called.
+                	$_SESSION['referringPage'] = $this->rawRequest;                
+                
+                	// Time benchmark	
+                	$request->stats['handler_end'] = 
+                		$request->stats['proc_end']  = microtime(true);
+                	
+                
+                	// SEND THE RESPONSE OUT OVER THE WIRE
+                	$this->response->send();
+		
+
+		    } else {
+		    if ($this->config->debug_level > 0) {
+                        $this->process("/_debug/errors/noControllerFunction/"
+                            . str_replace('/','+',$controllerFilePath)
+                            . "/{$this->request->route['action']}");
+                    } else {
+                         $this->process("/error/notfound");
+                    } 
+                    exit();
+		}     
+                
                     
             } catch (FDatabaseException $fde) {
                 $_SESSION['_exception'] = $fde;
@@ -211,66 +269,6 @@ class Furnace {
             } catch (Exception $e) {
                 $_SESSION['_exception'] = $e;
                 echo $fe;
-                exit();
-            }
-            
-            // Does the requested controller function exist?
-            $handlerExists = $this->response->handlerExists($this->request->route['action']);
-
-            if ($handlerExists) {
-
-                // Call the handler
-                $request->stats['handler_start'] = microtime(true);
-                   
-                try {
-                    $this->response->run($this->request->route['action'],
-                        $this->request->route['parameters']);
-                    // Display error if expected view template does not exist..
-                    if ($pageExists !== true 
-                            && !$this->response->pageOverrideDetected) {
-                        return $this->process(new FApplicationRequest(
-                            (($this->config->debug_level > 0) 
-                                ? ('/_debug/errors/noTemplate/'.str_replace('/','+',$pageExists))
-                                : '/error/notfound')
-                        ));
-                        exit();
-                    }   
-                } catch (FDatabaseException $fde) {
-                    $_SESSION['_exception'] = $fde;
-                    echo $fde;
-                    exit();
-                } catch (FException $fe) {
-                    $_SESSION['_exception'] = $fe;
-                    echo $fe;
-                    exit();
-                } catch (Exception $e) {
-                    $_SESSION['_exception'] = $e;
-                    echo $e;
-                    exit();
-                }
-                
-                // Set the referringPage attribute in the session. This
-                // allows non-view controller actions to redirect to
-                // the location from which they were called.
-                $_SESSION['referringPage'] = $this->rawRequest;                
-                
-                // Time benchmark	
-                $request->stats['handler_end'] = 
-                	$request->stats['proc_end']  = microtime(true);
-                	
-                
-                // SEND THE RESPONSE OUT OVER THE WIRE
-                $this->response->send();
-                
-                
-            } else {
-                if ($this->config->debug_level > 0) {
-                    $this->process("/_debug/errors/noControllerFunction/"
-                        . str_replace('/','+',$controllerFilePath)
-                        . "/{$this->request->route['action']}");
-                } else {
-                    $this->process("/error/notfound");
-                } 
                 exit();
             }
 
