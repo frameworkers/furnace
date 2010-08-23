@@ -24,7 +24,7 @@ class LoginBox extends FPageFragment {
         // Flush old failed logins
         //TODO: parameterize this with something like: login_failure_timeout
         $q = "DELETE FROM `app_logs` WHERE `created` < '" 
-            . date('Y-m-d g:i:s',strtotime('1 hour ago')) . "'";
+            . date('Y-m-d G:i:s',strtotime('1 hour ago')) . "'";
             
         try {
         	_db()->rawExec($q); 
