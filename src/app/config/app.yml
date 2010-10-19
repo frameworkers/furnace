@@ -1,0 +1,52 @@
+#
+# FURNACE Application Configuration File
+#
+# Variables:
+#   ${app} = application root directory
+#
+
+app:
+  name: My Application
+  url:  http://mysite.com
+  port: 80
+  base: /
+  theme: default
+  defaultModule: \org\frameworkers\furnace\help
+  logging:
+    log_dir: ${app}/data/logs
+    logs:
+      default:
+        type: file
+        name: furnace.all.log
+        mask: FF_INFO
+      notices:
+        type: file
+        name: notices.log
+        mask: FF_NOTICE
+  data:
+    data_dir: ${app}/data
+    tmp_dir:  ${app}/data/tmp
+  security:
+    debug_level: 1
+    password_salt: "daFc893nv5ad7b4{3k%6Zx&3k00(Dz?34f%23/z4GGz"
+    root_username: 
+    root_password: 
+  datasources:
+    debug:
+      default: 
+        driver: 'org\frameworkers\furnace\drivers\FPdoDriver'
+        options:
+          driver:   mysql
+          host:     localhost
+          database: 
+          username: 
+          password: 
+    production:
+      default: 
+        driver: 'org\frameworkers\furnace\drivers\FPdoDriver'
+        options:
+          driver:   mysql
+          host:     localhost
+          database: 
+          username: 
+          password:

@@ -1,0 +1,72 @@
+#
+# FURNACE Application Route Definition File
+#
+# Mappings between URLs and Controller/View pairs
+# NOTE: Order is important! The Router runs top to bottom, 
+# stopping after it has found a route that matches.
+#
+#
+#
+###########################################################
+## ADD CUSTOM ROUTES HERE:
+## Add custom routes (if needed) for your application here.
+##
+
+
+###########################################################
+## COMMON ROUTES 
+## module: \org\frameworkers\common
+##
+
+login: 
+  url: /login
+  map: { controller: default, view: login }
+  module: \org\frameworkers\common
+logout:
+  url: /logout
+  map: { controller: default, view: logout }
+  module: \org\frameworkers\common
+forgotpass:
+  url: /forgotpass
+  map: { controller: default, view: forgotpass }
+  module: \org\frameworkers\common
+
+###########################################################
+## ADMINISTRATION CONSOLE 
+## module: \org\frameworkers\foundry\admin
+##
+##
+
+admin:
+  url: /admin/:controller/:view
+  module: \org\frameworkers\foundry\admin
+admin_index:
+  url: /admin/:view
+  map: { controller: default }
+  module: \org\frameworkers\foundry\admin
+
+###########################################################
+## UTILITIES
+## module: \org\frameworkers\common
+##
+
+utilities:
+  url: /util/:view
+  map: { controller: default }
+  module: \org\frameworkers\common
+  
+
+###########################################################
+## SITEWIDE DEFAULT ROUTES
+## These routes are the initial defaults for every furnace 
+## installation.
+## Since they appear at the bottom of the file, they will
+## only be matched if every previous rule fails. 
+##
+##
+ 
+default:
+  url: /:controller/:view
+default_index:
+  url: /:view
+  map: { controller: default }
