@@ -15,7 +15,7 @@ use org\frameworkers\furnace\control as Control;
  * 
  * This class provides the high-level functionality needed to direct the
  * handling of an {@link FApplicationRequest}. It handles the set-up and
- * tear-down of the Furnace environment and manages the transfer of control 
+ * tear-down of the Furnace environment and manages the transfer of control
  * between lower elements of the Furnace library in the process of 
  * satisfying the user request.
  * 
@@ -89,10 +89,6 @@ class Furnace {
         $this->defaultModule = isset($config->data['defaultModule']) 
         	? $config->data['defaultModule']
         	: die("No default module specified");
-
-        // Set the theme
-        $this->theme  = $this->config->theme;
-        define('FF_THEME_DIR',FURNACE_APP_PATH . "/themes");
         
         // Initialize the session
         session_start();
@@ -160,6 +156,11 @@ class Furnace {
         $GLOBALS['_furnace_stats']['furnace_route_end'] = microtime(true);
         $GLOBALS['_furnace_stats']['furnace_route_time'] =  $GLOBALS['_furnace_stats']['furnace_route_end'] - $GLOBALS['_furnace_stats']['furnace_route_start'];
 	
+        // Set the Theme
+        $this->theme  = isset ($this->request->route['theme'])
+        	? $this->request->route['theme']
+        	: $this->config->theme;
+        
         // Define the module path based on the route information
         define ("MODULE" , FURNACE_APP_PATH 
         	. "/modules" 
@@ -414,7 +415,8 @@ __END;
                      ? $route['map']['view']
                      : 'index')),
                 'parameters' => $parameters,
-                'module'     => (isset($route['module']) ? $route['module'] : $this->defaultModule)
+                'module'     => (isset($route['module']) ? $route['module'] : $this->defaultModule),
+                'theme'      => (isset($route['theme']) ? $route['theme']  : false)
               );
               
               //echo ("Routing {$req} to {$the_route['controller']}::{$the_route['action']}(".implode(',',$parameters).")");
