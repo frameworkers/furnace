@@ -1,0 +1,23 @@
+RewriteEngine On
+RewriteBase   /app
+
+# Global extension assets
+RewriteRule ^extensions/global/(.+)$ \./plugins/extensions/global/$1 [L,NC]
+
+# Module assets
+RewriteRule assets/module/(.+)$          \./modules/$1 [L,NC]
+
+# Application extension assets
+RewriteRule ^extensions/(.+)/(.+)/(.+)$ \./plugins/extensions/$1/$2/$3 [L,NC]
+
+# Application static assets (theme content)
+RewriteCond %{REQUEST_URI} !^pages\/.*(\.html|\.php)$          [NC]
+RewriteRule assets/themes/(.+)$ themes/$1                      [L,NC]
+
+# Application 'do' scripts
+
+# Send all other requests to the main controller
+RewriteCond %{REQUEST_URI} !plugins/extensions/global/.+$      [NC]
+RewriteCond %{REQUEST_URI} !^.+\.(css|js|jpg|jpeg|png|gif|do)$ [NC]
+RewriteCond %{REQUEST_URI} !index\.php/.+$                     [NC]
+RewriteRule ^(.+)$ \./index\.php/$1                            [L,NC]
