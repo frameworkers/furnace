@@ -4,7 +4,7 @@
  * POINT TO A DIFFERENT VERSION, MODIFY 'FURNACE_LIB_PATH'
  * TO POINT TO THE FULL PATH TO YOUR FURNACE INSTALLATION:
  */
-define("FURNACE_LIB_PATH", '/home/andrew/Public/Frameworkers/furnace-next/lib');
+define("FURNACE_LIB_PATH", dirname(dirname(__FILE__)) . '/lib');
 
 /*********************************************************
 /** ** ** NO CHANGES NECESSARY BELOW THIS LINE ** ** ** **
