@@ -1,5 +1,9 @@
 <?php
 namespace org\frameworkers\furnace;
+use org\frameworkers\furnace\config\FApplicationConfig;
+
+use org\frameworkers\furnace\control\FApplicationRequest;
+
 use org\frameworkers\furnace\control as Control;
 /**
  * Furnace Rapid Application Development Framework
@@ -62,7 +66,15 @@ class Furnace {
     public $theme;
     public $extensions;
     public $extDirToUse;  
+    
     public $defaultModule; 
+    
+    public $modulePathToUse;
+    public $controllerClassName;
+    public $controllerFilePath;
+    public $controllerObject;
+    
+    
 
     public $applicationVariables = array();
     
@@ -85,11 +97,6 @@ class Furnace {
         // Load the YML application configuration file
         $this->config = $config;
         
-        // Record information about the default module;
-        $this->defaultModule = isset($config->data['defaultModule']) 
-        	? $config->data['defaultModule']
-        	: die("No default module specified");
-        
         // Initialize the session
         session_start();
     }
@@ -103,27 +110,39 @@ class Furnace {
 
     private function determineController() {
 
-        $controllerFilePath = MODULE . "/controllers/"
+        $controllerFilePath = $this->controllerFilePath = $this->modulePathToUse . "/controllers/"
         	. "{$this->request->route['controller']}Controller.class.php";
 
         // Ensure that the requested controller actually exists
         if (file_exists($controllerFilePath)) {
-        	$controllerClassName = "{$this->request->route['controller']}Controller";
+        	$controllerClassName = $this->controllerClassName = "{$this->request->route['controller']}Controller";
         } else {
         	// Try to fall back to the root controller
-        	$controllerFilePath = MODULE . "/controllers/defaultController.class.php";
-        	$controllerClassName = "defaultController";
+        	$controllerFilePath  = $this->controllerFilePath  = $this->modulePathToUse . "/controllers/defaultController.class.php";
+        	$controllerClassName = $this->controllerClassName = "defaultController";
         	// Update the route information to reflect the fallback operation
         	array_unshift($this->request->route['parameters'],$this->request->route['action']);
         	$this->request->route['action'] = $this->request->route['controller'];
         	$this->request->route['controller'] = 'default';
         }
+        
+        /* Ensure that everything will be ok with this request */
+        // Ensure the base controller exists
+        if (!file_exists($this->modulePathToUse . '/controllers/Controller.class.php')) {
+        	$this->triggerError('noBaseController',$this->request->route['module']);
+        }
+        
+        // Ensure the controller file exists
+        if (!file_exists($controllerFilePath)) {
+        	$this->triggerError('noController',array($this->request->route['module'],$this->request->route['controller']));
+        }
 	
 	    // Include the base controller
-        include_once(MODULE . '/controllers/Controller.class.php');
-       
+	    include_once($this->modulePathToUse . '/controllers/Controller.class.php');
+
         // Include the controller file
         include_once($controllerFilePath);
+        
 
         // Does the requested controller class exist?
         // TODO: Check for the existence of the class within the file
@@ -143,6 +162,14 @@ class Furnace {
         // Time benchmark
         $request->stats['proc_setup_start'] = microtime(true);
         
+            
+        // Ensure default module specified
+        if (isset($this->config->data['defaultModule']) && !empty($this->config->data['defaultModule'])) {
+        	$this->defaultModule = $this->config->data['defaultModule'];
+        } else {
+        	$this->defaultModule = '\org\frameworkers\furnace\help';
+        	$request = new FApplicationRequest('/_help/noDefaultModule');
+        }        
         
         // Store the FApplicationRequest object 
         $this->request = $request;
@@ -157,14 +184,14 @@ class Furnace {
         $GLOBALS['_furnace_stats']['furnace_route_time'] =  $GLOBALS['_furnace_stats']['furnace_route_end'] - $GLOBALS['_furnace_stats']['furnace_route_start'];
 	
         // Set the Theme
-        $this->theme  = isset ($this->request->route['theme'])
+        $this->theme  = isset ($this->request->route['theme']) && !empty($this->request->route['theme'])
         	? $this->request->route['theme']
         	: $this->config->theme;
         
         // Define the module path based on the route information
-        define ("MODULE" , FURNACE_APP_PATH 
+        $this->modulePathToUse = FURNACE_APP_PATH 
         	. "/modules" 
-        	. str_replace("\\","/",$this->request->route['module']));
+        	. str_replace("\\","/",$this->request->route['module']);
         	        	
         try {
 
@@ -201,7 +228,7 @@ class Furnace {
 		        $GLOBALS['_furnace_stats']['furnace_determineController_storeApplicationVariable_end'] = microtime(true);
 
             	// Create an instance of the controller
-            	$theController = new $controllerClassName();
+            	$theController = $this->controllerObject = new $controllerClassName();
             	
             	// Inject the furnace javascript variables into the page
         		$theController->injectJS($this->prepareFurnaceJS($this));
@@ -241,8 +268,11 @@ class Furnace {
 			    
         		
         		} else {
-		    		die("Page Not Found");
-                    exit();
+        			$mod = $this->request->route['module'];
+        			$con = $controllerClassName;
+        			$fn  = $this->request->route['action'];
+		    		$_SESSION['referringPage'] = $this->rawRequest;
+		    		$this->triggerError('noControllerFunction',array($mod,$con,$fn));
 				}
                     
             } catch (FDatabaseException $fde) {
@@ -326,6 +356,25 @@ __END;
     public function referrer() {
     	return $_SESSION['referringPage'];
     }
+    
+    public function triggerError($label,$extra = array()) {
+    	// Gather basic environment information
+    	$info = array();
+    	$info['label']     = $label;
+    	$info['request']   = $this->rawRequest;
+    	$info['route']     = $this->request->route;
+    	$info['module']    = $this->request->route['module'];
+    	$info['theme']     = $this->theme;
+    	$info['timestamp'] = mktime();
+    	$info['id']        = $info['timestamp'].'.'.rand(10000,99999);
+    	$info['extra']     = $extra;
+    	
+    	$_SESSION['lastError'] = $info;
+    	
+    	header('Location: ' . $this->config->url_base . 'error/'.$info['id']);
+    	exit();
+    }
+    
 
     /*
      * ROUTE
@@ -416,7 +465,7 @@ __END;
                      : 'index')),
                 'parameters' => $parameters,
                 'module'     => (isset($route['module']) ? $route['module'] : $this->defaultModule),
-                'theme'      => (isset($route['theme']) ? $route['theme']  : false)
+                'theme'      => (isset($route['theme']) ? $route['theme']   : false)
               );
               
               //echo ("Routing {$req} to {$the_route['controller']}::{$the_route['action']}(".implode(',',$parameters).")");
