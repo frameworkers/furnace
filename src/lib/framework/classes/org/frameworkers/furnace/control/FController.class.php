@@ -16,7 +16,7 @@ class FController extends Page\FPage {
 		
 		// Set the content path base
 		// This is the path base to use when loading view pages
-		$this->pagesPath = MODULE . "/pages/";
+		$this->pagesPath = _furnace()->modulePathToUse . "/pages/";
 		
 		if (isset($_POST) && count($_POST) > 0) {
 			$this->processPostedData();	
@@ -36,15 +36,17 @@ class FController extends Page\FPage {
 					? "{$action}.html"
 					:  _furnace()->request->route['controller'] . "/{$action}.html");
 
-					// Place it into the '_content_' zone
+			// Place it into the '_content_' zone
 			if (file_exists($contentPath)) {
 				$this->put(file_get_contents($contentPath),'content');
 			} else {
-				die("content path: {$contentPath} does not exist");
+				_furnace()->triggerError('noPage',
+					array(
+						str_replace('/','+',$contentPath),
+						str_replace('/','+',_furnace()->rawRequest)
+					)
+				);
 			}
-			
-			
-
 		} else {
 			die("Unable to satisfy unknown action '{$action}'");
 		}
