@@ -32,7 +32,8 @@ class FPage {
 	
 	
 	
-	protected $layoutContents;
+	public    $layoutFile;
+	public    $layoutFileContents;
 	
 	protected $jsraw;
 	protected $cssraw;
@@ -83,12 +84,12 @@ class FPage {
 		// requirement is that the layout contain the magic [_content_] tag
 		// which will be replaced with the computed page content, which is
 		// added during the call to {@see satisfyRequest}
-		if (empty($this->layoutContents)) {
+		if (empty($this->layoutFileContents)) {
 			$this->setLayout('default.html');
 		}
 		
 		// Add the layout data
-		$this->body .= $this->layoutContents;
+		$this->body .= $this->layoutFileContents;
 		
 		// Process any css includes
 		foreach ($this->stylesheets as $cssFile) {
@@ -180,7 +181,8 @@ class FPage {
 			if (file_exists(FURNACE_APP_PATH . "/modules/{$blockPath}/{$filename}")) {
 				$this->stylesheets[] = array($filename,ltrim($blockPath,'/'));
 			} else {
-				throw new Exceptions\FurnaceException("Requested CSS file '{$filename}' does not exist at {$blockPath}");
+				throw new Exceptions\FurnaceException(
+					"Requested CSS file '{$filename}' does not exist at {$blockPath}");
 			}	
 		} else {
 			if (file_exists(FF_THEME_DIR . '/' . _furnace()->theme . "/css/{$filename}")) {
@@ -206,10 +208,12 @@ class FPage {
 		if (file_exists(FF_THEME_DIR  . '/' . _furnace()->theme .  "/layouts/{$layoutFile}")) {
 			
 			// Load the layout file
-			$this->layoutContents = file_get_contents(FF_THEME_DIR . '/' . _furnace()->theme . "/layouts/{$layoutFile}");
+			$this->layoutFile         = $layoutFile;
+			$this->layoutFileContents = file_get_contents(
+				FF_THEME_DIR . '/' . _furnace()->theme . "/layouts/{$layoutFile}");
 
 		} else {
-			throw new Exceptions\FurnaceException("Requested layout file '{$layoutFile}' does not exist");
+			_furnace()->triggerError('noLayout',$layoutFile);
 		}
 	}	
 }
