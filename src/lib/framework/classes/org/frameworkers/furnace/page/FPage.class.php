@@ -40,6 +40,7 @@ class FPage {
 	
 	protected $stylesheets;
 	protected $javascripts;
+	protected $title;
 	
 	protected $renderEngine;
 	
@@ -52,6 +53,9 @@ class FPage {
 		$this->layoutContent = '';
 		$this->renderEngine = new \org\frameworkers\furnace\page\FPageTemplate();
 		
+		// Set a default title
+		$this->title = _furnace()->config->data['name'];
+		
 		// Create the document's doctype
 		$this->head  = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD XHTML 1.1//EN\""
 					.  " \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\r\n";
@@ -60,8 +64,6 @@ class FPage {
 		// Create mandatory document elements
 		$this->head .= "<head>\r\n"
 					.  "  <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"/>\r\n";
-		
-		$this->head .= "  <title>Sucks</title>\r\n";
 		
 		$this->body  = "<body>\r\n";
 
@@ -87,6 +89,9 @@ class FPage {
 		if (empty($this->layoutFileContents)) {
 			$this->setLayout('default.html');
 		}
+		
+		// Set the page title
+		$this->head .= "  <title>{$this->title}</title>\r\n";
 		
 		// Add the layout data
 		$this->body .= $this->layoutFileContents;
@@ -216,5 +221,11 @@ class FPage {
 			_furnace()->triggerError('noLayout',$layoutFile);
 		}
 	}	
+	
+	public function setTitle($title,$append = false) {
+		$this->title = ($append)
+			? $this->title . ' - ' . $title
+			: $title;
+	}
 }
 ?>
