@@ -64,17 +64,13 @@ class Furnace {
     public $request;
     public $response;
     public $theme;
-    public $extensions;
-    public $extDirToUse;  
     
     public $defaultModule; 
     
     public $modulePathToUse;
     public $controllerClassName;
     public $controllerFilePath;
-    public $controllerObject;
-    
-    
+    public $controllerObject;    
 
     public $applicationVariables = array();
     
@@ -84,17 +80,17 @@ class Furnace {
     public $user;
 
     public function __construct($config) {
-    	$GLOBALS['_furnace_stats']['furnace_constructor'] = microtime(true);
+    	
     		
         // Compute the project root directory
-        $this->rootdir = FURNACE_APP_PATH;
-        $this->paths['rootdir'] = $this->rootdir;
+        $this->rootdir = $this->paths['rootdir'] = FURNACE_APP_PATH;
         
         // Load the YML route definitions
+        $GLOBALS['_furnace_stats']['routes_loaded_start'] = microtime(true);
         $this->routes = self::yaml($this->rootdir . '/config/routes.yml');
-        $GLOBALS['_furnace_stats']['routes_loaded'] = microtime(true);
+        $GLOBALS['_furnace_stats']['routes_loaded_end']   = microtime(true);
 
-        // Load the YML application configuration file
+        // Load the application configuration
         $this->config = $config;
         
         // Initialize the session
@@ -158,18 +154,19 @@ class Furnace {
      * @return FApplicationResponse The resulting {@link FApplicationResponse} object
      */
     public function process($request) {
-  		$GLOBALS['_furnace_stats']['furnace_process_start'] = microtime(true);
-        // Time benchmark
-        $request->stats['proc_setup_start'] = microtime(true);
-        
-            
+    	            
         // Ensure default module specified
         if (isset($this->config->data['defaultModule']) && !empty($this->config->data['defaultModule'])) {
         	$this->defaultModule = $this->config->data['defaultModule'];
         } else {
         	$this->defaultModule = '\org\frameworkers\furnace\help';
         	$request = new FApplicationRequest('/_help/noDefaultModule');
-        }        
+        }   
+
+        // Ensure that the database connection is ok
+        if (!_db() && $_SESSION['lastError']['label'] != 'noDatabaseConnection') {
+        	$this->triggerError('noDatabaseConnection');
+        }
         
         // Store the FApplicationRequest object 
         $this->request = $request;
@@ -181,7 +178,6 @@ class Furnace {
         $GLOBALS['_furnace_stats']['furnace_route_start'] = microtime(true);
         $this->request->route = $this->route($this->rawRequest,$this->routes);
         $GLOBALS['_furnace_stats']['furnace_route_end'] = microtime(true);
-        $GLOBALS['_furnace_stats']['furnace_route_time'] =  $GLOBALS['_furnace_stats']['furnace_route_end'] - $GLOBALS['_furnace_stats']['furnace_route_start'];
 	
         // Set the Theme
         $this->theme  = isset ($this->request->route['theme']) && !empty($this->request->route['theme'])
@@ -194,9 +190,6 @@ class Furnace {
         	. str_replace("\\","/",$this->request->route['module']);
         	        	
         try {
-
-            $request->stats['proc_setup_end'] = 
-            	$request->stats['proc_start'] = microtime(true);
            
             $GLOBALS['_furnace_stats']['furnace_determineController_start'] = microtime(true);
 	    	$controllerClassName = $this->determineController();
@@ -243,29 +236,20 @@ class Furnace {
 				    		array($this->request->route['action'],
 				    			  $this->request->route['parameters']));
 				    $GLOBALS['_furnace_stats']['furnace_callHandler_end'] = microtime(true);
-				    $GLOBALS['_furnace_stats']['furnace_callHandler_time'] = $GLOBALS['_furnace_stats']['furnace_callHandler_end'] - $GLOBALS['_furnace_stats']['furnace_callHandler_start'];
-			    	
-
 
 					// Set the referringPage attribute in the session. This
                 	// allows non-view controller actions to redirect to
                 	// the location from which they were called.
                 	$_SESSION['referringPage'] = $this->rawRequest;                
-                
-                	// Time benchmark	
-                	$request->stats['handler_end'] = 
-                		$request->stats['proc_end']  = microtime(true);
-                	
+           	
                 
                 	// SEND THE RESPONSE OUT OVER THE WIRE
                 	// Time benchmark
                 	$GLOBALS['_furnace_stats']['furnace_render_start'] = microtime(true);
 			    	$contents = $theController->render(false);
 			    	$GLOBALS['_furnace_stats']['furnace_render_end']  = microtime(true);
-			    	$GLOBALS['_furnace_stats']['furnace_render_time'] = $GLOBALS['_furnace_stats']['furnace_render_end'] - $GLOBALS['_furnace_stats']['furnace_render_start'];
 			    	echo $contents;
-			    	
-			    
+		    
         		
         		} else {
         			$mod = $this->request->route['module'];
@@ -306,17 +290,6 @@ class Furnace {
 
     public function parse_yaml($file_path) {
         return self::yaml($file_path);
-    }
-    
-    private function discoverExtensions($routes) {
-    	foreach ($routes as $r => $route) {
-    		if ($r[0] == '_') {
-	    		// Append to extension registry:
-	             $this->extensions[$route['path']] = 
-	             	array("global" => (isset($route['global']) ? $route['global'] : false),
-	              		  "theme"  => (isset($route['theme'])  ? $route['theme']  : 'default'));
-    		}
-    	}
     }
     
 	private function prepareFurnaceJS() { 
@@ -371,8 +344,87 @@ __END;
     	
     	$_SESSION['lastError'] = $info;
     	
-    	header('Location: ' . $this->config->url_base . 'error/'.$info['id']);
+    	if (_furnace()->config->debug_level > 0
+			|| _user()->id() == 1) { 
+				
+			header('Location: ' . $this->config->url_base . 'error/' . $info['id']);
+			exit();	
+		}
+		
+		// Otherwise, just display the standard error page
+		// TODO: create a standard error message page for non-privileged users
+		// TODO: create a 404 page?
+		else {
+			if ($info['label'] == 'noPage' || $info['label'] == 'noController' || $info['label'] == 'noControllerFunction') {
+				header('Location: ' . $this->config->url_base . 'notfound');
+				exit();
+			} else {
+				$_SESSION['lastError'] = '';
+				die("<strong>An error has occurred</strong>. It has been logged as event {$id}");
+			}
+		}
     	exit();
+    }
+    
+	public function stats() {
+    	$loadConfig =  
+			$GLOBALS['_furnace_stats']['furnace_loadConfig_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_loadConfig_start'];
+			
+		$loadRoutes =
+			$GLOBALS['_furnace_stats']['routes_loaded_end'] -
+			$GLOBALS['_furnace_stats']['routes_loaded_start'];	
+			
+		$createRequest = 
+			$GLOBALS['_furnace_stats']['furnace_createRequest_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_createRequest_start'];
+			
+		$routeTime     =
+			$GLOBALS['_furnace_stats']['furnace_route_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_route_start'];
+			
+		$processTime   =
+			$GLOBALS['_furnace_stats']['furnace_process_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_process_start'];
+		
+		$determineControllerTime =
+			$GLOBALS['_furnace_stats']['furnace_determineController_end'] -
+			$GLOBALS['_furnace_stats']['furnace_determineController_start'];
+			
+		$storeAppVarsTime        =
+			$GLOBALS['_furnace_stats']['furnace_determineController_storeApplicationVariable_end'] -
+			$GLOBALS['_furnace_stats']['furnace_determineController_storeApplicationVariable_start'] -
+			
+		$handlerTime   =
+			$GLOBALS['_furnace_stats']['furnace_callHandler_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_callHandler_start'];
+			
+		$renderTime    =
+			$GLOBALS['_furnace_stats']['furnace_render_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_render_start'];
+			
+		$requestTime   =
+			$GLOBALS['_furnace_stats']['furnace_process_end'] - 
+			$GLOBALS['_furnace_stats']['furnace_start'];
+			
+    	echo "<!-- Furnace (http://furnace.frameworkers.org) rendered this "
+    		."page in {$requestTime} seconds -->\r\n";
+    		
+		if (_furnace()->config->debug_level >=1) {
+			echo "<!-- Response Generation Statistics: \r\n"
+				."\tConfig file loaded in:      {$loadConfig}\r\n"
+				."\tRoutes file loaded in:      {$loadRoutes}\r\n"
+				."\tRequest created in:         {$createRequest}\r\n"
+				."\tProcessing Time:            {$processTime}\r\n"
+				."\t- Routing completed in:       {$routeTime}\r\n"
+				."\t- Controller Determined in:   {$determineControllerTime}\r\n"
+				."\t- App vars stored in:         {$storeAppVarsTime}\r\n"
+				."\t- Handler ran in:             {$handlerTime}\r\n"
+				."\t- Rendering completed in:     {$renderTime}\r\n"
+				."\r\n"
+				."\tTOTAL REQUEST TIME:         {$requestTime}\r\n";
+			echo "-->\r\n";
+		}
     }
     
 
