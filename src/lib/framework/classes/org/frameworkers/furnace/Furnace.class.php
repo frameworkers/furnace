@@ -355,7 +355,8 @@ __END;
 		// TODO: create a standard error message page for non-privileged users
 		// TODO: create a 404 page?
 		else {
-			if ($info['label'] == 'noPage' || $info['label'] == 'noController' || $info['label'] == 'noControllerFunction') {
+
+			if ($info['label'] == 'notfound' || $info['label'] == 'noPage' || $info['label'] == 'noController' || $info['label'] == 'noControllerFunction') {
 				header('Location: ' . $this->config->url_base . 'notfound');
 				exit();
 			} else {
