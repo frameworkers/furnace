@@ -7,6 +7,7 @@ define('FF_VERSION',     '0.3');
 define('FF_ROOT_DIR',    FURNACE_LIB_PATH);
 define('FF_CONFIG_FILE', FURNACE_APP_PATH . '/config/app.yml');
 define('FF_LIB_DIR',     FURNACE_LIB_PATH);
+define('FF_THEME_DIR',   FURNACE_APP_PATH . "/themes");
 
 // Logging Constants (requires the PEAR Log package)
 // http://pear.php.net/package/Log/
@@ -59,16 +60,21 @@ function _db($which='default') {
         ? 'debug'
         : 'production';
     
-    // If this is the first access, load the appropriate driver and init. it  
-    if (!isset($_datasources[$debugLevel][$which])) {
-        $driverClass = _furnace()->config->data['datasources'][$debugLevel][$which]['driver'];
-        $options     = _furnace()->config->data['datasources'][$debugLevel][$which]['options'];
-        
-        $_datasources[$debugLevel][$which] = new $driverClass();
-        $_datasources[$debugLevel][$which]->init($options);  
+    try {
+	    // If this is the first access, load the appropriate driver and init. it  
+	    if (!isset($_datasources[$debugLevel][$which])) {
+	        $driverClass = _furnace()->config->data['datasources'][$debugLevel][$which]['driver'];
+	        $options     = _furnace()->config->data['datasources'][$debugLevel][$which]['options'];
+	        
+	        $_datasources[$debugLevel][$which] = new $driverClass();
+	        $_datasources[$debugLevel][$which]->init($options);  
+	    }
+	    
+	    return $_datasources[$debugLevel][$which];
+    } catch (Exception $e) {
+    	//TODO: Log this error
+    	return false;
     }
-    
-    return $_datasources[$debugLevel][$which];
 }
  
 /**
