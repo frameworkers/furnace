@@ -37,7 +37,7 @@ a img {
 }
 #admin-date {
 	position:absolute;
-	top:57px;
+	top:27px;
 	right:0px;
 	font-size:120%;
 	color:#666;
@@ -45,9 +45,11 @@ a img {
 
 h1 {
 	color:#fff;
-	background-color:#357;
+	background-color:#579;
 	border-bottom:solid 1px #135;
-	padding:5px;	
+	padding:5px;
+	font-size:24px;	
+	margin-top:15px;
 }
 
 
@@ -97,7 +99,7 @@ table#app-schema table th,
 }
 
 div.breadcrumbs {
-	margin-top:-15px;
+	margin-top:0px;
 	margin-bottom:10px;
 	border-bottom:dotted 1px #ccc;
 	padding-bottom:4px;
