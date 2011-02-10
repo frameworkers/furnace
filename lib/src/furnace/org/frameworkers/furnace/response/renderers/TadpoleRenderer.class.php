@@ -4,7 +4,7 @@ namespace org\frameworkers\furnace\response\renderers;
 use org\frameworkers\furnace\config\Config;
 
 use org\frameworkers\furnace\response\RenderEngine;
-use vendors\tadpole\TadpoleEngine;
+use vendors\org\crawwler\tadpole\TadpoleEngine;
 
 class TadpoleRenderer extends RenderEngine {
 	
