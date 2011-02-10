@@ -1,5 +1,5 @@
 <?php
-namespace vendors\spyc;
+namespace vendors\com\thresholdstate\spyc;
 /**
    * Spyc -- A Simple PHP YAML Class
    * @version 0.4.1
