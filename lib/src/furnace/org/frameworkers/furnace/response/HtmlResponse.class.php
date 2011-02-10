@@ -134,7 +134,7 @@ class HtmlResponse extends Response {
 		if ($bLocal) { // File is somewhere in the application views hierarchy
 			$url = "{$this->context->urls['view_base']}/" . ltrim($path,'/');
 		} else {       // File is part of the current theme
-			$url = "{$this->context->urls['theme_base']}/" . ltrim($path,'/');
+			$url = "{$this->context->urls['theme_base']}/js/" . ltrim($path,'/');
 		}
 		// Add the file to the array of javascripts to include in the context
 		$this->javascripts[$url] = 
@@ -145,7 +145,7 @@ class HtmlResponse extends Response {
 		if ($bLocal) { // File is somewhere in the application views hierarchy
 			$url = "{$this->context->urls['view_base']}/" . ltrim($path,'/');
 		} else {       // File is part of the current theme
-			$url = "{$this->context->urls['theme_base']}/" . ltrim($path,'/');
+			$url = "{$this->context->urls['theme_base']}/css/" . ltrim($path,'/');
 		}
 		// Build a CSS snippet to insert
 		$snippet = "<link rel=\"stylesheet\" type=\"text/css\" href=\"{$url}\">";
