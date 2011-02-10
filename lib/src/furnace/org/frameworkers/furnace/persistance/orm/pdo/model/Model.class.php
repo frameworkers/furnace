@@ -20,7 +20,7 @@ namespace org\frameworkers\furnace\persistance\orm\pdo\model;
 use org\frameworkers\furnace\connections\Connections;
 use org\frameworkers\furnace\config\Config;
 use org\frameworkers\furnace\persistance\FurnaceType;
-use vendors\spyc\Spyc;
+use vendors\com\thresholdstate\spyc\Spyc;
 
 
 class Model {
@@ -30,6 +30,8 @@ class Model {
 	public $objects;
 	
 	protected function __construct() {
+		$this->objects  = array();
+		$this->metadata = array();
 		
 	}
 	
