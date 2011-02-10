@@ -1,0 +1,7 @@
+RewriteEngine On
+RewriteBase   /furnace-www
+
+# Send all other requests to the main controller
+RewriteCond %{REQUEST_URI} !^.+\.(css|js|jpg|jpeg|png|gif|ico|do)$  [NC]
+RewriteCond %{REQUEST_URI} !index\.php/.+$                          [NC]
+RewriteRule ^(.+)$ \./index\.php/$1                                 [L,NC]
