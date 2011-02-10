@@ -1,0 +1,59 @@
+<h1>ORM Model</h1>
+<div class="column span-12 colborder">
+	<fieldset>
+	  <legend>Object: [sortedObjects;block=fieldset][@.className]</legend>
+	  <p>[@.description;error='<em>No description provided</em>']</p>
+	  <h5>Attributes:</h5>
+	  <table>
+	    <tr>
+	      <th style="width:25%">Name</th>
+	      <th style="width:25%">Furnace Type</th>
+	      <th>Additional Information</th>
+	    </tr>
+	    <tr>
+	      <td>[@.attributes;block=tr;noerror][@.name]</td>
+	      <td>[@.type]</td>
+	      <td>[@.description;error='<em>n/a</em>']</td>
+	    </tr>
+	  </table>
+	  <h5>Relations:</h5>
+	  <table>
+	    <tr>
+	      <th style="width:25%">Type</th>
+	      <th style="width:25%">Remote Object</th>
+	      <th>Name</th>
+	      <th>Intermediate</th>
+	    </tr>
+	    <tr>
+	      <td>[@.relations;block=tr;noerror][@.type]</td>
+	      <td>[@.remoteObjectClassName]</td>
+	      <td>[@.name]</td>
+	      <td>[@.lookupObject;prefix='<em>via </em>';error='<em>n/a</em>']</td>
+	    </tr>
+	  </table>
+	</fieldset>
+</div>
+
+<div class="column span-11 last">
+<h4>Regenerating Application Model Class Files</h4>
+<p>Whenever changes are made to the application model file, it is necessary to
+   re-create the PHP object class files to reflect the changes. When you regenerate,
+   you may find that your schema (database tables) have become out of date. Any
+   loss of synchronization will be displayed here, along with options for automatically
+   resolving the difference.</p>
+   <img id="imgRegenerateWorking" src="[%theme]/images/working.gif" style="display:none;vertical-align:middle"/>
+   <input type="button" id="btnRegenerateClassFiles" value="(Re)generate Class Files"/>
+   <span id="spnRegenerateClassFilesResult"></span>
+<hr class="space"/>
+
+<h4>Model-to-Database Synchronization</h4>
+<p>Foundry can compare the differences (if any) between your application
+   model and the default data source specified in your application's 
+   connections.config.php file. The analysis results will include options
+   for rectifying any differences found.</p>
+   
+   <img id="imgDbCompareWorking" src="[%theme]/images/working.gif" style="display:none;vertical-align:middle"/>
+   <input type="button" id="btnDbCompare" value="Compare Model To Database"/><br/><br/>
+   <div id="divDbCompareResult"></div>
+   <hr class="space"/>
+</div>

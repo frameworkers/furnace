@@ -1,0 +1,31 @@
+@CHARSET "UTF-8";
+
+.mainMenu {
+	background-color:#eee;
+	padding:10px 0px 0px 0px;
+	margin:1px 0px 10px 0px;	
+	font-size:1.1em;
+}
+
+.mainMenu ul {
+	margin:0px;
+	padding:0px;
+	padding-left:10px;
+	padding-bottom:5px;
+	border-bottom:solid 1px #abc;	
+}
+
+.mainMenu ul li {
+	display:inline;
+}
+
+.mainMenu ul li a {
+	background-color:#fff;
+	border-bottom:solid 1px #bcd;
+	border-top:solid 1px #deb;
+	border-right:solid 1px #deb;
+	padding:8px 15px;
+}
+.mainMenu ul li a.active {
+	border-bottom:solid 1px #fff;	
+}

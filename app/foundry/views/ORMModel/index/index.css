@@ -1,0 +1,14 @@
+@CHARSET "UTF-8";
+
+h5 {
+	background-color:#bce;
+	color:#fff;
+	padding:3px;
+}
+h5.alt {
+	background-color:transparent;
+	color:#111;	
+}
+legend {
+	padding: 0px 8px;	
+}
