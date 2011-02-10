@@ -1,0 +1,26 @@
+@CHARSET "UTF-8";
+body {
+	
+}
+
+.relative {
+	position:relative;	
+}
+.centered {
+	text-align:center;
+}
+
+#splash {
+	position:relative;
+	border-bottom:solid 1px #eee;
+	padding-bottom:5px;
+		
+}
+
+ul.linkz {
+	border:solid 5px #f3f3f3;
+	
+	padding:15px;
+	margin:5px auto;
+	list-style:none;
+}
