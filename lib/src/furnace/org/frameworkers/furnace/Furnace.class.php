@@ -34,6 +34,10 @@ class Furnace extends Object {
 
 		// Filterable
 		return $this->_filter(__METHOD__, array($url), function($self, $params) {
+			
+			// Initialize a PHP session
+			session_start();
+			header("cache-control: private");		
 
 			// Create a context for this request
 			$context = Context::CreateFromUrl( $params[0] );
