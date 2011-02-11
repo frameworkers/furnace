@@ -58,12 +58,17 @@ class HtmlResponse extends Response {
 			// Replace the zone tag with the included contents
 			$document = str_replace("[_{$ivLabel}_]", $ivContents, $document);
 		}
-		
+				
 		// Process each defined zone
 		foreach ($this->local_data as $zoneName => $zoneLocals) {
 			// Get zone content
 			$content  = file_get_contents($this->viewFilePaths[$zoneName]);
 			
+			// Incorporate any `flash` messages into the local content
+			$zoneLocals['_flashes'] = (isset($_SESSION['_flashes'][$zoneName]))
+				? implode("\r\n",$_SESSION['_flashes'][$zoneName])
+				: "";
+				
 			// Compile the zone
 			$compiled = $renderer->compile( $content, $this->context, $zoneLocals);
 
@@ -73,6 +78,9 @@ class HtmlResponse extends Response {
 		
 		// Final pass to catch any tags outside of defined zones
 		$document = $renderer->compile( $document, $this->context, array());
+		
+		// Reset the stored `flash` messages container
+		$_SESSION['_flashes'] = array();
 		
 		// Return the final, compiled response
 		return $document;		
@@ -187,9 +195,8 @@ class HtmlResponse extends Response {
 		$this->local_data[$zone][$key] = $val;
 	}
 	
-	public function flash($message,$cssClass = "ff_info") {
-		//TODO: implement message flashing
-	}
-	
-	
+	public function flash($message,$cssClass = "flash_info",$zone = 'content') {
+		$_SESSION['_flashes'][$zone][] = 
+			"<div class='ff_flash {$cssClass}'>{$message}</div>";
+	}	
 }
