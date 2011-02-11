@@ -71,6 +71,7 @@ abstract class Response extends StaticObject {
 			$newURL = Config::Get('applicationUrlBase') . $newURL;
 		}
 		header('Location: ' . $newURL);
+		exit();
 	}
 	
 }
