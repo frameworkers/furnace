@@ -8,7 +8,7 @@ define("REQUEST_START",microtime(true));     // Request statistics
  */
 // Furnace library location
 define("FURNACE_LIB_PATH",dirname(dirname(__FILE__))
-	."/lib/furnace");
+	."/lib/src/furnace");
 	
 // Furnace application location
 define("FURNACE_APP_PATH",dirname(__FILE__));
