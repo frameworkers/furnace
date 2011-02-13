@@ -19,6 +19,13 @@ class Controller extends Object {
 		$this->response->set($key,$value,$zone);
 	}
 	
+	/**
+	 * Test for a condition and provide error headers and messages on failure
+	 * @param mixed   $condition      The condition to test. Will be evaluated to boolean true or false
+	 * @param string  $failureMessage The message to display if the assertion fails
+	 * @param string  $httpCode       The http code to respond with if the assertion fails 
+	 *                                (use \org\frameworkers\furnace\utilities\HTTP class for http code constants)
+	 */
 	public function assert($condition,$failureMessage = 'Missing expected request parameters',$httpCode = HTTP::HTTP_400) {
 		if ( true !== $condition) {
 			$this->response->flash("Error: {$failureMessage}");
