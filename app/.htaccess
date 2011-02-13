@@ -1,5 +1,5 @@
 RewriteEngine On
-RewriteBase   /furnace-www
+RewriteBase   /CHANGEME-IN-DOT-HTACCESS
 
 # Send all other requests to the main controller
 RewriteCond %{REQUEST_URI} !^.+\.(css|js|jpg|jpeg|png|gif|ico|do)$  [NC]
