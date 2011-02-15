@@ -6,33 +6,105 @@
 <p class="large loud">
 <strong>Furnace:</strong> A rapid application development framework for PHP 5.3+
 </p>
-<div class="span-8">
-	<ul class="linkz">
-	  <li><strong>Latest Release: </strong> <span class="quiet">Pending...</span></li>
-	  <li><strong>Artifacts:</strong> <span class="quiet">Tarball | Zip</span></li>	  
-	</ul>
-	<ul class="linkz">
-	  <li><strong>Code: </strong> <a href="http://github.com/frameworkers/furnace">http://github.com/frameworkers/furnace</a></li>
-	  <li><strong>License:</strong> <a href="http://furnace.frameworkers.org/license">MIT</a></li>	  
-	</ul>
-</div>
-<div class="span-8">
-	<p>Furnace is a rapid application development framework for
-	   PHP 5.3+ web applications. It provides a fast, flexible framework
-	   for developing applications without restriction.</p>
-	   
-	<p>Furnace is open source software, publicly released under the
-	   <a href="[%a]/license">M.I.T. license</a>.
-	   Development on Furnace is collaborative, and we warmly welcome
-	   contributions of any kind. Please look at the 
-	   <a href="[%a]/docs/community-guidelines">community guidelines</a>
-	   and our
-	   <a href="[%a]/docs/how-to-participate">how-to</a> for developers
-	   interested in moving Furnace forwards.
+<div class="span-16" class="linkz">
+<h1>Welcome!</h1>
+Welcome to Furnace. This application provides information and tutorials to help you get
+started quickly building your own applications with Furnace. More help and information
+is available online at <a href="http://furnace.frameworkers.org">http://furnace.frameworkers.org</a>.
+
+	
 </div>
 <div class="span-8 last">
 	<ul class="linkz">
+	  <li><strong>Web:</strong> <a href="http://furnace.frameworkers.org">http://furnace.frameworkers.org</a></li>
 	  <li><strong>Code: </strong> <a href="http://github.com/frameworkers/furnace">http://github.com/frameworkers/furnace</a></li>
 	  <li><strong>License: </strong> <a href="http://furnace.frameworkers.org/license">MIT</a></li> 
 	</ul>
+</div>
+<hr class="space"/>
+<hr/>
+<div class="span-24 last">
+	<h2>A Hello World App:</h2>
+	<p>Every framework requires a little familiarization. Say hello to Furnace:</p>
+	<fieldset>
+		<legend>Create a View Handler</legend>
+		<p>Views in Furnace consist of (1) a little bit of controller logic to specify
+		   the settings and data that will be used by the view; and (2) a template file
+		   to define the structure. We use <a href="http://crawwler.org/tadpole">Tadpole</a>
+		   for html templates by default for its simplicity. Give it a try for this exercise
+		   and if you'd rather change later, it isn't hard to use any other template
+		   language you'd like (<a href="#">more on template engines</a>).</p>
+		<p>Lets add a view to this application. Each view has a handler, which is a function inside
+		   a controller. For simple applications, the only controller you'll ever need, <code>DefaultController</code>,
+		   already exists (./controllers/DefaultController.class.php).
+		   To add a handler for our new view, simply create a function inside <code>DefaultController</code>
+		   whose name is the name you want to use in the URL bar to access the view. In our case, we 
+		   want a <code>/hello-world</code> view, so we'll add the following: <code>function hello_world(){}</code>
+		   to the <code>DefaultController</code> class. Thats it!</p>
+</fieldset>
+<fieldset>
+  <legend>Create a View</legend>
+	    <p>Now on to the view itself. By default, views in Furnace are plain HTML files, but like just about
+	       everything else, this behavior can be configured. Furnace
+	       strives for a clean separation between PHP,HTML,Javascript, and CSS to make life easier when
+	       it comes to maintaining and evolving your application. Create a new .html file inside your
+	       application views directory ('./views/hello_world.html'). Be sure to name it exactly the way your
+	       handler function is named so that Furnace can find it. In the file, put something simple like
+	       <code>&lt;h1&gt;hello world!&lt;/h1&gt;</code> and save. The <em>only</em> content in the file
+	       should be the content which makes up the view (e.g., no &lt;html&gt;,&lt;head&gt;, or &lt;body&gt; tags as
+	       those are taken care of globally in the layout file for the current theme (./assets/themes/default/layouts/default.html)).
+	       Done with the view!</p>
+	    <p>Now visit your new page in the browser. If you've followed the directions exactly, you should 
+	       be able to click on <a href="[%a]/hello-world">this link</a>.
+</fieldset>
+<fieldset>
+  <legend>The Bonus Round</legend>
+       <p>Now that you've got the relationship between view files and view handlers (controllers) mastered, its
+          time to try passing some data between them to make your views more dynamic. Any dynamic data that a 
+          view will display must be explicitly passed to it by logic in the handler. On the handler side, this 
+          is accomplished by using the <code>$this-&gt;set('key','value')</code> function. For example, find your
+          <code>hello_world</code> function and add this to the body: <code>$this-&gt;set('now',mktime());</code>.
+          This will pass the current time to the view to be displayed.</p>
+       <p>The view (your ./views/hello_world.html) file needs to reserve a space for this dynamic data to be displayed.
+          The Tadpole template engine uses a very simple syntax for this (and most everything else): <code>[key]</code>.
+          If 'key' matches a key for any data you've "set" in the handler, the <code>[key]</code> tag will be replaced
+          with the corresponding value. Add the following to your view: <code>&lt;span&gt;Today is [now]&lt;/span&gt;</code>
+          and refresh the page.</p>
+       <p>A little disappointing, perhaps? It should show the raw unix timestamp returned by <code>mktime()</code>. You have two options.
+          Either you put a little controller logic in the handler to convert this timestamp to something more human readable,
+          or, you can take advantage of Tadpole's formatting capabilities and replace your <code>[now]</code> tag with:
+          <code>[now;type=date;unix;format='r']</code> (the format string can be anything supported by 
+          <a href="http://php.net/manual/en/function.date.php">the php date() function</a>). That's better!
+</fieldset>
+<fieldset>
+  <legend>For Double Points: Parsing a URL for variables</legend>
+       <p>You just learned how to send dynamic data to a view, and you're well on your way to creating dynamic web
+          applications. You'll want to know how to use arguments to control what happens in each of your handler
+          functions. Furnace uses clean, search-engine-friendly URLs for each view. Each URL is <em>routed</em> by Furnace to a 
+          particular handler function according to rules which you can configure (./config/routes.config.php). In many cases, you'll
+          end up structuring your URLs so that they encode data (variables) in addition to the desired handler/view combo. For example,
+          the url <code>/product/browse/35</code> would (by default) be routed to <code>ProductController::browse(35)</code>.</p>
+       <p>If your
+          handler function is set up to accept arguments, it can take advantage of the parameter marshalling that
+          Furnace does in the background. Modify your handler function declaration from <code>function hello_world()</code> to 
+          <code>function hello_world($who)</code> (or <code>hello_world($who='World')</code> if you would like to make the argument
+          optional by specifying a default value for the times when it is not provided). Then, add the following line somewhere in the
+          function body to pass the value on to the view: <code>$this-&gt;set('who',$who);</code>. Finally, update your view file to include the data. 
+          Change <code>&lt;h1&gt;Hello World!&lt;/h1&gt;</code> to <code>&lt;h1&gt;Hello [who]!$lt;/h1&gt;</code> and then try the following 
+          urls <a href="[%a]/hello_world/Mercury">1</a>, <a href="[%a]/hello_world/Venus">2</a>, <a href="[%a]/hello_world/Earth">3</a>.
+       </p>
+       <p>Following the pattern, if there were a second URL segment, it would be marshalled into the second argument of the handler function,
+          and so on.</p>
+</fieldset>
+<fieldset>
+  <legend>Other Stuff</legend>
+  <h5>Linking between pages</h5>
+  Furnace tries to make as few assumptions about your environment as possible. Furthermore, it provides options for making your application very portable.
+  Links are one of these situations that can cause a major headache when an application moves (say from the site_root to a subdirectory). To combat this, 
+  Furnace introduces a very simple notation: <code>&#91;%a&#93;</code> which should be placed as the first part of each 'href=' attribute of each application link.
+  When the page is rendered, <code>&#91;%a&#93;</code> will always, automatically resolve to the url_base for your application (this is the value you set for 
+  <code>RewriteBase</code> in your .htaccess file. Example: This page links to your "hello world" page by generating the link: 
+  <code>&lt;a href="&#91;%a&#93;/hello-world"&gt;hello!&lt;/a&gt;</code> (which resolves to: <code>&lt;a href="[%a]/hello-world"&gt;hello!&lt;/a&gt;</code> on your environment). No matter where the site moves in the future, <code>&#91;%a&#93;</code> will always
+  resolve correctly, keeping your links intact.
+</fieldset>
 </div>
