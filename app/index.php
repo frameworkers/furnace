@@ -48,7 +48,7 @@ include(FURNACE_APP_PATH . "/config/types.config.php");
 $urlbase = str_replace($_SERVER['DOCUMENT_ROOT'],'',$_SERVER['SCRIPT_FILENAME']);
 $urlbase = str_replace('/index.php','',$urlbase);
 
-org\frameworkers\furnace\config\Config::Set('applicationUrlBase',$urlbase);
+org\frameworkers\furnace\config\Config::Set('applicationUrlBase', '/' . $urlbase);
 
 // Handle the request
 app()->processRequest($_SERVER['REQUEST_URI']);
