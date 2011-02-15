@@ -81,7 +81,7 @@ class Router extends StaticObject{
         // Strip the prefix (url_base) from the incoming url
         $prefix = Config::Get('applicationUrlBase');
         if ($prefix != '/') {
-        	$url    = substr($url,strlen($prefix));
+        	$url    = substr($url,strlen($prefix) + 1);
         }
         
         // Break the incoming url into its segmented parts
@@ -163,7 +163,7 @@ class Router extends StaticObject{
                 continue;
               }
               // Capture named wildcards in the 'wildcards' array
-              if ($rp[$j][0] == ':') {
+              if ($rp[$j] && $rp[$j][0] == ':') {
                 $wildcards[substr($rp[$j],1)] = $parts[$j];
                 if ( ':handler'    != $rp[$j] && 
             	     ':controller' != $rp[$j] ) {
