@@ -77,7 +77,7 @@ class Object extends FrameworkBase {
 		
 		// If no filters defined or applied, just call the function body
 		if (empty($this->_methodFilters[$method]) && empty($filters)) {
-			return $callback($this, $params, $null);
+			return $callback($this, $params, null);
 		}
 
 		// Get any filters that have been applied to this method
