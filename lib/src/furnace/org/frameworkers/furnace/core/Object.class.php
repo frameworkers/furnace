@@ -87,4 +87,39 @@ class Object extends FrameworkBase {
 		
 		return Filters::run($this, $params, compact('data', 'class', 'method'));
 	}	
+	
+	/**
+	 * Convert the provided data (or $this if `data` is null) to an array.
+	 * 
+	 * @param mixed data  optional data to convert to an array. If the data is a
+	 *                    PHP object, it will be recursively converted into an
+	 *                    array.
+	 * @return array
+	 */
+	public function toArray($data = null) {
+		if (null == $data) $data = $this;
+        if (is_object($data)) $data = get_object_vars($data);
+        return is_array($data)
+        	? array_map(array(__CLASS__,__FUNCTION__), $data)
+        	: $data;
+    }
+    
+    
+    /**
+     * Returns a JSON representation of the current object
+     *  
+     * @return string
+     */
+	public function toJsonString() {
+        return json_encode($this->toArray(),JSON_FORCE_OBJECT);
+    }
+    
+    /**
+     * Returns a JSON representation of the current object
+     *  
+     * @return string
+     */
+    public function __toString() {
+    	return $this->toJsonString();
+    }
 }

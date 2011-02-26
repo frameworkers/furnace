@@ -92,4 +92,31 @@ class StaticObject extends FrameworkBase {
 		
 		return Filters::run($class, $params, compact('data', 'class', 'method'));
 	}
+	
+	/**
+	 * Convert the provided data (or $this if `data` is null) to an array.
+	 * 
+	 * @param mixed data  optional data to convert to an array. If the data is a
+	 *                    PHP object, it will be recursively converted into an
+	 *                    array.
+	 * @return array
+	 */
+	public function toArray($data) {
+        if (is_object($data)) $data = get_object_vars($data);
+        return is_array($data)
+        	? array_map(array(__CLASS__,__FUNCTION__), $data)
+        	: $data;
+    }
+	
+    /**
+     * Returns a JSON representation of the provided data
+     * 
+     * @param mixed data  optional data to convert to JSON. If the data is a
+	 *                    PHP object, it will be recursively converted into an
+	 *                    array representation and encoded as JSON
+     * @return string     The JSON formatted representation of the input
+     */
+	public function toJsonString($data) {
+        return json_encode(self::toArray($data),JSON_FORCE_OBJECT);
+    }
 }
