@@ -36,8 +36,7 @@ class Attribute {
 		$this->description = isset($metadata['description'])
 			? $metadata['description']
 			: '';
-		$this->metadata  = (array_intersect_key(
-			$metadata,array('max'=>'','description'=>'')));
+		$this->metadata  = $metadata;
 		$this->key       = isset($metadata['key'])
 			? $metadata['key']
 			: null;
