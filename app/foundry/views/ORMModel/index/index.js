@@ -6,7 +6,7 @@ $(document).ready(function() {
 			.attr('disabled','disabled')
 			.val('working...');
 		$('#imgRegenerateWorking').show();
-		$.get('/furnace-www/foundry/models/orm/generateClassFiles',
+		$.get(_context.urls.url_base + '/models/orm/generateClassFiles',
 			function(resp) {
 				$('#imgRegenerateWorking').hide();
 				$('#btnRegenerateClassFiles')
@@ -23,7 +23,7 @@ $(document).ready(function() {
 			.attr('disabled','disabled')
 			.val('working...');
 		$('#imgDbCompareWorking').show();
-		$.get('/furnace-www/foundry/models/orm/compareModelToDatabase',
+		$.get(_context.urls.url_base + '/models/orm/compareModelToDatabase',
 				function(resp) {
 					$('#imgDbCompareWorking').hide();
 					$('#btnDbCompare')
