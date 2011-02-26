@@ -1,9 +1,11 @@
 <?php
 namespace org\frameworkers\furnace\response;
 
+use org\frameworkers\furnace\core\StaticObject;
 use org\frameworkers\furnace\config\Config;
 use org\frameworkers\furnace\request\Context;
 use org\frameworkers\furnace\response\Response;
+
 
 class HtmlResponse extends Response {
 	
@@ -16,6 +18,8 @@ class HtmlResponse extends Response {
 	public $fileExtension;
 	
 	public $includedViews;
+	
+	public $rawJS;
 	
 	
 	public function __construct( $context ) {
@@ -184,7 +188,13 @@ class HtmlResponse extends Response {
 	}
 	
 	public function getIncludedJavascripts() {
-		return implode("\r\n",$this->javascripts);
+		$str = implode("\r\n",$this->javascripts);
+		$str .= "\r\n\t<script type='text/javascript'>\r\n";
+		$str .= "\t\tvar _context = " . StaticObject::toJsonString($this->context) . "\r\n";
+		$str .= "\t\tvar _local   = " . StaticObject::toJsonString($this->local_data);
+		$str .= "\r\n\t</script>\r\n";
+		
+		return $str;
 	}
 	
 	public function getIncludedStylesheets() {
