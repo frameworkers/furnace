@@ -6,12 +6,12 @@ use org\frameworkers\furnace\utilities\HTTP;
 
 class Controller extends Object {	
 	
-	public $context;
+	public $request;
 	
 	public $response;
 	
-	public function __construct( &$context, &$response ) {
-		$this->context  = $context;
+	public function __construct( &$request, &$response ) {
+		$this->request  = $request;
 		$this->response = $response;
 	}
 	
@@ -28,10 +28,8 @@ class Controller extends Object {
 	 */
 	public function assert($condition,$failureMessage = 'Missing expected request parameters',$httpCode = HTTP::HTTP_400) {
 		if ( true !== $condition) {
-			$this->response->flash("Error: {$failureMessage}");
+			$this->response->error("{$httpCode}: {$failureMessage}");
 			header("HTTP/1.1: {$httpCode}");
-			die($httpCode . ": " . $failureMessage);
 		}
-	}
-	
+	}	
 }
