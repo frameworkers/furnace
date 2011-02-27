@@ -24,7 +24,7 @@ use org\frameworkers\furnace\response\ResponseTypes;
  */
 class Furnace extends Object {
 	
-	const VERSION = '0.3.0-rc2';
+	const VERSION = '0.3.0-rc3';
 	
 	public function processRequest( $url ) {
 
