@@ -74,4 +74,16 @@ abstract class Response extends StaticObject {
 		exit();
 	}
 	
+	public function abort($detail = "No additional details provided") {
+		if (Config::Get('debugMode') > 0) {
+			echo "<h1>The response was aborted due to an error:</h1>";
+			echo "<hr/>{$detail}<hr/>";
+			echo "<pre>";
+			echo debug_print_backtrace();
+			echo "</pre>";
+		} else {
+			echo "<h5>An error has occurred.</h5>";	
+		}		
+		exit();		
+	}
 }
