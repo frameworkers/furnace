@@ -4,7 +4,7 @@ use org\frameworkers\furnace\config\Config;
 use org\frameworkers\furnace\core\StaticObject;
 use org\frameworkers\furnace\action\Router;
 
-class Context extends StaticObject {
+class Request extends StaticObject {
 	
 	// Route related context
 	public $controllerClassName;
@@ -14,8 +14,8 @@ class Context extends StaticObject {
 	public $arguments;
 	
 	// Request related context
-	public $post;
-	public $get;
+	public $method;
+	public $data;
 	
 	// Environment related context
 	public $urls  = array();
@@ -26,7 +26,7 @@ class Context extends StaticObject {
 	
 	public static function CreateFromUrl($url) {
 		
-		$context = new Context();
+		$context = new Request();
 		
 		// Determine the route to take for this url
 		$route = Router::Route( $url );
@@ -41,8 +41,13 @@ class Context extends StaticObject {
 			
 		// Store request related context information
 		$context->arguments = $route['parameters'];
-		$context->post      = $_POST;
-		$context->get       = $_GET;
+		if (!empty($_POST)) {
+			$context->method  = RequestMethod::POST;
+			$context->data    = $_POST;
+		} else {
+			$context->method  = RequestMethod::GET;
+			$context->data    = $_GET;
+		}
 		
 		// Store environment related context
 		$context->urls['url_base']    = rtrim(Config::Get('applicationUrlBase'),'/');
@@ -54,7 +59,7 @@ class Context extends StaticObject {
 	
 	public static function CreateFromControllerAndHandler($controllerName,$handlerName,$type='html',$args = array()) {
 		
-		$context = new Context();
+		$context = new Request();
 		
 		// Store route related context information
 		$context->controllerClassName = $controllerName;
@@ -66,8 +71,13 @@ class Context extends StaticObject {
 		
 		// Store request related context information
 		$context->arguments           = $args;
-		$context->post                = $_POST;
-		$context->get                 = $_GET;
+		if (!empty($_POST)) {
+			$context->method  = RequestMethod::POST;
+			$context->data    = $_POST;
+		} else {
+			$context->method  = RequestMethod::GET;
+			$context->data    = $_GET;
+		}
 		
 		// Store environment related context
 		$context->urls['url_base']    = rtrim(Config::Get('applicationUrlBase'),'/');
