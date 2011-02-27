@@ -13,7 +13,7 @@
  */
 namespace org\frameworkers\furnace;
 use org\frameworkers\furnace\core\Object;
-use org\frameworkers\furnace\request\Context;
+use org\frameworkers\furnace\request\Request;
 use org\frameworkers\furnace\response\ResponseTypes;
 
 /**
@@ -39,14 +39,14 @@ class Furnace extends Object {
 			session_start();
 			header("cache-control: private");		
 
-			// Create a context for this request
-			$context = Context::CreateFromUrl( $params[0] );
+			// Create a request object for this request
+			$request = Request::CreateFromUrl( $params[0] );
 			
 			// Create a response from the context
-			$response = ResponseTypes::CreateResponse( $context );
+			$response = ResponseTypes::CreateResponse( $request );
 
 			// Send any appropriate headers
-			header('Content-Type: ' . ResponseTypes::MimeFor($context->type));
+			header('Content-Type: ' . ResponseTypes::MimeFor($request->responseType));
 			
 			// Send the response body
 			echo $response;
