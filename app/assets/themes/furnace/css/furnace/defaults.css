@@ -1,0 +1,87 @@
+@CHARSET "UTF-8";
+
+
+/***********************************************************************
+ ** NOTIFICATIONS
+ ** Notifications communicate important messages to users. These
+ ** messages come in one of four "flavors":
+ **   -- success: An action has completed successfully
+ **   -- warn:    Something unexpected happened, but not bad enough to
+ **               cause an error
+ **   -- error:   An action did not complete successfully or something
+ **               unexpected happened which warrants something more 
+ **               severe than a warning
+ **   -- info:    Something the user should be aware of
+ **
+ **
+ ** By default, Furnace notifications are wrapped in a <div> tag
+ ** and given the class `ff_notify`. Furthermore, each notification
+ ** div also has the class `notify_TYPE` where TYPE is one of the 
+ ** four values discussed above (success,warn,error,info). 
+ **
+ ** By default, the notification background images come from a 
+ ** single "sprite", or combined image. This image can be found
+ ** in ../images/sprites/notifications.png
+ **
+ ***********************************************************************/
+ .ff_notify {
+	border:solid 1px #ccc;
+	padding:8px 15px 8px 65px;
+	background-color:#eee;	
+	margin:6px 0px;
+	background-image:url(../images/sprites/notifications.png);
+	background-repeat:no-repeat;
+	background-position:left top;
+	height:51px;
+	-moz-border-radius: 15px;
+	border-radius: 15px;
+}
+.ff_notify h5 {
+	margin:2px 0px 1px 0px;	
+	font-size:1.35em;
+	font-weight:normal;
+}
+
+/** SUCCESS **/
+.ff_notify.notify_success {
+	background-color:#d4ffcd;
+	border-color:#9adf8f;
+	color:#141;
+	background-position:0px 0px;	
+}
+.ff_notify.notify_success h5 {
+	color:#4a8f3f;	
+}
+
+/** WARN **/
+.ff_notify.notify_warn {
+	background-color:#fefccb;
+	border-color:#f4c200;
+	color:#cca000;
+	background-position:0px -67px;	
+}
+.ff_notify.notify_warn h5 {
+	color:#e8aa00;	
+}
+
+/** ERROR **/
+.ff_notify.notify_error {
+	background-color:#ffd2d3;
+	border-color:#dd5253;
+	color:#880000;
+	background-position:0px -134px;	
+}
+.ff_notify.notify_error h5 {
+	color:#cc0000;	
+}
+
+/** INFO **/
+.ff_notify.notify_info {
+	background-color:#dbecff;
+	border-color:#9dbbbf;
+	color:#4d5b5f;
+	background-position:0px -201px;	
+}
+.ff_notify.notify_info h5 {
+	color:#4683c5;	
+}
