@@ -2,12 +2,16 @@
 use org\frameworkers\furnace\Furnace;
 use org\frameworkers\furnace\config\Config;
 
+// What is the debug status of this application?
+// 1 = Debug/Development mode
+// 0 = Production mode
+Config::Set('debugMode', 1);
 
 Config::Set('applicationName'     ,'Furnace - Rapid PHP Application Development');
 Config::Set('applicationPort'     , 80);
 
 // What is the theme to use by default?
-Config::Set('theme'               ,'furnace');
+Config::Set('theme'               ,'default');
 
 // What is the layout file to use by default?
 // This should be a filename (including the 
