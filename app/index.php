@@ -1,6 +1,5 @@
 <?php
 
-define("FURNACE_VERSION","0.3.0-rc2");
 define("REQUEST_START",microtime(true));     // Request statistics
 
 /*
