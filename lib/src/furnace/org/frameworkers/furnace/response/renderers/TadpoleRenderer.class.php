@@ -1,7 +1,9 @@
 <?php
 namespace org\frameworkers\furnace\response\renderers;
 
+use org\frameworkers\furnace\auth\Auth;
 use org\frameworkers\furnace\config\Config;
+
 
 use org\frameworkers\furnace\response\RenderEngine;
 use vendors\org\crawwler\tadpole\TadpoleEngine;
@@ -23,6 +25,7 @@ class TadpoleRenderer extends RenderEngine {
 		
 		$this->tp->page_data = $locals;
 		
+		$this->tp->set('_user',     Auth::Get());
 		$this->tp->set('_config',   Config::Get('*'));
 		$this->tp->set('_context',  $context);
 		$this->tp->set('_response', $this->response);
