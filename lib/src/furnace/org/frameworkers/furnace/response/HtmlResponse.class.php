@@ -3,7 +3,7 @@ namespace org\frameworkers\furnace\response;
 
 use org\frameworkers\furnace\core\StaticObject;
 use org\frameworkers\furnace\config\Config;
-use org\frameworkers\furnace\request\Context;
+use org\frameworkers\furnace\request\Request;
 use org\frameworkers\furnace\response\Response;
 
 
@@ -18,6 +18,8 @@ class HtmlResponse extends Response {
 	public $fileExtension;
 	
 	public $includedViews;
+	
+	public $notifications;
 	
 	public $rawJS;
 	
@@ -43,6 +45,10 @@ class HtmlResponse extends Response {
 		$this->setView($context->handlerName . $this->fileExtension);
 			
 		$this->includedViews = array();
+		
+		$this->notifications = isset($_SESSION['_notifications'])
+			? $_SESSION['_notifications']
+			: array();
 	}
 	
 	public function render( ) {
@@ -54,6 +60,11 @@ class HtmlResponse extends Response {
 		$renderer        = new $renderEngine( $this );
 		
 		// Get the layout file as the outermost document
+		if (!file_exists($this->layoutFilePath)) {
+			$this->abort(
+				"Unable to find layout file at: "
+				.$this->layoutFilePath);
+		}
 		$document = file_get_contents($this->layoutFilePath);
 		if(empty($document)) { $document = '[_content_]'; }
 		
@@ -66,11 +77,16 @@ class HtmlResponse extends Response {
 		// Process each defined zone
 		foreach ($this->local_data as $zoneName => $zoneLocals) {
 			// Get zone content
+			if (!file_exists($this->viewFilePaths[$zoneName])) {
+				$this->abort(
+					"Unable to find view file for zone `{$zoneName}` at: "
+					.$this->viewFilePaths[$zoneName]);
+			}
 			$content  = file_get_contents($this->viewFilePaths[$zoneName]);
 			
 			// Incorporate any `flash` messages into the local content
-			$zoneLocals['_flashes'] = (isset($_SESSION['_flashes'][$zoneName]))
-				? implode("\r\n",$_SESSION['_flashes'][$zoneName])
+			$zoneLocals['_notifications'] = (isset($_SESSION['_notifications'][$zoneName]))
+				? implode("\r\n",$_SESSION['_notifications'][$zoneName])
 				: "";
 				
 			// Compile the zone
@@ -84,7 +100,7 @@ class HtmlResponse extends Response {
 		$document = $renderer->compile( $document, $this->context, array());
 		
 		// Reset the stored `flash` messages container
-		$_SESSION['_flashes'] = array();
+		$_SESSION['_notifications'] = array();
 		
 		// Return the final, compiled response
 		return $document;		
@@ -177,7 +193,7 @@ class HtmlResponse extends Response {
 		
 		// The array contains a controller and a view. Create a context 
 		// object from this information
-		$context = Context::CreateFromControllerAndHandler(
+		$context = Request::CreateFromControllerAndHandler(
 			$controllerClassName, $handlerName, $type, $args);
 
 		// Execute the request and store the response
@@ -201,12 +217,40 @@ class HtmlResponse extends Response {
 		return implode("\r\n",$this->stylesheets);
 	}
 	
+	public function getNotifications() {
+		$str = '';
+		foreach ($this->notifications as $zoneMessages) {
+			$str = implode("\r\n",$zoneMessages);
+		}
+		return $str;
+	}
+	
 	public function set($key,$val,$zone = 'content') {
 		$this->local_data[$zone][$key] = $val;
 	}
 	
-	public function flash($message,$cssClass = "flash_info",$zone = 'content') {
-		$_SESSION['_flashes'][$zone][] = 
-			"<div class='ff_flash {$cssClass}'>{$message}</div>";
-	}	
+	protected function flash($message,$title,$cssClass = "notify_info",$zone = 'content') {
+		$title   = ($title == '') ? '' : "<h5>{$title}</h5>";
+		$message = "<p>{$message}</p>";
+		 
+		$_SESSION['_notifications'][$zone][] = 
+			"<div class='ff_notify {$cssClass}'>{$title}{$message}</div>";
+	}
+
+	public function success($message,$title = 'Success!',$zone = 'content') {
+		$this->flash($message,$title,"notify_success",$zone);
+	}
+	
+	public function warn($message,$title = 'Warning:',$zone = 'content') {
+		$this->flash($message,$title,"notify_warn",$zone);
+	}
+	
+	public function error($message,$title = 'An Error Occurred:',$zone = 'content') {
+		$this->flash($message,$title,"notify_error",$zone);
+	}
+	
+	public function info($message,$title = 'Information:',$zone = 'content') {
+		$this->flash($message,$title,"notify_info",$zone);
+	}
+	
 }
