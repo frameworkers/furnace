@@ -24,11 +24,7 @@ use org\frameworkers\furnace\response\ResponseTypes;
  */
 class Furnace extends Object {
 	
-	public $config;
-	
-	public function __construct() {
-		
-	}
+	const VERSION = '0.3.0-rc2';
 	
 	public function processRequest( $url ) {
 
@@ -37,7 +33,7 @@ class Furnace extends Object {
 			
 			// Initialize a PHP session
 			session_start();
-			header("cache-control: private");		
+			header("cache-control: private");
 
 			// Create a request object for this request
 			$request = Request::CreateFromUrl( $params[0] );
@@ -52,6 +48,5 @@ class Furnace extends Object {
 			echo $response;
 			
 		});
-		
 	}
 }
