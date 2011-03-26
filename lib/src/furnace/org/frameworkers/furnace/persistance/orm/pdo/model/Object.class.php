@@ -85,14 +85,9 @@ class Object {
 		// object's table
 		
 		// Add the relation to the list for this object
-		$this->relations[$rel->name] = $rel;
-		if ($rel->isPrimary) {
+		$this->relations[$rel->localName] = $rel;
+		if ($rel->locallyPrimary) {
 			$this->primaryKeyRelations[] = $rel;
-		}
-		
-		// Add the relation columns to the table for this object
-		if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {
-			$this->table->addColumnObject($rel->localKeyColumn);
 		}
 	}
 }
