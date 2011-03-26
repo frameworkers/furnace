@@ -25,9 +25,8 @@ use vendors\com\thresholdstate\spyc\Spyc;
 
 class Model {
 
-	public $metadata;
-
-	public $objects;
+	public $metadata = array();
+	public $objects  = array();
 	
 	protected function __construct() {
 		$this->objects  = array();
@@ -66,237 +65,313 @@ class Model {
 		return $description;
 	}
 	
-	public function load($contents) {
 		
-		// Each "top level" element is an object definition
+	public function load($rawContents) {
+		
+		// Pass 1: Cleaning Phase
+		$contents = $this->cleanAndDetectObjects($rawContents);
+		
+		// Pass 2: Metadata Detection
+		$this->detectMetadata($contents);
+		
+		// Pass 3: Attribute Detection
+		$this->detectAttributes($contents);
+		
+		// Pass 4: Relationship Detection
+		$this->detectRelations($contents);
+		
+		// Pass 5: Relationship Mapping
+		$this->mapRelations($contents);
+		
+		// Sanity Check
+		$this->sanityCheck();
+	}
+	
+	public function cleanAndDetectObjects($contents) {
+		$cleaned = array();
 		foreach ($contents as $label => $objectdata) {
-			
-			$obj = new Object($label);
-			
-			// Each "second level" element is either an attribute,
-			// or metadata definition. Relations can not yet be
-			// parsed because not all object definitions have been 
-			// parsed yet.
-			foreach ($objectdata as $label => $content) {
-				
-				// Add object attributes
-				if ($label[0] != '_') {
-					// Parse the content string
-					$parsedContents = $this->parseContentString($label,$content);
-					// Create a new Attribute object
-					$attr = new Attribute(Lang::ToAttributeName($label),
-						$parsedContents['type'],$parsedContents);
-					// Add the new Attribute to the object
-					$obj->addAttribute($attr);
+			// Each "top level" element is an object definition
+			$properObjectLabel = Lang::ToClassName($label);
+			$cleaned[$properObjectLabel] = array();
+			foreach ($objectdata as $alabel => $content) {
+				$properAttrLabel = Lang::ToAttributeName($alabel);
+				// Collapse second level arrays
+				if (is_array($content) ) { 
+					$content = "[{$content[0]}]";
 				}
+				$cleaned[$properObjectLabel][$properAttrLabel] = $content;
+			}
+			
+			// Add the detected object to the model array
+			$this->objects[$properObjectLabel] = 
+				new Object(Lang::ToClassName($label,true));
+		}
+		return $cleaned;
+	}	
+	
+	public function detectMetadata($contents) {
+		foreach ($contents as $olabel => $objectdata) {
+			// Each "second level" element is either an attribute,
+			// relation, or metadata definition.
+			foreach ($objectdata as $alabel => $content) {
 				
-				// Add object metadata
-				switch (strtoupper($label)) {
-					case '_TABLE':
-						$parsedContents   = $this->parseContentString($label,$content);
-						$obj->setMetadata('table',$parsedContents);
-						$obj->table->name = Lang::ToTableName($obj->getMetadata('table'));
-						break;
-					case '_DESCRIPTION':
-						$obj->description = $this->parseContentString($label,$content);
-						break;
-					default:
-						break;
+				// Explode the string into tokens based on `;`
+				$parts = explode(';',$content);
+
+				if ('_' == $alabel[0]) {
+					switch (strtoupper($alabel)) {
+						case '_TABLE':
+							$this->objects[$olabel]->table->name = Lang::ToTableName($parts[0]);
+							break;
+						case '_DESC':
+						case '_DESCRIPTION':
+							$this->objects[$olabel]->description = Lang::ToValue($parts[0]);
+							break;
+					}
 				}
 			}
-			// Add the object to the model's array of objects
-			$this->objects[$obj->className] = $obj;
+		}	
+	}
+	
+	public function detectAttributes($contents) {
+		foreach ($contents as $olabel => $objectdata) {
+			// Each "second level" element is either an attribute,
+			// relation, or metadata definition.
+			foreach ($objectdata as $alabel => $content) {
+				$interpreted = array();
+				if ($content[0] != '[') {
+					// Explode the string into tokens based on `;`
+					$parts = explode(';',$content);
+					
+					if (($start = strpos($parts[0],'(')) !== false &&
+						($end   = strpos($parts[0],')')) !== false) {
+						$len    = strlen($parts[0]);
+						$interpreted["type"] = strtoupper(substr($parts[0],0,$start));
+						$interpreted["max"]  = substr($parts[0],$start+1,($len-1)-($start+1));
+					} else {
+						$interpreted["type"] = strtoupper($parts[0]);
+					}
+					unset($parts[0]);
+					foreach ($parts as $part) {
+						if ($part == '') continue;
+						if (strpos($part,'=') !== false) {
+							list ($key,$value)  = explode('=',$part);
+							$interpreted[Lang::ToCamelCase($key)]  = Lang::ToValue($value);
+						} else {
+							$interpreted[Lang::ToCamelCase($part)] = true;
+						}
+						
+					}
+					// Create an Attribute object from the tokenized information
+					$this->objects[$olabel]->addAttribute(
+						new Attribute($alabel,$interpreted['type'],$interpreted));
+				}
+			}
 		}
+	}
+	
+	public function detectRelations($contents) {
 		
-		// Object sanity check. Implement assumptions regarding primary key
-		// attributes. Specifically: if no attribute yet parsed has been declared
-		// a primary key, add a new primary key attribute named <objname>Id of
-		// type integer and set it to be primary and autoincrementing.
+		// Parse the objectdata again, this time building a 
+		// complete list of the relations linking different
+		// objects to one another
+		foreach ($contents as $olabel => $objectdata) {
+			foreach ($objectdata as $alabel => $contentString) {
+				
+				if ($contentString[0] == '[') {
+					
+					$obj = $this->objects[$olabel];
+					
+					//          [ClassName(ORDINAL)(FOREIGNKEY)]
+					$regex = "/\[([A-Za-z]+)\(([1|\*])\)\(([A-Za-z]+)\)\]/";
+					preg_match($regex,$contentString,$matches);
+					list ($matchedContent,$foreignClass,$ordinal,$foreignKey) = $matches;
+					if (!$matches) { die("Malformed relation detected: {$alabel}:{$contentString}");}
+					
+					// Get any metadata associated with the content string
+					$metadata = explode(';',$contentString);
+					
+					$relation = new Relation(Lang::ToAttributeName($alabel));
+					$relation->localType       = ('*' == $ordinal) 
+						? Relation::ORM_RELATION_MANY 
+						: Relation::ORM_RELATION_ONE;
+					$relation->locallyRequired = ('*' == $ordinal) ? false : true;
+					$relation->locallyPrimary  = in_array('primary',$metadata);
+					
+					$relation->localObjectClassName  = $obj->className;
+					$relation->remoteObjectClassName = Lang::ToClassName($foreignClass);
+						
+					$relation->localObjectTable     = $obj->table->name;
+					$relation->remoteObjectLabel    = $foreignKey;
+					$relation->remoteObjectTable    = $this->objects[$relation->remoteObjectClassName]
+														->table->name;
+					
+					$this->objects[$olabel]->addRelation($relation);	
+				}
+			}
+		}
+	}
+	
+	public function mapRelations($contents) {
+		// Connect VIA's and REVERSE_OF's to their counterparts
+		foreach ($contents as $olabel => $objectdata) {
+			foreach ($objectdata as $alabel => $contentString) {
+				if ($contentString[0] == '[') {
+					
+					// Get the referenced relation from the data structure
+					$relation =& $this->objects[$olabel]->relations[$alabel];	
+
+					// Set remote object column information
+					// Consistency Check: Ensure remote object label maps to either 
+					// an attribute or a (1) relation
+					if (!isset($this->objects[$relation->remoteObjectClassName]->attributes[$relation->remoteObjectLabel])) {
+						if (!isset($this->objects[$relation->remoteObjectClassName]->relations[$relation->remoteObject])) {
+							die("Malformed relation detected: {$alabel}:{$contentString} " 
+								. " - cause: remote object label `{$relation->remoteObjectLabel}` "
+								. " does not map to an attribute or relation in `{$relation->remoteObjectClassName}` ");
+						} else {
+							if ($this->objects[$relation->remoteObjectClassName]->relations[$relation->remoteObjectLabel]->localType != Relation::ORM_RELATION_ONE) {
+								die("Malformed relation detected: {$alabel}:{$contentString} "
+									. " - cause: remote object label `{$relation->remoteObjectLabel}` "
+									. " maps to a (*) relation in `{$relation->remoteObjectClassName}` ");
+							} else {
+								// remote object column information is the column info for the remote (1) relation
+								// TODO
+								die("Using a (1) Relation as the remote object label for another relation is not supported yet");
+							}
+						}
+					} else {
+						// remote object column information is the column info for the remote attribute
+						$relation->remoteObjectColumn = 
+							$this->objects[$relation->remoteObjectClassName]
+								->attributes[$relation->remoteObjectLabel]
+									->column;
+					}
+
+					/***
+					 * PARSE OPTIONAL LOOKUP TABLE TOKENS
+					 ***/
+					//             VIA ClassName(LOCALKEY|FOREIGNKEY)
+					$regexVia = "/ VIA ([A-Za-z]+)\s*\(([A-Za-z]+)\|([A-Za-z]+)\)/";
+					preg_match($regexVia,$contentString,$matchesVia);
+					if ($matchesVia) {
+						$relation->remoteType = Relation::ORM_RELATION_MANY;
+						$relation->remotelyRequired = false;
+						$relation->remotelyPrimary  = false;
+						list ($matchedContent,$lookupClass,$localKey,$remoteKey) = $matchesVia;
+						$relation->lookupObjectClassName  = Lang::ToClassName($lookupClass); 
+						
+						// Consistency check: Ensure the referenced local lookup relation exists in the lookup object
+						if (false != ($rel =& $this->objects[$lookupClass]->relations[$localKey])) { 
+							$rel->remoteName = $alabel;
+							$rel->remoteType = Relation::ORM_RELATION_MANY;
+							$relation->lookupObjectLocalRel   = $rel;
+						} else {
+							die("Malformed relation detected: {$alabel}:{$contentString} "
+								. " - cause: VIA references a non-existant relation");
+						}
+						
+						// Consistency check: Ensure the referenced remote lookup relation exists in the lookup object
+						if (false != ($rel =& $this->objects[$lookupClass]->relations[$remoteKey])) {
+							if (false != ($recipRel = $this->getViaReciprocal($relation))) {
+								$rel->remoteName = $recipRel->localName;
+							} else {
+								die("Malformed relation detected: {$alabel}:{$contentString} "
+									. " - cause: No matching VIA found elsewhere in model.");
+							}
+							$rel->remoteType = Relation::ORM_RELATION_MANY;
+							$relation->lookupObjectRemoteRel = $rel;
+						} else {
+							die("Malformed relation detected: {$alabel}:{$contentString} "
+								. " - cause: VIA references a non-existant relation");
+						}
+						
+						$relation->lookupObjectTable      = $this->objects[$relation->lookupObjectClassName]
+															->table->name;
+					} 
+					
+					//                 REVERSE_OF ClassName.foreignKey
+					$regexReverse = "/ REVERSE_OF ([A-Za-z]+)\.([A-Za-z]+)/";
+					preg_match($regexReverse,$contentString,$matchesReverse);
+					if ($matchesReverse) {
+						list($matchedContent,$foreignClass,$foreignKey) = $matchesReverse;
+						
+						// Consistency Check: Ensure the REVERSE_OF class matches the remote object class
+						if (($relation->remoteObjectClassName != $foreignClass )) {
+							die("Malformed relation detected:  {$alabel}:{$contentString} "
+								. " - cause: class for REVERSE_OF does not match remote class for relation");
+						}
+						
+						// Consistency Check: Ensure the referenced REVERSE_OF relation exists
+						if (($reciprocalRelation = $this->getRelation($foreignClass,$foreignKey)) != false) {
+							
+							// Consistency Check: if the REVERSE_OF relation is also locally (*),
+							// Then we need to use a VIA instead, since this is a M-M relationship
+							if ($reciprocalRelation->localType == Relation::ORM_RELATION_MANY) {
+								die("Malformed relation detected: {$alabel}:{$contentString} "
+									. " - cause: REVERSE_OF references a (*) relation, implies many-to-many which requires a VIA");
+							}
+							
+							$relation->remoteName = $reciprocalRelation->localName;
+							$relation->remoteType = $reciprocalRelation->localType;
+							$relation->remotelyRequired = $reciprocalRelation->locallyRequired;
+							$relation->remotelyPrimary  = $reciprocalRelation->locallyPrimary;
+							// And now in reverse, to complete the mapping:
+							$reciprocalRelation->remoteName = $relation->localName;
+							$reciprocalRelation->remoteType = $relation->localType;
+							$reciprocalRelation->remotelyRequired = $relation->locallyRequired;
+							$reciprocalRelation->remotelyPrimary  = $relation->locallyPrimary;
+							
+							
+						} else {
+							die("Malformed relation detected: {$alabel}:{$contentString} " 
+								." - cause: REVERSE_OF references non-existant relation");
+						}
+					} 
+					
+					// Consistency Check: Ensure all (*) relations expressly specify either
+					// a VIA or a REVERSE_OF clause
+					if ($relation->localType == Relation::ORM_RELATION_MANY && 
+						(!$matchesVia && !$matchesReverse)) {
+						die("Malformed relation detected: {$alabel}:{$contentString} "
+							." - cause: (*) without VIA or REVERSE_OF");		
+					}
+				}
+			}
+		}
+	}
+		
+	public function sanityCheck() {	
+		// Object sanity check. 
 		foreach ($this->objects as $obj) {
 			
-			// Ensure primary key attribute has been defined, and define
-			// one if not.
-			if (empty($obj->primaryKeyAttributes)) {
+			// Implement assumptions regarding primary key
+			// attributes. Specifically: if no attribute yet parsed has been declared
+			// a primary key, add a new primary key attribute named <objname>Id of
+			// type integer and set it to be primary and autoincrementing.
+			if (empty($obj->primaryKeyAttributes) && empty($obj->primaryKeyRelations)) {
 				$name = $obj->className . "Id";
 				$type = "INTEGER";
 				$data = array("primary"=>true,"autoincrement"=>true);
 				$attr = new Attribute($name,$type,$data);
 				$obj->addAttribute($attr);
 			}
-		} 
 			
-		
-		// Parse the objectdata again, this time building a 
-		// complete list of the relations linking different
-		// objects to one another
-		foreach ($contents as $label => $objectdata) {
-			// Get a reference to the stored object
-			$obj =& $this->objects[Lang::ToClassName($label,(strpos($label,'_') !== false))];
+			// Ensure that all (*) relations have either a `VIA` or a `REVERSE_OF` clause
+			// Ensure that no  (*) relation is marked as locally primary
 			
-			foreach ($objectdata as $label => $content) {
-				if (!is_array($content)) { $content = array($content); }
-				switch (strtoupper($label)) {
-					case '_HASONE':
-						foreach ($content as $c) {
-							
-						}
-						break;
-					case '_HASMANY':
-						foreach ($content as $c) {
-							$parsedContents = $this->parseContentString($label, $c);
-							$rel = new Relation($parsedContents['name'],$obj,$parsedContents);
-							$obj->addRelation($rel);
-						}
-						break;
-					case '_BELONGSTO':
-						foreach ($content as $c) {
-							$parsedContents = $this->parseContentString($label, $c);
-							$rel = new Relation($parsedContents['name'],$obj,$parsedContents);
-							$obj->addRelation($rel);
-							// Also store the reciprocal relation
-							$recip = $rel->getReciprocalRelation();
-							if ($recip) {
-								// Add the reciprocal relation to the remote object
-								$this->objects[$rel->remoteObjectClassName]->addRelation($recip);
-							}
-						}
-						break;	
-				}
-			}
-		}
-		
-		// Relation sanity check
-		foreach ($this->objects as &$object) {
-			foreach ($object->relations as &$rel) {
-				// Ensure all 1-M relations have a reciprocal (M-M relations handled elsewhere)
-				if ($rel->type == Relation::ORM_RELATION_HASMANY && empty($rel->lookupObject)) {
-					$foreign =& $this->objects[$rel->remoteObjectClassName];
-					$matches = array();
-					foreach ($foreign->relations as &$frel) {
-						if ($frel->type == Relation::ORM_RELATION_BELONGSTO &&
-							empty($frel->lookupObject) && 
-							$frel->remoteObjectClassName == $rel->localObjectClassName) {
-							$matches[] = $frel;	
-						}
-					}
-					if (empty($matches)) {
-						die("PARSE ERROR: no reciprocal `belongs to` relation defined in {$rel->remoteObjectClassName} for '{$object->className} - has many - {$rel->remoteObjectClassName} ({$rel->name})' ");
-					}
-					if (count($matches) == 1) {
-						$rel->reciprocalRelation = $matches[0];
-					}
-					if (count($matches) > 1) {
-						die('parser checks for ;reciprocal not implemented yet ');
-					}
+			// Ensure that all Many-To-Many relations are correctly mapped in both directions
+			// M-M relations can be identified by having a non-null `lookupObjectClassName`
+			foreach ($obj->relations as $rname => $rdata) {
+				if ($rdata->lookupObjectClassName) {
+					// Ensure the remote object's relation points back to this relation
+					
 				}
 			}
 		}
 	}
 	
-	public function parseContentString($label,$content) {
-		
-		$interpreted = array();
-		
-		$parts = explode(';',$content);
-		
-		// Interpret attribute definition content strings
-		if ($label[0] != '_') {
-			$interpreted = $this->interpretAttribute($parts);
-		
-		// Interpret relation and metadata definition content strings
-		} else {
-			switch (strtoupper($label)) {
-				case "_TABLE":
-					$interpreted = Lang::ToTableName($parts[0]);
-					break;
-				case "_DESCRIPTION":
-					$interpreted = Lang::ToValue($parts[0]);
-					break;
-				case "_BELONGSTO":
-					$interpreted = $this->interpretRelation(Relation::ORM_RELATION_BELONGSTO,$parts);
-					$interpreted['type'] = Relation::ORM_RELATION_BELONGSTO;
-					break;
-				case '_HASMANY':
-					$interpreted = $this->interpretRelation(Relation::ORM_RELATION_HASMANY,$parts);
-					$interpreted['type'] = Relation::ORM_RELATION_HASMANY;	
-					break;
-			}
-		}
-		// Return the result
-		return $interpreted;	
-	}
-	
-	protected function interpretAttribute($parts) {
-		$interpreted = array();
-		if (($start = strpos($parts[0],'(')) !== false &&
-			($end   = strpos($parts[0],')')) !== false) {
-			$len    = strlen($parts[0]);
-			$interpreted["type"] = strtoupper(substr($parts[0],0,$start));
-			$interpreted["max"]  = substr($parts[0],$start+1,($len-1)-($start+1));
-		} else {
-			$interpreted["type"] = strtoupper($parts[0]);
-		}
-		unset($parts[0]);
-		foreach ($parts as $part) {
-			if ($part == '') continue;
-			if (strpos($part,'=') !== false) {
-				list ($key,$value)  = explode('=',$part);
-				$interpreted[Lang::ToCamelCase($key)]  = Lang::ToValue($value);
-			} else {
-				$interpreted[Lang::ToCamelCase($part)] = true;
-			}
-			
-		}
-		return $interpreted;
-	}
-	
-	protected function interpretRelation($type,$parts) {
-		$interpreted = array();
-		// If the first part has a [], then the modeler has
-		// specified an attribute name for the relation, which
-		// should be extracted
-		if (($start = strpos($parts[0],'[')) !== false &&
-			($end   = strpos($parts[0],']')) !== false) {
-				$len    = strlen($parts[0]);
-				$inner  = substr($parts[0],$start+1,($len-1)-($start+1)); // trim []
-				list($local,$remote) = explode('|',$inner);
-				$interpreted['name'] = Lang::ToAttributeName($local);
-				if ($remote) { $interpreted['reciprocalName'] = Lang::ToAttributeName($remote); }
-				$interpreted['remoteObjectClassName'] = Lang::ToClassName(substr($parts[0],0,$start));
-		} 
-		// If no [] are found, then the modeler has assumed that
-		// the attribute name will be the remote object class name
-		// (or an explicit name=... part will be found later and 
-		// will override.
-		else {
-			$remoteObjectClassName = Lang::ToClassName($parts[0]);
-			$remoteObjectClass     = $this->objects[$remoteObjectClassName];
-			$remoteObjectClassPluralName = $remoteObjectClass->classPluralName;
-			$interpreted['name'] = 
-				($type == Relation::ORM_RELATION_HASMANY)
-					? Lang::ToAttributeName($remoteObjectClassPluralName)
-					: Lang::ToAttributeName($remoteObjectClassName);
-			$interpreted['remoteObjectClassName'] = $remoteObjectClassName;
-		}
-		
-		// Process all additional existing parts (starting with 1, not 0)
-		$partlen = count($parts);
-		for ($i = 1; $i < $partlen; $i++) {
-			// If an equality operator exists, store the rhs
-			if (strpos($parts[$i],'=') !== false) {
-				list ($key,$value)  = explode('=',$parts[$i]);
-				$interpreted[Lang::ToCamelCase($key)] = Lang::ToValue($value);
-			// If no equality operator, assume boolean true for rhs
-			} else {
-				$interpreted[Lang::ToCamelCase($parts[$i])] = true;
-			}
-		}
-		
-		// Return the result
-		return $interpreted;
-	}
-	
-	public static function TableFor($className) {
+	public function TableFor($className) {
 		
 		if (isset($this->tables[$className])) {
 			return $this->tables[$className];
@@ -315,30 +390,35 @@ class Model {
 		return false;
 	}
 	
-
-	public static function PrimaryKeysFor($className,$askingClassName = null) {
-		// return a Column object representing the primary key for the requested class
-		// asking class name is useful when the className is a class with more
-		// than one primary key. The asking class name can be used for additional 
-		// context in deciding which key to return
-		if (false != ($obj = Model::Get()->objects[$className])) {
-
-				return array("attrKeys"=>$obj->primaryKeyAttributes,
-							 "relKeys" =>$obj->primaryKeyRelations);
-
+	public function getRelation($className,$name) {
+		if (($o = $this->objects[Lang::ToClassName($className)]) != false) {
+			return (isset($o->relations[Lang::ToAttributeName($name)]))
+				? $o->relations[Lang::ToAttributeName($name)]
+				: false;
 		}
-		return false;
 	}
 	
-	public static function AttrForColumn($className,$columnName) {
-		if (false != ($obj = Model::Get()->objects[$className])) {
-			foreach ($obj->attributes as $attr) {
-				if ($attr->column->name == $columnName) {
-					return $attr;
+	// All VIA relations must have a reciprocal defined, which is differentiated
+	// only by the order in which the two relations appear: e.g:
+	// for Budget <--Acl--> User (budgets have many users using Acl as lookup)
+	//   Budget:
+	//     users:  [User(*)(id)] VIA Acl(budget|user)
+	//   User:
+	//     budgets:[Budget(*)(id)] VIA Acl(user|budget)
+	public function getViaReciprocal($rel) {
+		// We're looking for a relation between the same to objects, using the same
+		// intermediate lookup table, with only the `lookupObjectLocalRel` and 
+		// `lookupObjectRemoteRel` swapped
+		foreach ($this->objects as $o) {
+			foreach ($o->relations as $r) {
+				if ($r->localType == $rel->localType &&                         // both M-M
+					$r->localObjectClassName == $rel->remoteObjectClassName &&  // with opposite local & remote objects
+					$r->remoteObjectClassName == $rel->localObjectClassName     // this may need to be made more specific
+					 ) {
+					return $r;
 				}
 			}
 		}
 		return false;
 	}
-	
 }
