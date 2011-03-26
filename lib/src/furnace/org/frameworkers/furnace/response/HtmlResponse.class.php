@@ -1,23 +1,23 @@
 <?php
 namespace org\frameworkers\furnace\response;
 
+use org\frameworkers\furnace\response\html\HtmlLayout;
+use org\frameworkers\furnace\response\html\HtmlZone;
+
 use org\frameworkers\furnace\core\StaticObject;
 use org\frameworkers\furnace\config\Config;
 use org\frameworkers\furnace\request\Request;
 use org\frameworkers\furnace\response\Response;
+use org\frameworkers\furnace\response\renderers\TadpoleRenderer;
 
 
 class HtmlResponse extends Response {
 	
 	public $themePath;
 	
-	public $layoutFilePath;
-	
-	public $viewFilePaths;
+	public $layout;
 	
 	public $fileExtension;
-	
-	public $includedViews;
 	
 	public $notifications;
 	
@@ -37,12 +37,23 @@ class HtmlResponse extends Response {
 			 Config::Get('applicationThemesDirectory') . '/'
 			.Config::Get('theme');
 		
-		// Default layout file path
-		$this->layoutFilePath = 
-			$this->themePath . '/layouts/default.html';
+		// Set a default layout
+		$this->setLayout(Config::Get('defaultLayoutFile'));
 			
-		// Default view file 
-		$this->setView($context->handlerName . $this->fileExtension);
+		// Set a default view file for the `content` zone based on the current handler
+		if ($this->layout->content) {		
+			$path = (($this->context->controllerBaseName == 'default')
+					? ''
+					: "{$this->context->controllerBaseName}/");
+					
+			if (is_dir(Config::Get('applicationViewsDirectory') . '/' . $path . '/' . $context->handlerName)) {
+				$path .= "{$context->handlerName}/";
+			}
+		
+			$finalViewFilePath = $path . $context->handlerName . $this->fileExtension;
+		
+			$this->layout->content->prepare($finalViewFilePath);
+		}
 			
 		$this->includedViews = array();
 		
@@ -53,81 +64,36 @@ class HtmlResponse extends Response {
 	
 	public function render( ) {
 		
-		// Determine the render engine for the response
-		$renderEngine    = ResponseTypes::EngineFor('html');
-		
-		// Create a renderer for the response
-		$renderer        = new $renderEngine( $this );
-		
-		// Get the layout file as the outermost document
-		if (!file_exists($this->layoutFilePath)) {
-			$this->abort(
-				"Unable to find layout file at: "
-				.$this->layoutFilePath);
-		}
-		$document = file_get_contents($this->layoutFilePath);
-		if(empty($document)) { $document = '[_content_]'; }
-		
-		// Insert any included views
-		foreach ($this->includedViews as $ivLabel => $ivContents) {
-			// Replace the zone tag with the included contents
-			$document = str_replace("[_{$ivLabel}_]", $ivContents, $document);
-		}
-				
-		// Process each defined zone
-		foreach ($this->local_data as $zoneName => $zoneLocals) {
-			// Get zone content
-			if (!file_exists($this->viewFilePaths[$zoneName])) {
-				$this->abort(
-					"Unable to find view file for zone `{$zoneName}` at: "
-					.$this->viewFilePaths[$zoneName]);
-			}
-			$content  = file_get_contents($this->viewFilePaths[$zoneName]);
-			
-			// Incorporate any `flash` messages into the local content
-			$zoneLocals['_notifications'] = (isset($_SESSION['_notifications'][$zoneName]))
-				? implode("\r\n",$_SESSION['_notifications'][$zoneName])
-				: "";
-				
-			// Compile the zone
-			$compiled = $renderer->compile( $content, $this->context, $zoneLocals);
-
-			// Replace the zone tag with the compiled contents
-			$document = str_replace("[_{$zoneName}_]", $compiled, $document);
-		}
+		$document = $this->layout->render($this);
 		
 		// Final pass to catch any tags outside of defined zones
+		$renderer = new TadpoleRenderer($this);
 		$document = $renderer->compile( $document, $this->context, array());
 		
-		// Reset the stored `flash` messages container
+		// Reset the notifications array
 		$_SESSION['_notifications'] = array();
-		
-		// Return the final, compiled response
-		return $document;		
+		return $document;	
 	}
 		
-	public function setLayout($layoutFilename) {
-		return $this->layoutFilePath = 
-			"{$this->themePath}/layouts/{$layoutFilename}";
-	}
-	
-	public function setView($viewFilename,$zone = 'content') {
-		$path = Config::Get('applicationViewsDirectory') 
-			.(($this->context->controllerBaseName == 'default')
-				? '/'
-				: "/{$this->context->controllerBaseName}/");
-				
-		$extension = Config::Get('htmlViewFileExtension');
-		$localBase = basename($viewFilename,$extension);
-		
-		if (is_dir($path . '/' . $localBase)) {
-			$path .= "{$localBase}/";
+	/**
+	 * Initialize an HtmlLayout object
+	 * 
+	 * @param string $layoutFilename  If bRawString is false, this value will
+	 *                                be interpreted to be the theme-relative
+	 *                                path to the layout file to use. If 
+	 *                                bRawString is true, this value itself
+	 *                                will be used as the layout contents.
+	 * @param string $bRawString      Whether or not to treat $layoutFilename
+	 *                                as a file path (false) or as the actual
+	 *                                layout contents as a string (true)
+	 */
+	public function setLayout($layoutFilename,$bRawString = false) {
+		if ($bRawString) {
+			$this->layout = new HtmlLayout($layoutFilename);
+		} else {
+			$this->layout = new HtmlLayout(
+				file_get_contents("{$this->themePath}/layouts/{$layoutFilename}"));
 		}
-		
-		$finalPath = $path . $viewFilename;
-		
-		$this->viewFilePaths[$zone] = $finalPath;
-		return $finalPath;
 	}
 	
 	public function setTheme($theme) {
@@ -164,9 +130,19 @@ class HtmlResponse extends Response {
 		} else {       // File is part of the current theme
 			$url = "{$this->context->urls['theme_base']}/js/" . ltrim($path,'/');
 		}
-		// Add the file to the array of javascripts to include in the context
+		// Add the file to the array of javascripts to include in the context. 
+		// Indexing on url prevents duplicates
 		$this->javascripts[$url] = 
 				'<script type="text/javascript" src="'.$url.'"></script>';
+	}
+	
+	// Bundling a javascript puts the contents of the file inline rather than as a 
+	// <script src=.../>
+	public function bundleJavascript($path) {
+		$contents = file_get_contents($path);
+		$this->javascripts[] = '<script type="text/javascript">'
+			. $contents
+			. '</script>';
 	}
 	
 	public function includeStylesheet($path,$bLocal = false, $condition = null) {
@@ -182,8 +158,20 @@ class HtmlResponse extends Response {
 		}
 		
 		// Add the snippet to the array of stylesheets to include in the context
+		// Indexing on url prevents duplicates
 		$this->stylesheets[$url] = $snippet;
 	}
+	
+	// Bundling a stylesheet puts the contents of the file inline rather than as a 
+	// <link rel=.../>
+	public function bundleStylesheet($path) {
+		$contents = file_get_contents($path);
+		$this->stylesheets[] = '<style type="text/css">'
+			. $contents
+			. "</style>";
+	}
+	
+	
 	
 	public function includeView(array $which, $zoneLabel, $type='html') {
 		if (count($which) != 2 && count($which) != 3) { die('unsupported use of includeView'); }
