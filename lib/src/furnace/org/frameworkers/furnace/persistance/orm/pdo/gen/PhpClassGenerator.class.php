@@ -94,8 +94,8 @@ class PhpClassGenerator {
 	protected static function genObjRelDeclarations(Object $o) {
 		$str = '';
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {
-				$str .= T."protected \${$rel->name};".NL;
+			if ($rel->localType == Relation::ORM_RELATION_ONE) {
+				$str .= T."protected \${$rel->localName};".NL;
 			}
 		}
 		return NL.$str.NL;
@@ -140,17 +140,17 @@ class PhpClassGenerator {
 	protected static function genObjRelGetters(Object $o) {
 		$str = '';
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {
-				$str .= T."public function get".ucwords($rel->name)."() {".NL;
-				$str .= T.T."if(is_object(\$this->{$rel->name})) { return \$this->{$rel->name}; }".NL;
-				$str .= T.T."else { return \$this->{$rel->name} = {$rel->remoteObjectClassName}::Load(\$this->{$rel->name}); }".NL;
+			if ($rel->localType == Relation::ORM_RELATION_ONE) {
+				$str .= T."public function get".ucwords($rel->localName)."() {".NL;
+				$str .= T.T."if(is_object(\$this->{$rel->localName})) { return \$this->{$rel->localName}; }".NL;
+				$str .= T.T."else { return \$this->{$rel->localName} = {$rel->remoteObjectClassName}::Load(\$this->{$rel->localName}); }".NL;
 				$str .= T."}".NL.NL;
 			}
-			if ($rel->type == Relation::ORM_RELATION_HASMANY) {
-				$str .= T."public function get".ucwords($rel->name)."() {".NL;
+			if ($rel->localType == Relation::ORM_RELATION_MANY) {
+				$str .= T."public function get".ucwords($rel->localName)."() {".NL;
 				$str .= T.T."\$c = new \\app\\models\\orm\\{$rel->remoteObjectClassName}Collection();".NL;
 				$str .= T.T."// Apply filters".NL;
-				$str .= T.T."return \$c->equal('{$rel->remoteKeyColumn->name}',\$this->get_id());".NL;
+				$str .= T.T."return \$c->equal('{$rel->remoteObjectColumn->name}',\$this->get_id());".NL;
 				$str .= T."}".NL.NL;
 			}
 		}
@@ -174,8 +174,8 @@ class PhpClassGenerator {
 	protected static function genObjRelSetters(Object $o) {
 		$str  = '';
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {
-				$str .= T."public function set".ucwords($rel->name)."(\$idOrObject) {".NL;
+			if ($rel->localType == Relation::ORM_RELATION_ONE) {
+				$str .= T."public function set".ucwords($rel->localName)."(\$idOrObject) {".NL;
 				$str .= T.T."// handle object ".NL;
 				$str .= T.T."if (is_object(\$idOrObject)) {".NL;
 				$str .= T.T.T."die('tbd');".NL;
@@ -183,8 +183,8 @@ class PhpClassGenerator {
 				$str .= T.T."// handle id ".NL;
 				$str .= T.T."else {".NL;
 				$str .= T.T.T."if (\$o = {$rel->remoteObjectClassName}::Load(\$idOrObject)) {".NL;
-				$str .= T.T.T.T."\$this->{$rel->name}  = \$o;".NL;
-				$str .= T.T.T.T."\$this->_dirtyTable[] = '{$rel->name}'; ".NL;
+				$str .= T.T.T.T."\$this->{$rel->localName}  = \$o;".NL;
+				$str .= T.T.T.T."\$this->_dirtyTable[] = '{$rel->localName}'; ".NL;
 				$str .= T.T.T."}".NL;
 				$str .= T.T."}".NL;
 				$str .= T.T."return \$this;".NL;
@@ -192,8 +192,8 @@ class PhpClassGenerator {
 			}
 		}
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_HASMANY) {
-				$singularInflection = Inflection::ToSingular($rel->name);
+			if ($rel->localType == Relation::ORM_RELATION_MANY) {
+				$singularInflection = Inflection::ToSingular($rel->localName);
 				
 				$str .= T."public function add".ucwords($singularInflection)."(\$idOrObject) {".NL;
 				$str .= T.T."// Can't add anything unless this object itself".NL;
@@ -201,17 +201,17 @@ class PhpClassGenerator {
 				$str .= T.T."if (empty(\$this->_primaryKeys)) { return false; } ".NL.NL;
 				$str .= T.T."// The provided value is an object".NL;
 				$str .= T.T."if (\$idOrObject instanceof Object) {".NL;
-				if (empty($rel->lookupObject)) {
+				if (empty($rel->lookupObjectClassName)) {
 					$str .= T.T.T."// The relation is not M-M, so simply set the field and save".NL;
-					$str .= T.T.T."\$idOrObject->set".ucwords($rel->reciprocalRelation->name)."(\$this->{$rel->reciprocalRelation->localKeyColumn->name}); ".NL;
+					$str .= T.T.T."\$idOrObject->set".ucwords($rel->remoteName)."(\$this->{$rel->remoteKeyColumn->name}); ".NL;
 					$str .= T.T.T."return \$idOrObject->save();".NL.NL;
 				}
 				//TODO: same as above, but for M-M
 				$str .= T.T."// The provided value is an id".NL;
 				$str .= T.T."} else { ".NL;
-				if (empty($rel->lookupObject)) {
+				if (empty($rel->lookupObjectClassName)) {
 					$str .= T.T.T."if (false != (\${$singularInflection} = {$rel->remoteObjectClassName}::Load(\$idOrObject))) {".NL;
-					$str .= T.T.T.T."\${$singularInflection}->set".ucwords($rel->reciprocalRelation->name)."(\$this->{$rel->reciprocalRelation->localKeyColumn->name}); ".NL;
+					$str .= T.T.T.T."\${$singularInflection}->set".ucwords($rel->remoteName)."(\$this->{$rel->remoteObjectColumn->name}); ".NL;
 					$str .= T.T.T.T."return \${$singularInflection}->save();".NL;
 					$str .= T.T.T."}".NL;
 				}
@@ -256,9 +256,9 @@ class PhpClassGenerator {
 		}
 		$str .= NL.T.T.T."// store any `Belongs To` relations".NL;
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {
-				$str .= T.T.T."if(isset(\$data['{$rel->localKeyColumn->name}'])) {".NL
-					 .  T.T.T.T."\$this->{$rel->name} = \$data['{$rel->localKeyColumn->name}'];".NL
+			if ($rel->localType == Relation::ORM_RELATION_ONE) {
+				$str .= T.T.T."if(isset(\$data['{$rel->localObjectColumn->name}'])) {".NL
+					 .  T.T.T.T."\$this->{$rel->localName} = \$data['{$rel->localObjectColumn->name}'];".NL
 					 .  T.T.T."}".NL;
 				//TODO: add belongsto changes to the dirty list if $mergedChangesNeedSaving	
 			}
@@ -287,8 +287,8 @@ class PhpClassGenerator {
 		}
 		$str .= NL.T.T.T."// store any `Belongs To` relations".NL;
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {
-				$str .= T.T.T."if(isset(\$data->{$rel->localKeyColumn->name})) {\$this->{$rel->name} = \$data->{$rel->localKeyColumn->name}; }".NL;	
+			if ($rel->type == Relation::ORM_RELATION_MANY) {
+				$str .= T.T.T."if(isset(\$data->{$rel->localObjectColumn->name})) {\$this->{$rel->localName} = \$data->{$rel->localObjectColumn->name}; }".NL;	
 				//TODO: add belongsto changes to the dirty list if $mergedChangesNeedSaving
 			}
 		}
@@ -317,7 +317,7 @@ class PhpClassGenerator {
 			$str .= T.T.T."->equal('{$attr->column->name}',\${$attr->name})".NL;
 		}
 		foreach ($o->primaryKeyRelations as $rel) {
-			$str .= T.T.T."->equal('{$rel->localKeyColumn->name}',\${$rel->name})".NL;
+			$str .= T.T.T."->equal('{$rel->localObjectColumn->name}',\${$rel->localName})".NL;
 		}
 		$str .= T.T.T."->first();".NL.NL;
 		
@@ -340,7 +340,7 @@ class PhpClassGenerator {
 			$args[] = "\${$attr->name}";
 		}
 		foreach ($o->primaryKeyRelations as $rel) {
-			$args[] = "\${$rel->name}";
+			$args[] = "\${$rel->localName}";
 		}
 		$str .= implode(',',$args) . ") {".NL;
 		$str .= T.T."// Load the object".NL;
@@ -350,21 +350,21 @@ class PhpClassGenerator {
 			$args[] = "\${$attr->name}";
 		}
 		foreach ($o->primaryKeyRelations as $rel) {
-			$args[] = "\${$rel->name}";
+			$args[] = "\${$rel->localName}";
 		}
 		$str .= implode(',',$args) . ");".NL.NL;
 		$str .= T.T."// Delete all instances of all objects that 'belong to' this object".NL;
 		foreach ($m->objects as $remoteObject) {
 			if ($remoteObject->className == $o->className) { continue; }
 			foreach ($remoteObject->relations as $rel) {
-				if ($rel->type == Relation::ORM_RELATION_BELONGSTO 
+				if ($rel->localType == Relation::ORM_RELATION_ONE 
 					&& $rel->remoteObjectClassName == $o->className) {
 					// If the 'belongs to' relation is required, then the dependent
 					// (remote) object instance must also be deleted.
-					if ($rel->isRequired || $rel->isPrimary) {
+					if ($rel->locallyRequired || $rel->locallyPrimary) {
 						$str .= T.T."\$collection = new {$rel->localObjectClassName}Collection();".NL;
 						$str .= T.T."\$results    = \$collection".NL;
-						$str .= T.T.T."->equal('{$rel->remoteKeyColumn->name}',\$o->get{$rel->remoteKeyAttr->name}())".NL;
+						$str .= T.T.T."->equal('{$rel->remoteObjectColumn->name}',\$o->get{$rel->remoteObjectAttr->name}())".NL;
 						$str .= T.T.T."->toArray();".NL;
 						$str .= T.T."foreach (\$results as \$obj) {".NL;
 						$o2 = $m->objects[$rel->localObjectClassName];
@@ -373,7 +373,7 @@ class PhpClassGenerator {
 							$args[] = "\$obj->{$attr->column->name}";
 						}
 						foreach ($o2->primaryKeyRelations as $rel) {
-							$args[] = "\$obj->{$rel->localKeyColumn->name}";
+							$args[] = "\$obj->{$rel->localObjectColumn->name}";
 						}
 						$str .= T.T.T."{$rel->localObjectClassName}::Delete(".implode(',',$args).");".NL;
 						$str .= T.T."}".NL.NL;
@@ -395,7 +395,7 @@ class PhpClassGenerator {
 			$str .= T.T.T."->equal('{$attr->column->name}',\${$attr->name})".NL;
 		}
 		foreach ($o->primaryKeyRelations as $rel) {
-			$str .= T.T.T."->equal('{$rel->localKeyColumn->name}',\${$rel->name})".NL;
+			$str .= T.T.T."->equal('{$rel->localObjectColumn->name}',\${$rel->name})".NL;
 		}
 		$str .= T.T.T."->delete();".NL;
 		$str .= T."}".NL.NL;
@@ -429,11 +429,11 @@ class PhpClassGenerator {
 		$fieldsStrings = array();
 		$valuesStrings = array();
 		foreach ($o->relations as $rel) {
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO && $rel->isRequired) {
-				$str .= T.T.T."\$v_rels['{$rel->name}'] = is_object(\$this->{$rel->name}) ? \$this->{$rel->name}->get_id() : \$this->{$rel->name}; ".NL;
+			if ($rel->localType == Relation::ORM_RELATION_ONE && $rel->locallyRequired) {
+				$str .= T.T.T."\$v_rels['{$rel->localName}'] = is_object(\$this->{$rel->localName}) ? \$this->{$rel->localName}->get_id() : \$this->{$rel->localName}; ".NL;
 				
-				$fieldsStrings[] = "`{$rel->localKeyColumn->name}` ";
-				$valuesStrings[] = "'{\$v_rels['{$rel->name}']}' ";
+				$fieldsStrings[] = "`{$rel->localObjectColumn->name}` ";
+				$valuesStrings[] = "'{\$v_rels['{$rel->localName}']}' ";
 			}
 		}
 		foreach ($o->attributes as $attr) {
@@ -488,8 +488,8 @@ class PhpClassGenerator {
 		
 		// For BELONGSTO relations, override the column name used with the relation's local column name
 		foreach ($o->relations as $rel) {	
-			if ($rel->type == Relation::ORM_RELATION_BELONGSTO) {	
-				$str .= T.T.T."if (\$dirtyAttrName == '{$rel->name}') { \$dirtyAttrCol = '{$rel->localKeyColumn->name}'; } ".NL;		
+			if ($rel->localType == Relation::ORM_RELATION_ONE) {	
+				$str .= T.T.T."if (\$dirtyAttrName == '{$rel->localName}') { \$dirtyAttrCol = '{$rel->localObjectColumn->name}'; } ".NL;		
 			}
 		}
 		$str  .= T.T.T."\$updateStrings[] = \" `{\$dirtyAttrCol}`='{\$this->\$dirtyAttrName}' \"; ".NL
