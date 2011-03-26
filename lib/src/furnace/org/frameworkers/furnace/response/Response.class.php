@@ -67,7 +67,7 @@ abstract class Response extends StaticObject {
 	}
 	
 	public static function Redirect( $newURL ) {
-		if ($newURL[0] == '/') {
+		if ($newURL[0] == '/' && Config::Get('applicationUrlBase') != '/') {
 			$newURL = Config::Get('applicationUrlBase') . $newURL;
 		}
 		header('Location: ' . $newURL);
