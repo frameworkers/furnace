@@ -6,7 +6,7 @@ use org\frameworkers\furnace\config\Config;
 
 abstract class Response extends StaticObject {
 	
-	protected $context;
+	public $context;
 	
 	protected $local_data  = array('content' => array());
 	
