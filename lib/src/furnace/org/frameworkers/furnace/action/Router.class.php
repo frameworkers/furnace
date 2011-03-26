@@ -91,11 +91,14 @@ class Router extends StaticObject{
         // reconfigure the environment for a foundry request
         if (($foundryMagic = Config::Get('foundryMagicUrlBase')) !== null
         	&& $parts[0] == $foundryMagic) {
-        		
         	// Mark this request as being a foundry request
         	define("FOUNDRY_REQUEST",true);
-        	Config::Set('applicationUrlBase',Config::Get('applicationUrlBase')
-        		. '/' . Config::Get('foundryMagicUrlBase'));
+        	Config::Set('applicationUrlBase',
+        		((Config::Get('applicationUrlBase') == '/')
+        			? ''
+        			: Config::Get('applicationUrlBase')
+        		) 
+        		. '/' . ltrim(Config::Get('foundryMagicUrlBase'),'/'));
         	Config::Set('applicationControllersDirectory',FURNACE_APP_PATH 
         		. "/foundry/controllers");
         	Config::Set('applicationViewsDirectory',FURNACE_APP_PATH 
