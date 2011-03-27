@@ -18,16 +18,19 @@ class ORMModelController extends Controller {
 	public function __construct($context, $response) {
 		parent::__construct($context, $response);
 		$this->modelDirectory = Config::Get('applicationModelsDirectory'). "/orm";
+		
+		// Example of using a pre-packaged widget in a zone:
+		$this->response->layout->menu->assign(
+			new org\frameworkers\flame\widgets\mainMenu\MainMenuWidget($context,$response));
 	}
 	
 	public function index() {
-		
 		$this->response->includeJavascript('/ORMModel/index/index.js',true);
 		$this->response->includeStylesheet('/ORMModel/index/index.css',true);
-		$this->response->includeView(array('PartialsController','mainMenu',array('orm')),'menu');
+		$this->response->layout->menu->set('activeTab','orm');
 
 		
-		$this->set('sortedObjects',Model::Get()->objects);
+		$this->response->layout->content->set('sortedObjects',Model::Get()->objects);
 	}
 	
 	public function generateClassFiles() {
@@ -79,6 +82,20 @@ class ORMModelController extends Controller {
 		
 		$this->set('tables',$tables);
 		
+	}
+	
+	public function exportModelAsSql() {
+		$this->response->setLayout('[_content_]',true);
+		$output = '';
+		$m = Model::Get();
+		foreach ($m->objects as $o) {
+			$t = $o->table;
+			$output .= '-- Table: ' . $t->name . "\r\n";
+			$output .= Connections::Get()->createTableSql($t);
+			$output .= ";\r\n\r\n";
+		}
+		$this->response->layout->content->prepare('[sql]',true)
+			->set('sql',$output);
 	}
 	
 	public function createTable($objectName,$bForce=false) {

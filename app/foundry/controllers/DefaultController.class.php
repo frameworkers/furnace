@@ -8,8 +8,12 @@ use org\frameworkers\furnace\action\Controller;
 class DefaultController extends Controller {
 	
 	public function index() {
-		$this->response->includeView(
-			array('PartialsController','mainMenu',array('overview')),'menu');
+		//$this->response->includeView(
+		//	array('PartialsController','mainMenu',array('overview')),'menu');
+		$this->response->includeJavascript('partials/mainMenu/mainMenu.js',true);
+		$this->response->includeStylesheet('partials/mainMenu/mainMenu.css',true);
+		$this->response->layout->menu->prepare('partials/mainMenu/mainMenu.html')
+			->set('activeTab','overview');
 	}
 	
 }
