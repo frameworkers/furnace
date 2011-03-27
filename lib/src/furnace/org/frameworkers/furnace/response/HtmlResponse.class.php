@@ -52,7 +52,9 @@ class HtmlResponse extends Response {
 		
 			$finalViewFilePath = $path . $context->handlerName . $this->fileExtension;
 		
-			$this->layout->content->prepare($finalViewFilePath);
+			if (file_exists($finalViewFilePath)) {
+				$this->layout->content->prepare($finalViewFilePath);
+			}
 		}
 			
 		$this->includedViews = array();
