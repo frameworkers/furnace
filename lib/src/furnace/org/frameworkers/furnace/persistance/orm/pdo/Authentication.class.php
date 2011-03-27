@@ -15,6 +15,8 @@ namespace org\frameworkers\furnace\persistance\orm\pdo;
 
 use org\frameworkers\furnace\persistance\session\Session;
 use org\frameworkers\furnace\connections\Connections;
+use org\frameworkers\furnace\response\Response;
+use org\frameworkers\furnace\config\Config;
 
 /**
  * An implementation of the furnace IAuthExtension interface providing
@@ -99,15 +101,21 @@ class Authentication implements \org\frameworkers\furnace\interfaces\IAuthExtens
 		Session::Clear('_auth');
 	}
 	
-	public function check() {
+	public function check($forceRedirect = false) {
 		if (isset($_SESSION['_auth'])) {
 			$now = mktime();
 			$_SESSION['_auth']['_metadata']['idleseconds'] = 
 				$now - $_SESSION['_auth']['_metadata']['activity'];
 			$_SESSION['_auth']['_metadata']['activity'] = $now;
-			return true;
+			return $_SESSION['_auth'];
 		} else {
-			return false;
+			if ($forceRedirect) {
+				// Current page
+				$afterLogin = str_replace('/','+',$_SERVER['REDIRECT_URL']);
+				Response::Redirect(Config::Get('applicationLoginUrl') . '/' . $afterLogin);
+			} else {
+				return false;
+			}
 		}
 	}
 	
