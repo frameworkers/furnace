@@ -51,8 +51,8 @@ class HtmlResponse extends Response {
 			}
 		
 			$finalViewFilePath = $path . $context->handlerName . $this->fileExtension;
-		
-			if (file_exists($finalViewFilePath)) {
+			$fullPath = Config::Get('applicationViewsDirectory') . '/' . $finalViewFilePath;
+			if (file_exists($fullPath)) {
 				$this->layout->content->prepare($finalViewFilePath);
 			}
 		}
