@@ -13,7 +13,7 @@ class HtmlLayout {
 	
 	public function __construct($layoutContents) {
 		// Extract zones
-		preg_match_all("/\[_([A-Za-z]+)_\]/", $layoutContents, $matches);
+		preg_match_all("/\[_([A-Za-z0-9]+)_\]/", $layoutContents, $matches);
 		if ($matches) {
 			foreach ($matches[1] as $discoveredZone) {
 				$this->$discoveredZone = new HtmlZone($discoveredZone);
