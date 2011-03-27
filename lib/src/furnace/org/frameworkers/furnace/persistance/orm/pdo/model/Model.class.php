@@ -85,6 +85,8 @@ class Model {
 		
 		// Sanity Check
 		$this->sanityCheck();
+		
+		//var_dump($this->objects);die();
 	}
 	
 	public function cleanAndDetectObjects($contents) {
@@ -219,7 +221,7 @@ class Model {
 				if ($contentString[0] == '[') {
 					
 					// Get the referenced relation from the data structure
-					$relation =& $this->objects[$olabel]->relations[$alabel];	
+					$relation = $this->objects[$olabel]->relations[$alabel];	
 
 					// Set remote object column information
 					// Consistency Check: Ensure remote object label maps to either 
@@ -246,6 +248,7 @@ class Model {
 							$this->objects[$relation->remoteObjectClassName]
 								->attributes[$relation->remoteObjectLabel]
 									->column;
+						
 					}
 
 					/***
@@ -262,7 +265,7 @@ class Model {
 						$relation->lookupObjectClassName  = Lang::ToClassName($lookupClass); 
 						
 						// Consistency check: Ensure the referenced local lookup relation exists in the lookup object
-						if (false != ($rel =& $this->objects[$lookupClass]->relations[$localKey])) { 
+						if (false != ($rel = $this->objects[$lookupClass]->relations[$localKey])) { 
 							$rel->remoteName = $alabel;
 							$rel->remoteType = Relation::ORM_RELATION_MANY;
 							$relation->lookupObjectLocalRel   = $rel;
@@ -272,7 +275,7 @@ class Model {
 						}
 						
 						// Consistency check: Ensure the referenced remote lookup relation exists in the lookup object
-						if (false != ($rel =& $this->objects[$lookupClass]->relations[$remoteKey])) {
+						if (false != ($rel = $this->objects[$lookupClass]->relations[$remoteKey])) {
 							if (false != ($recipRel = $this->getViaReciprocal($relation))) {
 								$rel->remoteName = $recipRel->localName;
 							} else {
@@ -288,6 +291,7 @@ class Model {
 						
 						$relation->lookupObjectTable      = $this->objects[$relation->lookupObjectClassName]
 															->table->name;
+
 					} 
 					
 					//                 REVERSE_OF ClassName.foreignKey
@@ -337,6 +341,24 @@ class Model {
 							." - cause: (*) without VIA or REVERSE_OF");		
 					}
 				}
+			}
+		}
+		
+		// Make sure all (1) -> (*) relations have a localObjectColumn defined
+		foreach ($this->objects as $o) {
+			foreach ($o->relations as $r) {
+				if ($r->localType == Relation::ORM_RELATION_ONE) {
+					$name = $r->localName;                     // The name of the relation
+					$type = $r->remoteObjectColumn->type; // The type of the column this maps to
+					$primary = ($r->remoteType == Relation::ORM_RELATION_MANY 
+						&& $r->locallyPrimary);
+					
+					$c = new Column($name, $type, false, $primary, array("type"=> $type));
+					
+					$this->objects[$o->className]->relations[$r->localName]->localObjectColumn = $c;
+					$this->objects[$o->className]->table->addColumnObject($c);
+				} 
+				
 			}
 		}
 	}
@@ -421,4 +443,21 @@ class Model {
 		}
 		return false;
 	}
+	
+	/*
+	public function isKeyForVia($rel) {
+		$lo = $this->objects[$rel->localObjectClassName];
+		$fo = $this->objects[$rel->remoteObjectClassName];
+		// Does the fo have a VIA on the lo using rel->localName as a key?
+		var_dump($rel);
+		foreach ($fo->relations as $r) {
+			if ($r->localType == Relation::ORM_RELATION_MANY
+				&& $r->remoteType == Relation::ORM_RELATION_MANY
+				&& $r->remoteObjectClassName = $lo->className) {
+				return true;		
+			}
+		}
+		return false;
+	}
+	*/
 }
