@@ -56,8 +56,6 @@ class HtmlResponse extends Response {
 				$this->layout->content->prepare($finalViewFilePath);
 			}
 		}
-			
-		$this->includedViews = array();
 		
 		$this->notifications = isset($_SESSION['_notifications'])
 			? $_SESSION['_notifications']
@@ -90,11 +88,20 @@ class HtmlResponse extends Response {
 	 *                                layout contents as a string (true)
 	 */
 	public function setLayout($layoutFilename,$bRawString = false) {
+		$bkup = $this->layout;
 		if ($bRawString) {
 			$this->layout = new HtmlLayout($layoutFilename);
 		} else {
 			$this->layout = new HtmlLayout(
 				file_get_contents("{$this->themePath}/layouts/{$layoutFilename}"));
+		}
+		// Restore any common zone information that might apply
+		if ($bkup) {
+			foreach ($bkup->_zones as $z) {
+				if (in_array($z,$this->layout->_zones)) {
+					$this->layout->$z = $bkup->$z;
+				}
+			}
 		}
 	}
 	
