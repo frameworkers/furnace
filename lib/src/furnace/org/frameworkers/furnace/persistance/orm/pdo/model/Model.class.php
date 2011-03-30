@@ -85,8 +85,6 @@ class Model {
 		
 		// Sanity Check
 		$this->sanityCheck();
-		
-		//var_dump($this->objects);die();
 	}
 	
 	public function cleanAndDetectObjects($contents) {
@@ -96,7 +94,11 @@ class Model {
 			$properObjectLabel = Lang::ToClassName($label);
 			$cleaned[$properObjectLabel] = array();
 			foreach ($objectdata as $alabel => $content) {
-				$properAttrLabel = Lang::ToAttributeName($alabel);
+				if ($alabel[0] != '_') {
+					$properAttrLabel = Lang::ToAttributeName($alabel);
+				} else {
+					$properAttrLabel = $alabel;
+				}
 				// Collapse second level arrays
 				if (is_array($content) ) { 
 					$content = "[{$content[0]}]";
@@ -111,12 +113,11 @@ class Model {
 		return $cleaned;
 	}	
 	
-	public function detectMetadata($contents) {
-		foreach ($contents as $olabel => $objectdata) {
+	public function detectMetadata(&$contents) {
+		foreach ($contents as $olabel => &$objectdata) {
 			// Each "second level" element is either an attribute,
 			// relation, or metadata definition.
 			foreach ($objectdata as $alabel => $content) {
-				
 				// Explode the string into tokens based on `;`
 				$parts = explode(';',$content);
 
@@ -130,6 +131,7 @@ class Model {
 							$this->objects[$olabel]->description = Lang::ToValue($parts[0]);
 							break;
 					}
+					unset($objectdata[$alabel]);
 				}
 			}
 		}	
