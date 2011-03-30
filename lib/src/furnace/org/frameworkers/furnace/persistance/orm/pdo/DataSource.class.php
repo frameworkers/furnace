@@ -28,6 +28,7 @@ use org\frameworkers\furnace\persistance\orm\pdo\sql\SqlBuilder;
 use org\frameworkers\furnace\persistance\orm\pdo\Dataset;
 use org\frameworkers\furnace\persistance\cache\Cache;
 use org\frameworkers\furnace\persistance\orm\pdo\model\Table;
+use org\frameworkers\furnace\persistance\orm\pdo\model\Column;
 
 class DataSource extends \PDO {
 	const PROVIDER_CLASS_LOCATION = "org\\frameworkers\\furnace\\persistance\\orm\\pdo\\providers\\";
@@ -237,5 +238,17 @@ class DataSource extends \PDO {
 	
 	function createTableSql($tableDescriptor) {
 		return $this->provider->createTableSql($tableDescriptor);
+	}
+	
+	function tableAddColumn($tableName, Column $definition) {
+		return $this->provider->tableAddColumn($tableName,$definition);
+	}
+	
+	function tableDropColumn($tableName, $columnName) {
+		return $this->provider->tableDropColumn($tableName,$columnName);
+	}
+	
+	function tableChangeColumn($tableName, $columnName, Column $definition) {
+		return $this->provider->tableChangeColumn($tableName,$columnName,$definition);
 	}
 }

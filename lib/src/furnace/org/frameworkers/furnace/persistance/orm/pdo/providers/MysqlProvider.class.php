@@ -28,7 +28,10 @@ use org\frameworkers\furnace\persistance\orm\pdo\DataSource;
 use org\frameworkers\furnace\persistance\orm\pdo\sql\SqlBuilder;
 use org\frameworkers\furnace\persistance\FurnaceType;
 use org\frameworkers\furnace\persistance\orm\pdo\model\Table;
+use org\frameworkers\furnace\persistance\orm\pdo\model\Column;
+use org\frameworkers\furnace\persistance\orm\pdo\model\Lang;
 use org\frameworkers\furnace\persistance\orm\pdo\providers\IPdoProvider;
+
 
 
 class MysqlProvider implements IProvider {
@@ -251,6 +254,39 @@ class MysqlProvider implements IProvider {
 		$columnSql .= "PRIMARY KEY(`" . implode("`,`",$primaryKeys)."`)\n";
 		return $sql . ' (' . $columnSql . ')';
 	}
+	
+	function getColumnSql(Column $definition) {
+		$mappings = self::getFurnaceToMysqlMappings($definition->extra);
+		$type    = $mappings[strtolower($definition->type)];
+		$null    = $definition->isNull  ? "NULL " : "NOT NULL ";
+		$comment = $definition->comment ? "COMMENT '" . str_replace("'","''",$definition->comment) . "' " : '';
+		$default = $definition->default ? "DEFAULT \"$definition->default\" " : '';
+		$autoinc = $definition->isAutoinc ? "AUTOINCREMENT " : '';
+		
+		$sql = "`{$definition->name}` {$type} {$null} {$autoinc} {$default} {$comment} ";
+		return $sql;
+	}
+	
+	function tableAddColumn($tableName, Column $definition) {
+		$tableName = Lang::toTableName($tableName);
+		$sql =  "ALTER TABLE `{$tableName}` ADD COLUMN " . $this->getColumnSql($definition);
+		$this->pdo->exec($sql);
+	}
+	
+	function tableDropColumn($tableName, $columnName) {
+		$tableName = Lang::toTableName($tableName);
+		$columnName= Lang::toColumnName($columnName);
+		$sql = "ALTER TABLE `{$tableName}` DROP COLUMN `{$columnName}` ";
+		$this->pdo->exec($sql);
+	}
+	
+	function tableChangeColumn($tableName,$columnName,Column $definition) {
+		$tableName = Lang::toTableName($tableName);
+		$columnName= Lang::toColumnName($columnName);
+		$sql = "ALTER TABLE `{$tableName}` CHANGE COLUMN `{$columnName}` " . $this->getColumnSql($definition);
+		$this->pdo->exec($sql); 
+	}
+	
 	
 	/**
 	 * Sanity check and semantic sugar from higher level
