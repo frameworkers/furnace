@@ -27,7 +27,7 @@ class JsonResponse extends Response {
 	}
 	
 	public function set($key,$value) {
-		$this->local_data['content'][$key] = $value;
+		$this->local_data[$key] = $value;
 	}
 	
 	public function flash($message,$cssClass = "ff_info") {

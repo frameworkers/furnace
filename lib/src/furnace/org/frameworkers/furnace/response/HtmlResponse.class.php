@@ -57,6 +57,10 @@ class HtmlResponse extends Response {
 			}
 		}
 		
+		// Initialize the local_data structure
+		$this->local_data = array("content" => array());
+		
+		// Initialize any notifications
 		$this->notifications = isset($_SESSION['_notifications'])
 			? $_SESSION['_notifications']
 			: array();
@@ -201,10 +205,16 @@ class HtmlResponse extends Response {
 	}
 	
 	public function getIncludedJavascripts() {
+		// Build data structure of all local zone data
+		$localDataByZone = array();
+		foreach ($this->layout->_zones as $z) {
+			$localDataByZone[$z] = $this->layout->$z->localData;
+		}
+		
 		$str = implode("\r\n",$this->javascripts);
 		$str .= "\r\n\t<script type='text/javascript'>\r\n";
 		$str .= "\t\tvar _context = " . StaticObject::toJsonString($this->context) . "\r\n";
-		$str .= "\t\tvar _local   = " . StaticObject::toJsonString($this->local_data);
+		$str .= "\t\tvar _local   = " . StaticObject::toJsonString($localDataByZone);
 		$str .= "\r\n\t</script>\r\n";
 		
 		return $str;

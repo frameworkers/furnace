@@ -8,7 +8,7 @@ abstract class Response extends StaticObject {
 	
 	public $context;
 	
-	protected $local_data  = array('content' => array());
+	protected $local_data  = array();
 	
 	protected $javascripts = array();
 	
