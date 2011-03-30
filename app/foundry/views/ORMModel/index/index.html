@@ -1,4 +1,12 @@
 <h1>ORM Model</h1>
+<div style="position:absolute;top:95px;left:340px;">
+<img id="imgRegenerateWorking" src="[%theme]/images/working.gif" style="display:none;vertical-align:middle"/>
+   <input type="button" id="btnRegenerateClassFiles" value="(Re)generate Class Files"/>
+   <span id="spnRegenerateClassFilesResult"></span>
+</div>
+<hr/>
+<hr class="space"/>
+
 <div class="column span-12 colborder">
 	<fieldset>
 	  <legend>Object: [sortedObjects;block=fieldset][@.className]</legend>
@@ -19,44 +27,57 @@
 	  <h5>Relations:</h5>
 	  <table>
 	    <tr>
-	      <th style="width:25%">Type</th>
+	      <th style="width:25%">Name</th>
 	      <th style="width:25%">Remote Object</th>
-	      <th>Name</th>
+	      <th>Type</th>
 	      <th>Intermediate</th>
 	    </tr>
 	    <tr>
-	      <td>[@.relations;block=tr;noerror][@.type]</td>
-	      <td>[@.remoteObjectClassName]</td>
-	      <td>[@.name]</td>
-	      <td>[@.lookupObject;prefix='<em>via </em>';error='<em>n/a</em>']</td>
+	   	  <td>[@.relations;block=tr;noerror][@.localName]</td>
+	   	  <td>[@.remoteObjectClassName]</td>
+	      <td>
+	      	[@.remoteType;map='1|One,M|Many';error='?']
+	      	<span style="font-size:1.6em;">&rarr;</span>
+	      	[@.localType;map='1|One,M|Many';error='?']</td>
+	      <td>[@.lookupObjectClassName;error='<em>n/a</em>']</td>
 	    </tr>
 	  </table>
 	</fieldset>
 </div>
 
 <div class="column span-11 last">
-<h4>Regenerating Application Model Class Files</h4>
-<p>Whenever changes are made to the application model file, it is necessary to
-   re-create the PHP object class files to reflect the changes. When you regenerate,
-   you may find that your schema (database tables) have become out of date. Any
-   loss of synchronization will be displayed here, along with options for automatically
-   resolving the difference.</p>
-   <img id="imgRegenerateWorking" src="[%theme]/images/working.gif" style="display:none;vertical-align:middle"/>
-   <input type="button" id="btnRegenerateClassFiles" value="(Re)generate Class Files"/>
-   <span id="spnRegenerateClassFilesResult"></span>
+<h5 style="margin-top:10px;">Database Schema Status:</h5>
+<table>
+  <tr>
+    <td style="width:50px;vertical-align:top;" rowspan="2">
+    	[tables;block=table]
+    	<img src="[assert:!@.tableExists;block=self][%theme]/images/db/table-missing.jpg" 
+    		 style="height:48px;vertical-align:top;"/>
+    	<img src="[assert:@.tableExists;block=self][assert:@.actionRequired;block=self][%theme]/images/db/table-errors.jpg" 
+    		 style="height:48px;vertical-align:top;"/>
+    	<img src="[assert:@.tableExists;block=self][assert:!@.actionRequired;block=self][%theme]/images/db/table.jpg" 
+    		 style="height:48px;vertical-align:top;"/>
+    </td>
+    <td>
+    	<a href="[%a]/models/orm/synchronize/[@.name]">[@.name]</a>
+    </td>
+  </tr>
+  <tr>
+    <td>[assert:@.tableExists;block=tr]
+    	<span>[assert:@.actionRequired;block=span]Action is required.&nbsp;
+    	<a href="[%a]/models/orm/synchronize/[@.name]">More Information</a></span>
+    </td>
+  </tr>
+  <tr>
+    <td>[@.tableExists][assert:!@.tableExists;block=tr]
+    	This table does not exist. &nbsp;
+    	<a class="createTable" title="[@.name]" href="#">Create it now</a>.
+    	<img class="working" src="[%theme]/images/working.gif" style="vertical-align:middle;display:none;"/>
+    </td>
+  </tr>
+</table>
 <hr class="space"/>
-
-<h4>Model-to-Database Synchronization</h4>
-<p>Foundry can compare the differences (if any) between your application
-   model and the default data source specified in your application's 
-   connections.config.php file. The analysis results will include options
-   for rectifying any differences found.</p>
-   
-   <img id="imgDbCompareWorking" src="[%theme]/images/working.gif" style="display:none;vertical-align:middle"/>
-   <input type="button" id="btnDbCompare" value="Compare Model To Database"/><br/><br/>
-   <div id="divDbCompareResult"></div>
-   <hr class="space"/>
-
+<hr/>
 
 <h4>Database Schema Export</h4>
 <p>Foundry can provide an SQL export of the database.</p>

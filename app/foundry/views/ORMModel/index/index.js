@@ -17,22 +17,16 @@ $(document).ready(function() {
 		);
 	});
 	
-	// Enable the 'compare model to database' button
-	$('#btnDbCompare').click(function() {
-		$('#btnDbCompare')
-			.attr('disabled','disabled')
-			.val('working...');
-		$('#imgDbCompareWorking').show();
-		$.get(_context.urls.url_base + '/models/orm/compareModelToDatabase',
-				function(resp) {
-					$('#imgDbCompareWorking').hide();
-					$('#btnDbCompare')
-						.removeAttr('disabled')
-						.val('Compare Model To Database');
-					$('#divDbCompareResult').html(resp);
-				}
-			);
+	// Enable the 'create table' links
+	$('.createTable').click(function(e) {
+		e.preventDefault();
+		$td = $(this).parent();
+		$td.children('img.working').show();
+		$.get(_context.urls.url_base + '/models/orm/createTable/'
+				+ $(this).attr('title') + '.json',{},function(data) {
+			if (data) {
+				$td.html(data.message);
+			}
+		});
 	});
-	
-	
 });

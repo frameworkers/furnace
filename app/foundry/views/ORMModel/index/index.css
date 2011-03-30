@@ -12,3 +12,7 @@ h5.alt {
 legend {
 	padding: 0px 8px;	
 }
+
+td {
+	line-height:20px;	
+}
