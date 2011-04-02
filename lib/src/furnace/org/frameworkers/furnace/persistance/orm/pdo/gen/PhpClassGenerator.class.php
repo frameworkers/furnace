@@ -527,6 +527,7 @@ class PhpClassGenerator {
 		$str .= T."public function __construct(\$connectionLabel = 'default') {".NL;
 		$str .= T.T."parent::__construct(Connections::Get(\$connectionLabel));".NL;
 		$str .= T.T."\$this->sqlBuilder->table('{$o->table->name}');".NL;
+		$str .= T.T."\$this->rowClass = '\app\models\orm\\{$o->className}';".NL;
 		$str .= T."}".NL.NL;
 		$str .= "}".NL.NL;
 		return $str;
