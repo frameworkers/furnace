@@ -203,7 +203,7 @@ class PhpClassGenerator {
 				$str .= T.T."if (\$idOrObject instanceof Object) {".NL;
 				if (empty($rel->lookupObjectClassName)) {
 					$str .= T.T.T."// The relation is not M-M, so simply set the field and save".NL;
-					$str .= T.T.T."\$idOrObject->set".ucwords($rel->remoteName)."(\$this->{$rel->remoteKeyColumn->name}); ".NL;
+					$str .= T.T.T."\$idOrObject->set".ucwords($rel->remoteName)."(\$this->_primaryKeys); ".NL;
 					$str .= T.T.T."return \$idOrObject->save();".NL.NL;
 				}
 				//TODO: same as above, but for M-M
@@ -211,7 +211,7 @@ class PhpClassGenerator {
 				$str .= T.T."} else { ".NL;
 				if (empty($rel->lookupObjectClassName)) {
 					$str .= T.T.T."if (false != (\${$singularInflection} = {$rel->remoteObjectClassName}::Load(\$idOrObject))) {".NL;
-					$str .= T.T.T.T."\${$singularInflection}->set".ucwords($rel->remoteName)."(\$this->{$rel->remoteObjectColumn->name}); ".NL;
+					$str .= T.T.T.T."\${$singularInflection}->set".ucwords($rel->remoteName)."(\$this->_primaryKeys); ".NL;
 					$str .= T.T.T.T."return \${$singularInflection}->save();".NL;
 					$str .= T.T.T."}".NL;
 				}
@@ -469,7 +469,11 @@ class PhpClassGenerator {
 			    * SHOULD BE AN ITERATION THROUGH ALL PRIMARY KEY ATTRIBUTES TESTING 
 			    * EACH TO ENSURE != FALSE
 			    */
-			   .T.T.T."return (\$this->{$o->primaryKeyAttributes[0]->name} > 0);".NL
+			   .T.T.T."\$goodSave = (\$this->{$o->primaryKeyAttributes[0]->name} > 0);".NL
+			   .T.T.T."if (\$goodSave) {".NL
+			   .T.T.T.T."\$this->_dirtyTable = array(); // Reset the dirty table".NL
+			   .T.T.T."}".NL
+			   .T.T.T."return \$goodSave;".NL
 			   /****/
 			   
 			   .T.T."}".NL
