@@ -33,7 +33,7 @@ class PhpClassGenerator {
 	
 	public static function GenerateManagedClassForObject(Object $o, Model $m) {
 		$compiled  = self::PHP_FILE_OPEN;
-		$compiled .= self::genFileProlog();
+		$compiled .= self::genFileProlog($o);
 		$compiled .= self::genObjClassComments($o);
 		$compiled .= self::genObjClassOpener($o);
 		$compiled .= self::genObjAttrDeclarations($o);
@@ -63,8 +63,9 @@ class PhpClassGenerator {
 		return $compiled;
 	}
 	
-	protected static function genFileProlog() {
+	protected static function genFileProlog($o) {
 		$str .= 'namespace app\models\orm\managed;'.NL.NL;
+		$str .= 'use \app\models\orm\\' . $o->className . 'Collection as Custom' . $o->className . 'Collection;'.NL;
 		$str .= 'use \org\frameworkers\furnace\persistance\orm\pdo\core\Object;'.NL;
 		$str .= 'use \org\frameworkers\furnace\persistance\orm\pdo\Dataset;'.NL;
 		$str .= 'use \org\frameworkers\furnace\connections\Connections;'.NL;
@@ -311,8 +312,8 @@ class PhpClassGenerator {
 		$str .= implode(', ',$pkAttrs);
 		$str .= ") {".NL;
 		
-		$str .= T.T."\$raw = Connections::Get()->select()".NL
-			  . T.T.T."->from('{$o->table->name}')".NL;
+		$str .= T.T."\$collection = new Custom". $o->className . "Collection();".NL;
+		$str .= T.T."\$obj = \$collection".NL;
 		foreach ($o->primaryKeyAttributes as $attr) {
 			$str .= T.T.T."->equal('{$attr->column->name}',\${$attr->name})".NL;
 		}
@@ -321,9 +322,7 @@ class PhpClassGenerator {
 		}
 		$str .= T.T.T."->first();".NL.NL;
 		
-		$str .= T.T."if (\$raw instanceof \stdClass) {".NL;
-		$str .= T.T.T."\$obj = new \\app\\models\\orm\\{$o->className}();".NL;
-		$str .= T.T.T."\$obj->merge(\$raw);".NL;	
+		$str .= T.T."if (\$obj) {".NL;
 		$str .= T.T.T."return \$obj;".NL;
 		$str .= T.T."} else {".NL;
 		$str .= T.T.T."throw new ORMLoadException('Unable to load requested object');".NL;
