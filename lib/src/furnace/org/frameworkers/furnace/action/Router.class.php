@@ -52,7 +52,8 @@ class Router extends StaticObject{
 		$defaults = array(
 			"controller" => "default",
 			"handler"    => "index",
-			"type"       => "html"
+			"type"       => "html",
+			"extension"  => false
 			
 		);
 		
@@ -193,6 +194,7 @@ class Router extends StaticObject{
                 'url'        => $url,
                 'route'      => $route['url'],
                 'prefix'     => $prefix,
+                'extension'  => isset($route['extension']) ? $route['extension'] : false,
                 'controller' => ((isset($wildcards['controller']) && 
             		             !empty($wildcards['controller']))
                    ? $wildcards['controller']
