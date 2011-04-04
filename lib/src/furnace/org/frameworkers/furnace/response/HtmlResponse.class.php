@@ -68,6 +68,11 @@ class HtmlResponse extends Response {
 	
 	public function render( ) {
 		
+		//Get the latest notifications (in case the handler set any)
+		$this->notifications = isset($_SESSION['_notifications'])
+			? $_SESSION['_notifications']
+			: array();
+		
 		$document = $this->layout->render($this);
 		
 		// Final pass to catch any tags outside of defined zones
