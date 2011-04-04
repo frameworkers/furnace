@@ -24,4 +24,12 @@ class RequestMethod {
 	const PUT     = "PUT";
 	const DELETE  = "DELETE";
 	
+	public static function Determine($string) {
+		switch (strtoupper($string)) {
+			case 'GET':    return self::GET;
+			case 'POST':   return self::POST;
+			case 'PUT':    return self::PUT;
+			case 'DELETE': return self::DELETE;
+		}
+	}
 }
