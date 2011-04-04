@@ -35,7 +35,7 @@ class Request extends StaticObject {
 		// extension is to be used for this route
 		if ($route['extension']) {
 			include_once(FURNACE_APP_PATH . '/extensions/' 
-				. "{$route['extension']}/config/{$route['extension']}.config.php");
+				. "{$route['extension']}/config/extension.config.php");
 		}
 		
 		// Store route related context information

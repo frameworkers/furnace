@@ -76,7 +76,7 @@ class AutoLoader {
 		// linux install.
 		$class = str_replace('\\','/',$class);
 		
-		$exts  = Extension::Lookup('*');
+		$exts  = Extension::All();
 		foreach ($exts as $pathBase) {
 			$path = $pathBase . '/lib/' . $class . '.class.php';
 			if (file_exists($path)) {

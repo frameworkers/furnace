@@ -20,17 +20,13 @@ class Extension {
 	
 	protected static $registry = array();
 	
-	public static function Register($label, $rootDir) {
-		self::$registry[$label] = $rootDir;
+	public static function Register($rootDir) {
+		self::$registry[] = $rootDir;
+		include_once($rootDir .'/config/routes.config.php');
+				
 	}
 	
-	public static function Lookup($label) {
-		if ($label == '*') {
-			return self::$registry;
-		} else {		
-			return isset(self::$registry[$label])
-				? self::$registry[$label]
-				: null;
-		}
+	public static function All() {
+		return self::$registry;
 	}
 }
