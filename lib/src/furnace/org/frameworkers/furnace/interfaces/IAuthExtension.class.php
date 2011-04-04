@@ -46,6 +46,13 @@ interface IAuthExtension {
 	public function check();
 	
 	/**
+	 * Test whether or not a user is currently logged in, and
+	 * redirect to the `applicationLoginUrl` configuration
+	 * setting if none found.
+	 */
+	public function requireLogin();
+	
+	/**
 	 * Return the unique (usually human readable) identity
 	 * of the user (username)
 	 */
