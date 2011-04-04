@@ -3,6 +3,7 @@ namespace org\frameworkers\furnace\action;
 
 use org\frameworkers\furnace\core\Object;
 use org\frameworkers\furnace\utilities\HTTP;
+use org\frameworkers\furnace\auth\Auth;
 
 class Controller extends Object {	
 	
@@ -10,9 +11,24 @@ class Controller extends Object {
 	
 	public $response;
 	
+	public $auth;
+	
+	public $user;
+	
+	public $clean = true; // A controller is clean until it fails an assertion
+	
 	public function __construct( &$request, &$response ) {
+		
+		// Store information about the context of this request
 		$this->request  = $request;
 		$this->response = $response;
+		
+		// Store information about the currently authenticated user
+		$this->auth     = Auth::Get();
+		$this->user     = $this->auth->getEntityObject();
+		
+		// No assertions have failed at this point
+		$this->clean    = true;
 	}
 	
 	public function set($key,$value,$zone = 'content') {
@@ -26,10 +42,25 @@ class Controller extends Object {
 	 * @param string  $httpCode       The http code to respond with if the assertion fails 
 	 *                                (use \org\frameworkers\furnace\utilities\HTTP class for http code constants)
 	 */
-	public function assert($condition,$failureMessage = 'Missing expected request parameters',$httpCode = HTTP::HTTP_400) {
-		if ( true !== $condition) {
-			$this->response->error("{$httpCode}: {$failureMessage}");
-			header("HTTP/1.1: {$httpCode}");
+	public function assert($condition,$failureMessage = 'Missing expected request parameters',$callback = null) {
+
+		if ( true != $condition) {
+			$this->clean = false;
+			$this->response->error($failureMessage);
+			if (null != $callback) {
+				$callback($this->request,$this->response);
+			}
 		}
-	}	
+	}
+
+	public function assertStrict($condition,$failureMessage = 'Missing expected request parameters',$callback = null) {
+
+		if ( true !== $condition) {
+			$this->clean = false;
+			$this->response->error($failureMessage);
+			if (null != $callback) {
+				$callback($this->request,$this->response);
+			}
+		}
+	}
 }
