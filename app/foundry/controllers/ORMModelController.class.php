@@ -53,16 +53,18 @@ class ORMModelController extends Controller {
 
 		// Table by table evaluation
 		foreach ($tables as $t) {
-			$columns = $this->analyzeTable($t);
-			
-			// Is any action required on this table?
-			$tables[$t->name]->actionRequired = false;
-			foreach ($columns as $c) {
-				if ($c->columnExists == false 
-					|| $c->columnInModel == false
-					|| $c->diffDetected == true) {
-					$tables[$t->name]->actionRequired = true;
-					break;			
+			if ($t->tableInModel) {
+				$columns = $this->analyzeTable($t);
+				
+				// Is any action required on this table?
+				$tables[$t->name]->actionRequired = false;
+				foreach ($columns as $c) {
+					if ($c->columnExists == false 
+						|| $c->columnInModel == false
+						|| $c->diffDetected == true) {
+						$tables[$t->name]->actionRequired = true;
+						break;			
+					}
 				}
 			}
 		}
