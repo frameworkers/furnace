@@ -16,7 +16,6 @@ namespace org\frameworkers\furnace\connections;
  * Provides a data structure for organizing the application's connections
  * to various services
  */
-use org\frameworkers\furnace\persistance\orm\pdo\DataSource;
 
 class Connections {
 	
@@ -24,13 +23,13 @@ class Connections {
 	
 	protected static $instances;
 	
-	public static function Add($label,$type,$connectionInformation) {
+	public static function Add($label,$provider,$connectionInformation) {
 		
 		// Add this connection information to the `$definitions` array.
 		self::$definitions[$label] = array(
-			    "label"=> $label,
-				"type" => $type,
-				"info" => $connectionInformation
+			    "label"    => $label,
+				"provider" => $provider,
+				"extra"    => $connectionInformation
 		);
 	}
 	
@@ -40,19 +39,8 @@ class Connections {
 		if (!isset(self::$instances[$label])) {
 			$conn = self::$definitions[$label];
 			if ($conn) {
-				switch ($conn['type']) {
-					// Handle RDBMS connections by instantiating a new
-					// DataSource instance with the appropriate provider
-					case 'mysql':
-						self::$instances[$label] = new DataSource(
-							"mysql:host={$conn['info']['host']};dbname={$conn['info']['dbname']};",
-							$conn['info']['username'],
-							$conn['info']['password']);
-						break;
-					default:
-						die("unable to instantiate connection to resource with label `{$label}`");
-							
-				}
+				$provider = $conn['provider'];
+				self::$instances[$label] = $provider::Create($conn['extra']);
 			} else { die("no connection defined with label `{$label}`");}
 		}
 		
