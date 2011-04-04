@@ -1,6 +1,8 @@
 <?php
 namespace org\frameworkers\furnace\response\renderers;
 
+use org\frameworkers\furnace\interfaces\IAuthExtension;
+
 use org\frameworkers\furnace\auth\Auth;
 use org\frameworkers\furnace\config\Config;
 
@@ -25,7 +27,11 @@ class TadpoleRenderer extends RenderEngine {
 		
 		$this->tp->page_data = $locals;
 		
-		$this->tp->set('_user',     Auth::Get());
+		if (Auth::Get()->getStatus() == IAuthExtension::AUTHENTICATED) {
+			$this->tp->set('_user', Auth::Get());
+		} else {
+			$this->tp->set('_user', false);
+		}
 		$this->tp->set('_config',   Config::Get('*'));
 		$this->tp->set('_context',  $context);
 		$this->tp->set('_response', $this->response);
