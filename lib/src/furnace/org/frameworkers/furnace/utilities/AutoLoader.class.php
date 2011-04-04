@@ -18,6 +18,7 @@
  * @author  Andrew Hart <andrew.hart@frameworkers.org>
  * @version SVN: $Id$
  */
+use org\frameworkers\furnace\extension\Extension;
 class AutoLoader {
 	
 	public static $loader;
@@ -48,6 +49,7 @@ class AutoLoader {
 		// Register autoload features
 		spl_autoload_extensions('.class.php');
 		spl_autoload_register(array($this,'framework'));
+		spl_autoload_register(array($this,'extensions'));
 	}
 	
 	/**
@@ -61,23 +63,35 @@ class AutoLoader {
 		// linux install.
 		$class = str_replace('\\','/',$class);
 		
-		$pathBase = 'app/' == substr($class,0,4)
-			? FURNACE_APP_PATH . '/' . substr($class,4)
-			: FURNACE_LIB_PATH . '/' . $class;
-		
-		$path   = $pathBase .".class.php";
-		
-		//var_dump($path);
+		$path = FURNACE_LIB_PATH . '/' . $class . ".class.php";
 		
 		if (file_exists($path)) {
 			require_once($path);
-			
-		// *Collection classes are co-located with their parents	
-		} else if (substr($class,-10) == 'Collection' && $class[10]) {
-			$path = str_replace('Collection.class.php','.class.php',$path);
+		}
+	}
+	
+	protected function extensions($class) {
+		// swap '\' for '/' to handle linux paths. This should
+		// eventually be made conditonal upon detecting a 
+		// linux install.
+		$class = str_replace('\\','/',$class);
+		
+		$exts  = Extension::Lookup('*');
+		foreach ($exts as $pathBase) {
+			$path = $pathBase . '/lib/' . $class . '.class.php';
 			if (file_exists($path)) {
 				require_once($path);
-			}
+				return;
+
+			// *Collection classes are co-located with their parents
+			// * which needs to change, since it is non-standard!	
+			} else if (substr($class,-10) == 'Collection' && $class[10]) {
+				$path = str_replace('Collection.class.php','.class.php',$path);
+				if (file_exists($path)) {
+					require_once($path);
+					return;
+				}
+			}	
 		}
 	}
 }
