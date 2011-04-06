@@ -117,7 +117,7 @@ class HtmlResponse extends Response {
 	public function setTheme($theme) {
 		$this->themePath = Config::Get('applicationThemesDirectory')."/{$theme}";
 		$this->context->urls['theme_base'] = 
-			Config::Get('applicationUrlBase')."/themes/{$theme}";
+			rtrim(Config::Get('applicationUrlBase'),'/')."/assets/themes/{$theme}";
 	}
 	
 	/**
