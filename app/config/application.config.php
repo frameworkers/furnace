@@ -38,3 +38,11 @@ Config::Set('applicationModelsDirectory',dirname(dirname(__FILE__)). '/models');
 Config::Set('applicationViewsDirectory', dirname(dirname(__FILE__)). '/views');
 Config::Set('applicationThemesDirectory',dirname(dirname(__FILE__)). '/assets/themes');
 
+
+Config::Set('applicationLoginUrl','/login');
+
+
+/**
+ * Extensions
+ */
+Extension::Register(FURNACE_APP_PATH .'/extensions/flame');

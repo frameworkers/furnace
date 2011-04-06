@@ -3,11 +3,12 @@
 use org\frameworkers\furnace\connections\Connections;
 
 /*
- * Example connection to a local MySQL database
+ * Example connection to a MySQL database via Flame ORM Driver
  */
-Connections::Add("default","mysql",array(
+Connections::Add("default",'\org\frameworkers\flame\core\DataSource',array(
+	"type"     => "mysql",
 	"host"     => "localhost",
 	"dbname"   => "db",
-	"username" => "user", 
-	"password" => "pass"
+	"username" => "username", 
+	"password" => "password"
 ));
