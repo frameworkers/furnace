@@ -1,6 +1,7 @@
 <?php
 use org\frameworkers\furnace\Furnace;
 use org\frameworkers\furnace\config\Config;
+use org\frameworkers\furnace\extension\Extension;
 
 // What is the debug status of this application?
 // 1 = Debug/Development mode
