@@ -17,7 +17,7 @@ Config::Set('theme'               ,'default');
 // What is the layout file to use by default?
 // This should be a filename (including the 
 // file extension, e.g.: 'default.html')
-Config::Set('layoutFile'          ,'default.html');
+Config::Set('defaultLayoutFile'   ,'default.html');
 
 // What is the default response type?
 Config::Set('defaultResponseType' ,'html');
