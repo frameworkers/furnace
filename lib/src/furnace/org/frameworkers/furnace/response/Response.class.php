@@ -50,6 +50,7 @@ abstract class Response extends StaticObject {
 		$argc = count($a);
 		
 		try {
+			$a = array_values($a); // Named keys are ignored, only order matters
 			switch ($argc) {
 				case 0: $c->$h(); break;
 				case 1: $c->$h($a[0]); break;

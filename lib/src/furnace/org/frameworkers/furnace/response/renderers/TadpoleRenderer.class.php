@@ -27,8 +27,8 @@ class TadpoleRenderer extends RenderEngine {
 		
 		$this->tp->page_data = $locals;
 		
-		if (Auth::Get()->getStatus() == IAuthExtension::AUTHENTICATED) {
-			$this->tp->set('_user', Auth::Get());
+		if (false != ($u = Auth::Get()) && $u->getStatus() == IAuthExtension::AUTHENTICATED) {
+			$this->tp->set('_user', $u);
 		} else {
 			$this->tp->set('_user', false);
 		}

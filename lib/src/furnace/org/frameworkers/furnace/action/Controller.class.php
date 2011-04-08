@@ -25,7 +25,7 @@ class Controller extends Object {
 		
 		// Store information about the currently authenticated user
 		$this->auth     = Auth::Get();
-		$this->user     = $this->auth->getEntityObject();
+		$this->user     = ($this->auth) ? $this->auth->getEntityObject() : false;
 		
 		// No assertions have failed at this point
 		$this->clean    = true;
