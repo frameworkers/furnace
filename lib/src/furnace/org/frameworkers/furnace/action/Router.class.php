@@ -78,6 +78,11 @@ class Router extends StaticObject{
 	 * @param string   $url     The candidate URL
 	 */
 	public static function Route($url) {
+		
+		// Ignore any query string arguments when routing
+		if (($qmark = strpos($url,'?') > 0)) {
+			$url = substr($url,0,$qmark);
+		}
 
         // Strip the prefix (url_base) from the incoming url
         $prefix = Config::Get('applicationUrlBase');
