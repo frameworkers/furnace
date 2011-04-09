@@ -961,20 +961,10 @@ class TadpoleEngine {
 						if ($bIsObject) {
 							// If the object has a private method defined, call it
 							if (is_callable(array($flashlight,$privateMethod))) {
-								// Handle the case in which a 'count' of the number of objects is requested
-								if ( '#' == $segment ) {
-									// return the number of objects
-									die('---');
-									var_dump(count($flashlight->privateMethod()->toArray()));
-									return count($flashlight->privateMethod()->toArray());
-								} else {
-							    	// Call the private method and return its result
-							    	return $flashlight->$privateMethod();
-								}
-							
+							    // Call the private method and return its result
+							    return $flashlight->$privateMethod();							
 							// If the object does not have a private method defined, try to return the public attribute
 							} else {
-								
 								// Handle the case in which a limited subset of matches is requested
 								if (isset($commands['start']) || isset($commands['limit'])) {
 									
@@ -984,8 +974,12 @@ class TadpoleEngine {
 								
 								// Handle the case in which all matches are to be returned
 								} else {
-									
-									return $flashlight->$segment;
+									// Handle the case in which a 'count' of the number of objects is requested
+									if ('#' == $segment) {
+										return count($flashlight->toArray());
+									} else {
+										return $flashlight->$segment;
+									}
 								}
 							}
 						// Handle the case where the flashlight is not an object
