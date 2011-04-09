@@ -92,39 +92,7 @@ class Router extends StaticObject{
         
         // Break the incoming url into its segmented parts
         $parts  = explode('/',ltrim($url,'/'));
-        
-        // Check the first url part for the foundry magic url and, if found,
-        // reconfigure the environment for a foundry request
-        if (($foundryMagic = Config::Get('foundryMagicUrlBase')) !== null
-        	&& $parts[0] == $foundryMagic) {
-        	// Mark this request as being a foundry request
-        	define("FOUNDRY_REQUEST",true);
-        	Config::Set('applicationUrlBase',
-        		((Config::Get('applicationUrlBase') == '/')
-        			? ''
-        			: Config::Get('applicationUrlBase')
-        		) 
-        		. '/' . ltrim(Config::Get('foundryMagicUrlBase'),'/'));
-        	Config::Set('applicationControllersDirectory',FURNACE_APP_PATH 
-        		. "/foundry/controllers");
-        	Config::Set('applicationViewsDirectory',FURNACE_APP_PATH 
-        		. "/foundry/views");
-        	Config::Set('applicationThemesDirectory',FURNACE_APP_PATH
-        		. "/foundry/assets/themes");
-        	Config::Set('theme','foundry');
-        	Config::Set('applicationName','Furnace - Foundry');
-        	
-        	// Clear routes and load Foundry route definitions
-        	Router::Clear();
-        	require_once(FURNACE_APP_PATH . '/foundry/config/routes.config.php');
-        		
-        	// Pop the `$foundryMagic` segment off the url
-        	array_shift($parts);
-        } else {
-        	define("FOUNDRY_REQUEST",false);
-        }
-        
-        
+
         // Look for a response type which can be specified by the presence of
         // an extension on the request (e.g.: /blog/post/34.json => 'json').
         // Any usable type must have a corresponding entry in types.config.php
