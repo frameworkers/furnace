@@ -58,7 +58,7 @@ class HtmlResponse extends Response {
 		}
 		
 		// Initialize the local_data structure
-		$this->local_data = array("content" => array());
+		$this->local_data = array("content" => array(),"_global" => array());
 		
 		// Initialize any notifications
 		$this->notifications = isset($_SESSION['_notifications'])
@@ -118,6 +118,7 @@ class HtmlResponse extends Response {
 		$this->themePath = Config::Get('applicationThemesDirectory')."/{$theme}";
 		$this->context->urls['theme_base'] = 
 			rtrim(Config::Get('applicationUrlBase'),'/')."/assets/themes/{$theme}";
+		$this->setLayout('default.html');
 	}
 	
 	/**
@@ -239,6 +240,10 @@ class HtmlResponse extends Response {
 	
 	public function set($key,$val,$zone = 'content') {
 		$this->local_data[$zone][$key] = $val;
+	}
+	
+	public function setGlobal($key,$val) {
+		$this->global_data[$key] = $val;
 	}
 	
 	protected function flash($message,$title,$cssClass = "notify_info",$zone = 'content') {

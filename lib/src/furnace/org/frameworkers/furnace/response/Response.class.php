@@ -10,6 +10,8 @@ abstract class Response extends StaticObject {
 	
 	protected $local_data  = array();
 	
+	public    $global_data = array();
+	
 	protected $javascripts = array();
 	
 	protected $stylesheets = array();

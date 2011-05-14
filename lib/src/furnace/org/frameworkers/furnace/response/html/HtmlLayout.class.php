@@ -1,6 +1,8 @@
 <?php
 namespace org\frameworkers\furnace\response\html;
 
+use org\frameworkers\furnace\response\ResponseTypes;
+
 class HtmlLayout {
 	
 	public $_layout;
@@ -46,6 +48,11 @@ class HtmlLayout {
 					
 			// Replace the zone tag in the layout with the compiled contents
 			$document = str_replace("[_{$this->$zone->label}_]",$contents,$document);
+			
+			// Replace any global tag data
+			$engine   = ResponseTypes::EngineFor('html');
+			$renderer = new $engine($response);
+			$document = $renderer->compile($document,$response->context,$response->global_data);
 		}
 		
 		// Return the final, compiled document
