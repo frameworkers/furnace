@@ -58,7 +58,7 @@ class HtmlResponse extends Response {
 		}
 		
 		// Initialize the local_data structure
-		$this->local_data = array("content" => array(),"_global" => array());
+		$this->local_data = array("content" => array());
 		
 		// Initialize any notifications
 		$this->notifications = isset($_SESSION['_notifications'])
