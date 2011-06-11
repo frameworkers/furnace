@@ -291,7 +291,7 @@ class Furnace {
         </pre>
         <?php endif;
         echo self::footer();
-        exit();
+        self::Cleanup();
     }
 
     public static function header($title = 'Frameworkers - Furnace') {
