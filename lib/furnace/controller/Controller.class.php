@@ -15,6 +15,7 @@
 
 namespace furnace\controller;
 
+use furnace\core\Config;
 use furnace\core\Furnace;
 use furnace\response\ResponseChunk;
 use furnace\request\Request;
@@ -100,6 +101,10 @@ class Controller {
 
     public function flash($message,$cssClass = 'success') {
         return $this->response->flash($message,$cssClass);
+    }
+
+    public function title($value) {
+        Config::Set('page.title',$value);
     }
 
     public function finalize() {
