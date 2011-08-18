@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# Change RewriteBase to suit your application environment. For example,
+# if you plan to run Furnace from the server root (e.g.: http://example.com/),
+# then RewriteBase should be set to '/'. If you plan to run Furnace from a 
+# subdirectory of the server root (e.g.: http://example.com/subdirectory/), 
+# then RewriteBase should be set to '/subdirectory'
+#
+RewriteBase /
+
+# No configuration needed below this line -----------------------------------
+
+# Send everything to index.php
+RewriteCond %{REQUEST_URI} !index\.php/.+$    [NC]
+RewriteRule ^(.+)$ \./index\.php/$1           [L,NC,QSA]
