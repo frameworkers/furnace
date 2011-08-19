@@ -14,6 +14,9 @@
 
 namespace furnace\connections;
 
+use furnace\utilities\Logger;
+use furnace\utilities\LogLevel;
+
 /**
  * Provides a data structure for organizing the application's connections
  * to various services
