@@ -50,14 +50,9 @@ Config::Set('sess.flashes.key','_flashes');
 // =============================================================================
 
 /*
-Connections::Add("default",
-    new \furnace\persistance\database\providers\pdo\PdoProvider(
-        array("driver"   => "mysql",
-              "host"     => "localhost",
-              "db"       => "",
-              "username" => "",
-              "password" => "")
-    )
+Connections::Add(
+	"default", new \PDO('mysql:host=localhost;dbname=mydb','username','password',
+		array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION))
 );
 */
 
