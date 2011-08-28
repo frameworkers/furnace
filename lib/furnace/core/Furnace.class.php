@@ -231,6 +231,13 @@ class Furnace {
         exit();
     }   
 
+    public static function Flash() {
+    	$_SESSION[Config::Get('sess.flashes.key')][] = array(
+            "message" => $message,
+            "type"    => $type
+        );
+    }
+
     public static function halt($message, 
         $debugDetails = 'No additional information available') {
         

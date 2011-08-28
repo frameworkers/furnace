@@ -118,10 +118,6 @@ class HtmlResponse extends Response {
     }
 
     public function flash($message,$type = 'success') {
-        
-        $_SESSION[Config::Get('sess.flashes.key')][] = array(
-            "message" => $message,
-            "type"    => $type
-        );
+        Furnace::Flash($message,$type);
     }
 }
