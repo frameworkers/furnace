@@ -73,6 +73,23 @@ class Input {
 
         return $default;
     }
+    
+    public static function url($key = null, $default = null, $filter = true) {
+        $data = Furnace::GetRequest()->route();
+        if (null == $key) {
+            return (filter)
+                ? self::filter_data($data->parameters)
+                : $data['parameters'];
+        }
+        
+        if (isset($data->parameters->$key)) {
+            return (filter)
+                ? self::filter_data($data->parameters[$key])
+                : $data['parameters'][$key];
+        }
+        
+        return $default;
+    }
 
     public static function get($key = null, $default = null, $filter = true) {
         
