@@ -41,7 +41,7 @@ class Controller {
     public function __construct($request, $response) {
         $this->request  = $request;
         $this->response = $response;
-        $this->input    = new Input($request);
+        $this->input    = Input::init();
     }
 
     public function data() {
