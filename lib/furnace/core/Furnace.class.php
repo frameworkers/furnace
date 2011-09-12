@@ -231,7 +231,7 @@ class Furnace {
         exit();
     }   
 
-    public static function Flash() {
+    public static function Flash($message, $type = 'success') {
     	$_SESSION[Config::Get('sess.flashes.key')][] = array(
             "message" => $message,
             "type"    => $type
