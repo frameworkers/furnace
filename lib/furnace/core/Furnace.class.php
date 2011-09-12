@@ -186,6 +186,10 @@ class Furnace {
         return end(self::$responses);
     } 
 
+    public static function GetRequest() {
+        return self::$request;
+    }
+    
     public static function Redirect($newUrl) {
         $newLocation = ('/' == $newUrl[0])
             ? F_URL_BASE . $newUrl
