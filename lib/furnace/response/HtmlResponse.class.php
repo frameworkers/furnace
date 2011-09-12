@@ -18,6 +18,7 @@ namespace furnace\response;
 use furnace\request\Request;
 use furnace\routing\Route;
 use furnace\core\Config;
+use furnace\core\Furnace;
 
 class HtmlResponse extends Response {
 
