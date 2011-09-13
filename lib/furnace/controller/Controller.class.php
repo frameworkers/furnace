@@ -31,12 +31,8 @@ class Controller {
     protected $input;
 
     protected $connection;
-
-
-    protected $data       = array('content' => '');
-    protected $contents   = array('content' => ''); 
+     
     protected $activeZone = 'content';
-
 
     public function __construct($request, $response) {
         $this->request  = $request;
@@ -64,9 +60,9 @@ class Controller {
         if (!$raw) {
             $fullPath = F_MODULES_PATH 
                 . "/{$this->request->route()->module}/views/{$templateFilePath}";
-            $this->contents[$this->activeZone] = file_get_contents($fullPath);
+            $this->response->contents[$this->activeZone] = file_get_contents($fullPath);
         } else {
-            $this->contents[$this->activeZone] = $templateFilePath;
+            $this->response->contents[$this->activeZone] = $templateFilePath;
         }
 
         return $this; // allow chaining       
@@ -93,7 +89,7 @@ class Controller {
     }
 
     public function set($key,$value,$default = null) {
-        $this->data[$this->activeZone][$key] = (null == $value)
+        $this->response->data[$this->activeZone][$key] = (null == $value)
             ? $default
             : $value;
         return $this; // allow chaining
@@ -109,14 +105,15 @@ class Controller {
 
     public function finalize() {
         $result = array();
-        foreach ($this->contents as $zone => $content) {
+        foreach ($this->response->contents as $zone => $content) {
 
-            if (count($this->data[$zone]) > 0) {
-                $result[$zone] = template(new ResponseChunk($content,$this->data[$zone]));
+            if (count($this->response->data[$zone]) > 0) {
+                $result[$zone] = template(new ResponseChunk($content,$this->response->data[$zone]));
             } else {
-                $result[$zone] = new ResponseChunk($content,$this->data[$zone]);
+                $result[$zone] = new ResponseChunk($content,$this->response->data[$zone]);
             }
         }
+        
         $this->response->add($result);
         return $this->response;
     }

@@ -23,6 +23,9 @@ class Response {
     protected $request;
     protected $route;
     protected $body;
+    
+    public $data       = array('content' => '');
+    public $contents   = array('content' => '');
 
     public function __construct(Request $request,Route $route,$options = array()) {
         $this->request      = $request;
