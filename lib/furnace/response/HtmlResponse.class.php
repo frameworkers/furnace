@@ -121,4 +121,20 @@ class HtmlResponse extends Response {
     public function flash($message,$type = 'success') {
         Furnace::Flash($message,$type);
     }
+    
+    public function includeJavascript($relativePath) {
+    	$fullPath = js_url($relativePath);
+    	$chunk = new ResponseChunk('<script type="text/javascript" src="'.$fullPath.'"></script>');
+    	//$this->contents['javascripts'] .= $chunk->contents();
+    	$this->contents['javascripts'] .= $chunk->contents();
+    }
+    
+    public function includeStylesheet($relativePath) {
+    	$fullPath = css_url($relativePath);
+    	$chunk = new ResponseChunk('<style type="text/css" rel="stylesheet" href="'.$fullPath.'"/>');
+    	$this->contents['stylesheets'] .= $chunk->contents();
+    }
+    
+    
+    
 }
