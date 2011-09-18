@@ -39,7 +39,6 @@ define('F_ENV_DEVELOPMENT'    , 2000);
 define('F_APP_PATH'           , dirname(__FILE__));
 define('F_LIB_PATH'           , F_APP_PATH . '/lib');
 define('F_DATA_PATH'          , F_APP_PATH . '/data');
-define('F_THEME_PATH'         , F_APP_PATH . '/themes');
 define('F_MODULES_PATH'       , F_APP_PATH . '/modules');
 define('F_DEFAULT_MODULE_NAME', 'default');
 define('F_DEFAULT_MODULE_NS'  , 'app');
@@ -241,18 +240,18 @@ function flash($message,$title,$cssClasses) {
 }
 
 function img_url($path) {
-    $theme = Config::Get('app.theme');
-    return F_URL_BASE . "/themes/{$theme}/img/{$path}";
+    return Config::Get('app.themes.url') 
+    	   . Config::Get('app.theme') . "/img/{$path}";
 }
 
 function js_url($path) {
-    $theme = Config::Get('app.theme');
-    return F_URL_BASE . "/themes/{$theme}/js/{$path}";
+    return Config::Get('app.themes.url') 
+    	   . Config::Get('app.theme') . "/js/{$path}";
 }
 
 function css_url($path) {
-    $theme = Config::Get('app.theme');
-    return F_URL_BASE . "/themes/{$theme}/css/{$path}";
+    return Config::Get('app.themes.url') 
+    	   . Config::Get('app.theme') . "/css/{$path}";
 }
 
 function href($url) {
