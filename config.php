@@ -36,6 +36,8 @@ Config::Set('message.500'     ,"It takes real skill to mess things up this badly
 
 // APPLICATION THEME SETTINGS
 // ============================================================================
+Config::Set('app.themes.dir'  , F_APP_PATH . '/themes/');
+Config::Set('app.themes.url'  , F_URL_BASE . '/themes/');
 Config::Set('app.theme'       ,'default');
 Config::Set('default.layout'  ,'default.php');
 Config::Set('template.engine' ,false);
@@ -83,3 +85,6 @@ Config::Set('auth.options'    ,array(
 Router::Connect("/:controller/:handler");
 Router::Connect("/:handler", array("controller" => "default"));
 
+
+// PLACE CUSTOM CONFIGURATION HERE
+// =============================================================================
