@@ -75,15 +75,15 @@ class Furnace {
             } 
         }
 
-        // 3.4 Create a Response object to hold the response
-        self::$responses[] = Furnace::CreateResponse($request,$route);
-        $response = end(self::$responses);
-
-        // 3.5 Parse the module's config file, if present
+        // 3.4 Parse the module's config file, if present
         $moduleConfigFilePath = F_MODULES_PATH . "/{$route->module}/config.php";
         if (file_exists($moduleConfigFilePath)) {
             include($moduleConfigFilePath);
         }
+        
+        // 3.5 Create a Response object to hold the response
+        self::$responses[] = Furnace::CreateResponse($request,$route);
+        $response = end(self::$responses);        
         
         // 3.6 Include the required controller file & create an instance of the class
         require_once($controllerFilePath);
