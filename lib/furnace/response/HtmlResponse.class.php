@@ -35,7 +35,7 @@ class HtmlResponse extends Response {
             if (false === $options['layout']) { // layout omitted explicitly
                 $this->layout(false);
             } else {
-                $this->layout(F_THEME_PATH . '/'
+                $this->layout(Config::Get('app.themes.dir')
                     . Config::Get('app.theme') . '/layouts/'
                     . $options['layout']);
             }
@@ -44,8 +44,7 @@ class HtmlResponse extends Response {
             if (false === $route->layout) {     // layout omitted explicitly
                 $this->layout(false);
             } else {
-                $this->layout(
-                    F_THEME_PATH . '/'
+                $this->layout(Config::Get('app.themes.dir')
                         . Config::Get('app.theme') . '/layouts/' 
                         . $route->layout);
             }
@@ -131,7 +130,7 @@ class HtmlResponse extends Response {
     
     public function includeStylesheet($relativePath) {
     	$fullPath = css_url($relativePath);
-    	$chunk = new ResponseChunk('<style type="text/css" rel="stylesheet" href="'.$fullPath.'"/>');
+    	$chunk = new ResponseChunk('<link rel="stylesheet" type="text/css" href="'.$fullPath.'"/>');
     	$this->contents['stylesheets'] .= $chunk->contents();
     }
     
