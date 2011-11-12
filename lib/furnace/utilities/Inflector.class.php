@@ -63,4 +63,10 @@ class Inflector {
 
 		return trim($output);
 	}
+	
+	public static function toFunction($string) {
+	    $output = str_replace(' ','',$string);    // remove spaces
+	    $output = str_replace('-','_',$output);   // convert '-' to '_'
+	    return $output;
+	}
 }

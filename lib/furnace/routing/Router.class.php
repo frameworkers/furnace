@@ -100,15 +100,15 @@ class Router {
         // or it will be ignored.
         $type     = null;
         $lastPart =& $parts[count($parts)-1];
-        $foundDot = strrpos($lastPart,'.') !== false;
+        $foundDot = strrpos($lastPart,'>') !== false;
         $ext      = ($foundDot) 
-        	? substr($lastPart,strrpos($lastPart,'.') + 1) 
+        	? substr($lastPart,strrpos($lastPart,'>') + 1) 
         	: false;
         if ( $ext && ResponseTypes::TypeExists( $ext ) ) {
         	$type = $ext;
         }
         if ( $ext ) { // Strip the extension from the route
-        	$lastPart = str_replace(".{$ext}",'',$lastPart);
+        	$lastPart = str_replace(">{$ext}",'',$lastPart);
         }
 
         $the_route = array();
@@ -192,8 +192,6 @@ class Router {
                      	: 'text/html'))), // use the default configured type
               );
               
-              // Handler fix-ups
-              $the_route['handler'] = str_replace('-','_',$the_route['handler']);
               Logger::Log(LogLevel::DEBUG,"Matched route: {$the_route['route']}");
               return new Route($the_route);
             }

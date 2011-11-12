@@ -25,6 +25,7 @@ use furnace\utilities\Logger;
 use furnace\utilities\LogLevel;
 use furnace\utilities\Http;
 use furnace\utilities\Benchmark;
+use furnace\utilities\Inflector;
 
 class Furnace {
 
@@ -94,7 +95,8 @@ class Furnace {
 
 
         // 3.7 Ensure the requested handler has been defined and is callable
-        $handlerFunction = $route->handler;
+        $handlerFunction = Inflector::toFunction($route->handler);
+        
         if (!is_callable(array($controllerInstance,$handlerFunction))) {
             if (Config::Get('environment') == F_ENV_DEVELOPMENT) {
                 Furnace::halt("Unable to handle request","Furnace was unable to find a "
