@@ -35,11 +35,15 @@ class Inflector {
 	
 	// from: furnacePHPFramework
 	// to:   Furnace PHP Framework
-	public static function toHumanReadable($string) {
+	public static function toHumanReadable($string,$isHyphenated = false) {
 		$string = self::toProperCase($string);
 		$output = '';
 		$i      = 0;
 		$lastLetterWasCapitalized = false;
+		
+		if ($isHyphenated) {
+		    return ucwords(str_replace('-',' ',$string));
+		}
 		
 		// Iterate over the string
 		while ($string[$i]) {
