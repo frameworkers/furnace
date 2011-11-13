@@ -51,6 +51,25 @@ class HtmlResponse extends Response {
         }
     }
 
+    /**
+     * Get or set the layout for the current response
+     * 
+     * An HtmlResponse is normally wrapped in a 'layout' which provides
+     * aspects of the user interface that are common across all pages sharing
+     * the same layout, and acts as a container for the defined content zones. 
+     * There are three ways to invoke this function. Invoking 
+     * this function with no parameters will cause it to return the contents 
+     * of the layout that is currently being used. Invoking this function with
+     * a single string argument representing an absolute path to a layout file
+     * will cause the function to replace the current layout with the contents
+     * of the provided file. Finally, passing boolean 'false' to this function
+     * will cause the function to erase any previously stored layout information
+     * for this response. 
+     * 
+     * @param mixed $path   Either a string representing the absolute path to 
+     *                      the layout file to use for this response, or boolean
+     *                     'false' to indicate that no layout should be used.
+     */
     public function layout($path = null) { 
         // If path === null, return the current layout        
         if (null === $path) {
