@@ -56,6 +56,20 @@ class Controller {
         return $this->auth;
     }
 
+    /**
+     * Prepare a view template for use
+     * 
+     * Allows specifying of a path to a template file to use for rendering
+     * the content for the currently active zone. The default behavior (i.e.: when
+     * the second parameter, '$raw', is boolean 'false') is to treat the specified
+     * path as relative to the 'views' directory of the module specified by the 
+     * route. If the second parameter, '$raw', is true, then the value for 
+     * $templateFilePath is treated as the absolute path to the resource. 
+     * 
+     * @param string $templateFilePath The path to the template file to use. See the note above
+     *                                 for how this function will interpret the provided value
+     * @param string $raw              Whether to treat the path as relative (default) or absolute/raw.	
+     */
     public function prepare($templateFilePath,$raw = false) {
         if (!$raw) {
             $fullPath = F_MODULES_PATH 
