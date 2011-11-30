@@ -94,8 +94,8 @@ class HtmlResponse extends Response {
      *                             theme's 'layouts' directory. Usually, this is
      *                             a simple file name (e.g.: 'default.php').
      */
-    public function useLayout($relativePath) {
-        return $this->setLayout($relativePath);
+    public function useLayout($relativePath,$pathIsAbsolute = false) {
+        return $this->setLayout($relativePath,$pathIsAbsolute);
     }
     
     /**
@@ -104,17 +104,17 @@ class HtmlResponse extends Response {
      * @param string $relativePath The path to the layout file, relative to the
      *                             theme's 'layouts' directory. Usually this is 
      *                             a simple file name (e.g.: 'default.php').
-     * @param boolean $absolutePath Wheter to treat $relativePath as absolute 
+     * @param boolean $pathIsAbsolute Whether to treat $relativePath as absolute 
      *                             (default is false)
      */
-    public function setLayout($relativePath,$absolutePath = false) {
+    public function setLayout($relativePath,$pathIsAbsolute = false) {
         
         if ($relativePath === false) {
             $this->layoutFileContents = false;
             return $this;
         }
         
-        $fullPath = ($absolutePath)
+        $fullPath = ($pathIsAbsolute)
     		? $relativePath
     		: Config::Get('app.themes.dir')
     		    .Config::Get('app.theme')
@@ -182,24 +182,24 @@ class HtmlResponse extends Response {
         Furnace::Flash($message,$type);
     }
     
-    public function includeJavascript($relativePath,$absolutePath = false) {
-    	$fullPath = ($absolutePath)
+    public function includeJavascript($relativePath,$pathIsAbsolute = false) {
+    	$fullPath = ($pathIsAbsolute)
     		? $relativePath
     		: js_url($relativePath);
     	$chunk = new ResponseChunk('<script type="text/javascript" src="'.$fullPath.'"></script>');
     	$this->contents['javascripts'] .= $chunk->contents();
     }
     
-    public function includeStylesheet($relativePath,$absolutePath = false) {
-    	$fullPath = ($absolutePath)
+    public function includeStylesheet($relativePath,$pathIsAbsolute = false) {
+    	$fullPath = ($pathIsAbsolute)
     		? $relativePath
     		: css_url($relativePath);
     	$chunk = new ResponseChunk('<link rel="stylesheet" type="text/css" href="'.$fullPath.'"/>');
     	$this->contents['stylesheets'] .= $chunk->contents();
     }
     
-    public function bundleJavascript($relativePath,$absolutePath = false) {
-        $fullPath = ($absolutePath)
+    public function bundleJavascript($relativePath,$pathIsAbsolute = false) {
+        $fullPath = ($pathIsAbsolute)
     		? $relativePath
     		: Config::Get('app.themes.dir').Config::Get('app.theme') . "/js/{$relativePath}";
     		
@@ -209,8 +209,8 @@ class HtmlResponse extends Response {
     	$this->contents['javascripts'] .= $chunk->contents();
     }
     
-    public function bundleStylesheet($relativePath,$absolutePath = false) {
-        $fullPath = ($absolutePath)
+    public function bundleStylesheet($relativePath,$pathIsAbsolute = false) {
+        $fullPath = ($pathIsAbsolute)
     		? $relativePath
     		: Config::Get('app.themes.dir').Config::Get('app.theme') . "/css/{$relativePath}";
     		
