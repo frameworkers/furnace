@@ -66,6 +66,11 @@ class HtmlResponse extends Response {
      * will cause the function to erase any previously stored layout information
      * for this response. 
      * 
+     * NOTE: For most cases, particularly when trying to set the layout from
+     *       a controller handler, the {@see setLayout} and {@see useLayout} 
+     *       methods are preferable because they support relative pathing and
+     *       method chaining.
+     * 
      * @param mixed $path   Either a string representing the absolute path to 
      *                      the layout file to use for this response, or boolean
      *                     'false' to indicate that no layout should be used.
@@ -80,6 +85,43 @@ class HtmlResponse extends Response {
         $this->layoutFileContents = (false === $path)
             ? false
             : file_get_contents($path);
+    }
+    
+    /**
+     * Alias for {@see setLayout}
+     * 
+     * @param string $relativePath The path to the layout file, relative to the
+     *                             theme's 'layouts' directory. Usually, this is
+     *                             a simple file name (e.g.: 'default.php').
+     */
+    public function useLayout($relativePath) {
+        return $this->setLayout($relativePath);
+    }
+    
+    /**
+     * Set the layout to use for this response
+     * 
+     * @param string $relativePath The path to the layout file, relative to the
+     *                             theme's 'layouts' directory. Usually this is 
+     *                             a simple file name (e.g.: 'default.php').
+     * @param boolean $absolutePath Wheter to treat $relativePath as absolute 
+     *                             (default is false)
+     */
+    public function setLayout($relativePath,$absolutePath = false) {
+        
+        if ($relativePath === false) {
+            $this->layoutFileContents = false;
+            return $this;
+        }
+        
+        $fullPath = ($absolutePath)
+    		? $relativePath
+    		: Config::Get('app.themes.dir')
+    		    .Config::Get('app.theme')
+    		    ."/layouts/{$relativePath}";
+    	
+    	$this->layoutFileContents = file_get_contents($fullPath);
+    	return $this;
     }
 
     public function data($zone = null) {
