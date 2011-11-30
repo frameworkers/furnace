@@ -145,7 +145,6 @@ class HtmlResponse extends Response {
     		? $relativePath
     		: js_url($relativePath);
     	$chunk = new ResponseChunk('<script type="text/javascript" src="'.$fullPath.'"></script>');
-    	//$this->contents['javascripts'] .= $chunk->contents();
     	$this->contents['javascripts'] .= $chunk->contents();
     }
     
@@ -157,6 +156,26 @@ class HtmlResponse extends Response {
     	$this->contents['stylesheets'] .= $chunk->contents();
     }
     
+    public function bundleJavascript($relativePath,$absolutePath = false) {
+        $fullPath = ($absolutePath)
+    		? $relativePath
+    		: Config::Get('app.themes.dir').Config::Get('app.theme') . "/js/{$relativePath}";
+    		
+    	$contents = file_get_contents($fullPath);
+    	
+    	$chunk = new ResponseChunk('<script type="text/javascript">'.$contents.'"></script>');
+    	$this->contents['javascripts'] .= $chunk->contents();
+    }
     
-    
+    public function bundleStylesheet($relativePath,$absolutePath = false) {
+        $fullPath = ($absolutePath)
+    		? $relativePath
+    		: Config::Get('app.themes.dir').Config::Get('app.theme') . "/css/{$relativePath}";
+    		
+    	$contents = file_get_contents($fullPath);
+    	
+    	$chunk = new ResponseChunk('<style type="text/css">'.$contents.'</style>');
+    	$this->contents['stylesheets'] .= $chunk->contents();
+    }
+
 }
