@@ -65,6 +65,10 @@ class Controller {
      * path as relative to the 'views' directory of the module specified by the 
      * route. If the second parameter, '$raw', is true, then the value for 
      * $templateFilePath is treated as the absolute path to the resource. 
+     *
+     * This function also checks the current theme to see if an override template
+     * has been defined. If one is found in the theme, it is used instead of the 
+     * application template.
      * 
      * @param string $templateFilePath The path to the template file to use. See the note above
      *                                 for how this function will interpret the provided value
@@ -72,16 +76,30 @@ class Controller {
      */
     public function prepare($templateFilePath,$raw = false) {
         if (!$raw) {
+          
+            // The full path to the template in the module
             $fullPath = F_MODULES_PATH 
-                . "/{$this->request->route()->module}/views/{$templateFilePath}";
-            if (file_exists($fullPath)) {
-                $this->response->contents[$this->activeZone] = file_get_contents($fullPath);
-            }   
+                . "/{$this->request->route()->module}"
+                . "/views/{$templateFilePath}";
+                
+            // The full path to a theme-specific override in the
+            // current theme
+            $themeOverride = Config::Get('app.themes.dir')
+                . '/' . Config::get('app.theme')
+                . '/views/' . $this->request->route()->module
+                . "/{$templateFilePath}";
+
+            // Check for a theme override of the template
+            $this->response->contents[$this->activeZone] = 
+                (file_exists($themeOverride))
+                    ? file_get_contents($themeOverride)
+                    : file_get_contents($fullPath);
+
         } else {
             $this->response->contents[$this->activeZone] = $templateFilePath;
         }
 
-        return $this; // allow chaining       
+        return $this; // allow chaining
     }
 
     public function load($modelClass,$alias = null) {
