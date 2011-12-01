@@ -46,8 +46,6 @@ class Input {
             unset($GLOBALS['_FILES']);
             ini_set('register_globals', 0);
         }
-        
-        return self;
     }
 
     public static function any($key, $default = null, $filter = true) {
