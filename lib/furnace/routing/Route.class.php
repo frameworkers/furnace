@@ -34,17 +34,17 @@ class Route {
     public $options;
 
     public function __construct($data = array()) {
-        $this->url = $data['url'];
-        $this->pattern = $data['pattern'];
-        $this->prefix = $data['prefix'];
-        $this->controller = $data['controller'];
-        $this->layout = $data['layout'];
-        $this->module = $data['module'];
-        $this->options = $data['options'];
-        $this->path = $data['path'];
-        $this->contentType = $data['contentType'];
-        $this->handler = $data['handler'];
-        $this->parameters = $data['parameters'];
+        $this->url     = isset($data['url'])             ? $data['url']         : false;
+        $this->pattern = isset($data['pattern'])         ? $data['pattern']     : false;
+        $this->prefix  = isset($data['prefix'])          ? $data['prefix']      : false;
+        $this->controller = isset($data['controller'])   ? $data['controller']  : false;
+        $this->layout  = isset($data['layout'])          ? $data['layout']      : false;
+        $this->module  = isset($data['module'])          ? $data['module']      : false;
+        $this->options = isset($data['options'])         ? $data['options']     : false;
+        $this->path    = isset($data['path'])            ? $data['path']        : false;
+        $this->contentType = isset($data['contentType']) ? $data['contentType'] : false;
+        $this->handler = isset($data['handler'])         ? $data['handler']     : false;
+        $this->parameters = isset($data['parameters'])   ? $data['parameters']  : false;
     }
 }
 
