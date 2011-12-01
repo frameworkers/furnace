@@ -74,7 +74,9 @@ class Controller {
         if (!$raw) {
             $fullPath = F_MODULES_PATH 
                 . "/{$this->request->route()->module}/views/{$templateFilePath}";
-            $this->response->contents[$this->activeZone] = file_get_contents($fullPath);
+            if (file_exists($fullPath)) {
+                $this->response->contents[$this->activeZone] = file_get_contents($fullPath);
+            }   
         } else {
             $this->response->contents[$this->activeZone] = $templateFilePath;
         }
