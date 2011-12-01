@@ -35,6 +35,15 @@ class Router {
 	public static $routes = array();
 	
 	/**
+	 * A holding area for processing module routes until they are flushed
+	 * into the main {@see $routes} array.  This is necessary to ensure the
+	 * proper route precedence order.
+	 * 
+	 * @var array
+	 */
+	public static $moduleRoutes = array();
+	
+	/**
 	 * Define a route your application will respond to
 	 * 
 	 * The purpose of {@link Connect} is to provide a mapping
@@ -69,6 +78,64 @@ class Router {
 			self::$routes = array();
 		}
 		array_push(self::$routes,$options);	
+	}
+	
+	/**
+	 * Version of {@see Connect} that is used by module config files
+	 * when defining module-specific routes.
+	 * 
+	 * @param string $route    The route definition to record
+	 * @param array  $options  Options to apply to this route
+	 */
+	public static function ModuleConnect($route,$options = array()) {
+	    // Set up default values
+		$defaults = array(
+			"controller" => "default",
+			"handler"    => "index",
+			"type"       => "html",
+			"extension"  => false,
+            "module"     => "app"
+		);
+		
+		// Merge default values into provided options
+		$options = array_merge($defaults,$options);
+		
+		// Merge the route url into the options
+		$options['url'] = $route;
+		
+		// Add the route to the list of known routes
+		if (self::$routes == null) {
+			self::$routes = array();
+		}
+		array_push(self::$moduleRoutes,$options);
+	}
+	
+	/**
+	 * Applies the routes defined for a particular module, maintaining
+	 * route precedence. 
+	 * 
+	 * Routes are evaluated by the Router in the order they are encountered.
+	 * Because module config files are parsed _after_ the main config file,
+	 * by default, all module routes would be encountered _after_ the 
+	 * default routing behavior of furnace: in other words, they'd never,
+	 * ever match. 
+	 * 
+	 * Module config files, therefore, must use {@see ModuleConnect} when
+	 * defining routes. This stores the route information in a temporary
+	 * structure until this function is called to flush the definitions,
+	 * in the correct order, into the main route table.
+	 * 
+	 * To maintain the proper precedence (i.e.: the precedence that the
+	 * module config author intended) each module route is prepended
+	 * (e.g.: unshifted) to the main route table in order.
+	 * 
+	 */
+	public static function ApplyModuleRoutes() {
+	    $ordered = array_reverse(self::$moduleRoutes,true);
+	    foreach ($ordered as $route) {
+	        array_unshift(self::$routes,$route);
+	    }
+	    self::$moduleRoutes = array();
 	}
 	
 	

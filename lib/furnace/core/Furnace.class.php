@@ -76,10 +76,13 @@ class Furnace {
             } 
         }
 
-        // 3.4 Parse the module's config file, if present
-        $moduleConfigFilePath = F_MODULES_PATH . "/{$route->module}/config.php";
-        if (file_exists($moduleConfigFilePath)) {
-            include($moduleConfigFilePath);
+        // 3.4 Apply the staged config for the module, and, if none exists, 
+        //     attempt to locate the config file and parse it now
+        if (! Config::ApplyStagedModule($route->module)) {
+            $moduleConfigFilePath = F_MODULES_PATH . "/{$route->module}/config.php";
+            if (file_exists($moduleConfigFilePath)) {
+                include($moduleConfigFilePath);
+            }
         }
         
         // 3.5 Create a Response object to hold the response

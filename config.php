@@ -86,5 +86,10 @@ Router::Connect("/:controller/:handler");
 Router::Connect("/:handler", array("controller" => "default"));
 
 
+// MODULES IN USE BY THIS APPLICATION
+// ==============================================================================
+// Example: Config::LoadModule('Foo');
+
+
 // PLACE CUSTOM CONFIGURATION HERE
 // =============================================================================

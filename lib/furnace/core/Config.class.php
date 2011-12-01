@@ -21,20 +21,82 @@ namespace furnace\core;
 class Config {
 	
 	protected static $configStore = array();
+	protected static $stageMode        = false;
+	protected static $stagedModuleName = false;
+	protected static $modules     = array();
 	
 	public static function Set($key, $value) {
 		if (empty(self::$configStore)) self::init();
-		self::$configStore[$key] = $value;
+		
+		if (self::$stageMode) {
+		    // Create the staging area for the staged module if not exists
+		    if (!isset(self::$modules[self::$stagedModuleName])) {
+		        self::$modules[self::$stagedModuleName] = array();
+		    }
+		    // Add the current key/value pair to the staging area
+		    self::$modules[self::$stagedModuleName][$key] = $value;
+		} else {
+		    // Add the current key/value pair to the config store
+		    self::$configStore[$key] = $value;
+		}
 	}
 	
 	public static function Get($key = null,$default = null) {
 		if ($key == null) {
 			return self::$configStore;
-		} else {		
-			return isset(self::$configStore[$key])
-				? self::$configStore[$key]
-				: $default;
+		} else {
+		    // self::$stageMode means we are 
+		    // currently staging a module's config file. In this case
+		    // we need to check both the global config store and the
+		    // staged values for the module. This is required
+		    // because it is possible (indeed probable) that a module 
+		    // config will reference its own settings in 
+		    // Router::Connect(...) declarations.
+		    if (self::$stageMode) {
+		        // Check the global store first
+		        if (isset(self::$configStore[$key])) {
+		            return self::$configStore[$key];
+		        }
+		        // Check the module's staged config
+		        if (isset(self::$modules[self::$stagedModuleName][$key])) {
+		            return self::$modules[self::$stagedModuleName][$key];
+		        }
+		        // Nothing matched, return the default
+		        return $default;
+		    // Default operation
+		    } else {
+    			return isset(self::$configStore[$key])
+    				? self::$configStore[$key]
+    				: $default;
+		    }
 		}
+	}
+	
+	public static function LoadModule( $moduleName ) {
+	    // Get the config file for the desired module
+	    $configFilePath = F_MODULES_PATH . "/{$moduleName}/config.php";
+	    
+	    // Enter staging mode
+	    self::$stageMode = true;
+	    self::$stagedModuleName = $moduleName;
+	    
+	    // Process the config file
+	    if (file_exists($configFilePath)) {
+	        require_once ($configFilePath);
+	    }
+	    // Exit staging mode
+	    self::$stagedModuleName = false;
+	    self::$stageMode = false;
+	}
+	
+	public static function ApplyStagedModule( $moduleName ) {
+	    if (isset(self::$modules[$moduleName])) {
+	        self::$configStore = array_merge(
+	            self::$configStore, self::$modules[$moduleName]);
+	        return true;
+	    } else {
+	        return false;
+	    }
 	}
 	
 	public static function Delete($key) {
