@@ -84,7 +84,12 @@ class Furnace {
         
         // 3.5 Create a Response object to hold the response
         self::$responses[] = Furnace::CreateResponse($request,$route);
-        $response = end(self::$responses);        
+        $response = end(self::$responses);       
+                    
+        // 3.5.1 Add Furnace javascript variables, but only if this is the _parent_ request
+        if (count(self::$responses) == 1) {
+            $response->add(array('javascripts' => Furnace::processJavascriptVariables($response)));
+        }
         
         // 3.6 Include the required controller file & create an instance of the class
         require_once($controllerFilePath);
@@ -229,6 +234,17 @@ class Furnace {
         }
 
         $contents .= '</div>';
+        return new ResponseChunk($contents);
+    }
+    
+    public static function ProcessJavascriptVariables($response) {
+        $contents  = "<script type=\"text/javascript\">\r\n";
+        $contents .= "var Furnace = { \r\n";
+        $contents .= "   'theme': '" . Config::Get('app.theme') . "'\r\n";
+        $contents .= "  ,'URL'  : '" . F_URL_BASE . "'\r\n";
+        $contents .= "}\r\n";
+        $contents .= "</script>\r\n";        
+        
         return new ResponseChunk($contents);
     }
 
