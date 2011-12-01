@@ -94,10 +94,6 @@ class Furnace {
         // 3.6 Include the required controller file & create an instance of the class
         require_once($controllerFilePath);
         $controllerInstance = new $controllerClassName($request,$response);
-        if ($authProviderInstance) {
-            $controllerInstance->auth($authProviderInstance);
-        }
-
 
         // 3.7 Ensure the requested handler has been defined and is callable
         $handlerFunction = Inflector::toFunction($route->handler);
