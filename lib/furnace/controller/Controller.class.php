@@ -117,6 +117,17 @@ class Controller {
         $this->$attrName = new $modelClass();
     }
 
+    public function useModule( $which ) {
+      $moduleConfigFilePath = F_MODULES_PATH 
+        . "/{$which}/config.php";
+      if (file_exists($moduleConfigFilePath)) {
+        require_once($moduleConfigFilePath);
+      } else {
+        throw new \Exception("Unable to locate module '{$which}'");
+      }
+      return $this;
+    }
+
     public function region($name) {
         $this->activeZone = $name;
         return $this; // allow chaining
