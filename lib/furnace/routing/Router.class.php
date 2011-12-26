@@ -259,7 +259,7 @@ class Router {
                      	: 'text/html'))), // use the default configured type
               );
               
-              Logger::Log(LogLevel::DEBUG,"Matched route: {$the_route['route']}");
+              Logger::Log(LogLevel::INFO,"Matched route: {$the_route['route']}");
               return new Route($the_route);
             }
         }
