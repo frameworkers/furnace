@@ -113,9 +113,23 @@ class Furnace {
         }
 
         // 3.8 Prepare the expected (default) view file
-        $controllerInstance
-            ->region('content')
-            ->prepare("{$route->handler}" . Config::Get('view.extension'));
+        $viewTemplateLoadedOk = false;        
+        $subDirView = $route->controller . '/' . $route->handler . Config::Get('view.extension');
+        $flatView   = $route->handler . Config::Get('view.extension');
+
+        try {  
+          $controllerInstance->region('content')->prepare($subDirView);
+          $viewTemplateLoadedOk = true;
+        } catch (\Exception $e) {
+          try {
+            $controllerInstance->region('content')->prepare($flatView);
+            $viewTemplateLoadedOk = true;
+          } catch (\Exception $e2) {
+            // Unable to load a view template, but continuing anyway
+            // in case this controller handler has no intention of
+            // displaying a view (e.g.: redirection, file download, etc)
+          }
+        }
 
         // 3.9 Invoke the controller function
         $a = array_values($route->parameters); // Named keys are ignored, only order matters

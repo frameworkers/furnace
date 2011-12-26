@@ -89,6 +89,12 @@ class Controller {
                 . '/views/' . $this->request->route()->module
                 . "/{$templateFilePath}";
 
+            // Ensure at least one of the files exists
+            if (!file_exists($fullPath) && !file_exists($themeOverride)) {
+              throw new \Exception("Unable to prepare template: "
+                ."requested file does not exist and no corresponding theme override detected.");
+            }
+
             // Check for a theme override of the template
             $this->response->contents[$this->activeZone] = 
                 (file_exists($themeOverride))
@@ -96,6 +102,10 @@ class Controller {
                     : file_get_contents($fullPath);
 
         } else {
+            if (!file_exists($templateFilePath)) {
+              throw new \Exception("Unable to prepare template: "
+                ."requested file does not exist.");
+            }
             $this->response->contents[$this->activeZone] = $templateFilePath;
         }
 
