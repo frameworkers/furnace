@@ -64,10 +64,11 @@ class Input {
                 ? self::filter_data(self::$post)
                 : self::$post;
 
-        if (isset(self::$post[$key]))
+        if (isset(self::$post[$key])) {
             return ($filter)
                 ? self::filter_data(self::$post[$key])
                 : self::$post[$key];
+        }
 
         return $default;
     }
