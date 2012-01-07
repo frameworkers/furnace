@@ -148,7 +148,7 @@ class Router {
 	public static function Route($url) {
 		
 		// Ignore any query string arguments when routing
-		if (($qmark = strpos($url,'?') > 0)) {
+		if (($qmark = strpos($url,'?')) > 0) {
 			$url = substr($url,0,$qmark);
 		}
 
