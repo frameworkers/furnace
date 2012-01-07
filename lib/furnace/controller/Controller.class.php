@@ -144,7 +144,7 @@ class Controller {
     }
 
     public function set($key,$value,$default = null) {
-        $this->response->data[$this->activeZone][$key] = (null == $value)
+        $this->response->data[$this->activeZone][$key] = (null === $value)
             ? $default
             : $value;
         return $this; // allow chaining
