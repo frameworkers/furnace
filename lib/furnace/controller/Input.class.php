@@ -96,10 +96,11 @@ class Input {
                 ? self::filter_data(self::$get)
                 : self::$get;
 
-        if (isset(self::$get[$key]))
+        if (isset(self::$get[$key])) {
             return ($filter)
                 ? self::filter_data(self::$get[$key])
                 : self::$get[$key];
+        }
 
         return $default;
     }
