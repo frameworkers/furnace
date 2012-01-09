@@ -21,6 +21,7 @@ use \furnace\utilities\LogLevel;
 
 class Route {
 
+    public $raw;
     public $url;
     public $pattern;
     public $prefix;
@@ -34,6 +35,7 @@ class Route {
     public $options;
 
     public function __construct($data = array()) {
+        $this->raw     = isset($data['raw'])             ? $data['raw']         : false;
         $this->url     = isset($data['url'])             ? $data['url']         : false;
         $this->pattern = isset($data['pattern'])         ? $data['pattern']     : false;
         $this->prefix  = isset($data['prefix'])          ? $data['prefix']      : false;

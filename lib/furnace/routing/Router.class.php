@@ -146,6 +146,8 @@ class Router {
 	 * @param string   $url     The candidate URL
 	 */
 	public static function Route($url) {
+    // Store the absolute raw url as provided to the router
+    $raw = $url;
 		
 		// Ignore any query string arguments when routing
 		if (($qmark = strpos($url,'?')) > 0) {
@@ -233,6 +235,7 @@ class Router {
                     
         // Build the resulting route data array
         $the_route = array(
+          'raw'        => $raw,
           'url'        => $url,
           'route'      => $route['url'],
           'prefix'     => $prefix,
