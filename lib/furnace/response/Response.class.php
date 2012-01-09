@@ -59,6 +59,10 @@ class Response {
         return false;
     }
 
+    // Perform any final processing. This is invoked by the Furnace
+    // class as step 4.1.1 of the Request(...) method
+    public function finalize() {}
+
     public static function redirect( $newURL ) {
         if ($newURL[0] == '/' && F_URL_BASE != '/') {
 			$newURL = F_URL_BASE . $newURL;
@@ -66,5 +70,6 @@ class Response {
 		header('Location: ' . $newURL);
 		exit();
     }
+
 }
 

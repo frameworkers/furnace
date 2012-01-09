@@ -26,6 +26,8 @@ class HtmlResponse extends Response {
     protected $layoutZones        = array("_content_" => '');
     protected $flashMessages      = array();
 
+    protected $rawJavascriptVars  = array();
+
 
     public function __construct(Request $request,Route $route,$options = array()) {
         parent::__construct($request, $route, $options);
@@ -220,4 +222,47 @@ class HtmlResponse extends Response {
     	$this->contents['stylesheets'] .= $chunk->contents();
     }
 
+    public function setJs($key,$value,$default = null) {
+      $this->rawJavascriptVars[$key] = (null === $value)
+        ? $default
+        : $value;
+      return $this; 
+    }
+
+    public function finalize() {
+  
+      // Prepare Javascript variables ------------------------------------
+      $js  = "\r\n<script type=\"text/javascript\">\r\n";
+      $js .= "var Furnace = { \r\n";
+      $js .= "   'theme': '" . Config::Get('app.theme') . "'\r\n";
+      $js .= "  ,'URL'  : '" . F_URL_BASE . "'\r\n";
+      $js .= "}\r\n";
+
+      // Prepare user Javascript variables
+      foreach ($this->rawJavascriptVars as $k => $v) {
+        $js .= "var {$k} = " . json_encode($v) . ";\r\n";
+      }
+      $js .= "</script>\r\n";
+
+      // Add the Furnace & user Javascript variables to the data array
+      $this->add(array('javascripts' => new ResponseChunk($js)));
+
+      // Prepare Flash message content -----------------------------------
+      
+      // Get the messages from the session
+      $flashes = Furnace::GetUserMessages();
+
+      if ($flashes) {
+          // Format each message
+          $flashMessages = '<div id="f_flashMessages">';
+          foreach ($flashes as $message) {
+              $fn             = $message['type'];
+              $flashMessages .= ($fn($message['message'])->contents());
+          }
+          $contents .= '</div>';
+      }
+
+      // Add the user messages to the data array
+      $this->add(array('flashes' => new ResponseChunk($flashMessages)));
+    }
 }

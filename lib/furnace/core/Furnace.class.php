@@ -87,12 +87,7 @@ class Furnace {
         
         // 3.5 Create a Response object to hold the response
         self::$responses[] = Furnace::CreateResponse($request,$route);
-        $response = end(self::$responses);       
-                    
-        // 3.5.1 Add Furnace javascript variables, but only if this is the _parent_ request
-        if (count(self::$responses) == 1) {
-            $response->add(array('javascripts' => Furnace::processJavascriptVariables($response)));
-        }
+        $response = end(self::$responses);
         
         // 3.6 Include the required controller file & create an instance of the class
         require_once($controllerFilePath);
@@ -169,12 +164,12 @@ class Furnace {
             }
         }
 
+        // 4.1.1 Allow the response object to perform any final processing steps
+        $response->finalize();
+
 
         // 4.2 Process the layout file, if necessary
         if ($hasLayout) {
-            // Add flash messages from the session (and reset)
-            $response->add(array('flashes' => Furnace::ProcessFlashMessages()));
-
             // Process the layout file and add it to the response
             $response->add(
                 template(
@@ -231,34 +226,25 @@ class Furnace {
         }
     }
 
-    public static function ProcessFlashMessages() {
-        $contents = '<div id="f_flashMessages">';
+    public static function GetUserMessages() {
+      $flashes = $_SESSION[Config::Get('sess.flashes.key')];
+      unset($_SESSION[Config::Get('sess.flashes.key')]);
 
-        // Get the messages from the session
-        $flashes = $_SESSION[Config::Get('sess.flashes.key')];
-        unset($_SESSION[Config::Get('sess.flashes.key')]);
-
-        if ($flashes) {
-            // Format each message
-            foreach ($flashes as $message) {
-                $fn        = $message['type'];
-                $contents .= ($fn($message['message'])->contents());
-            }
-        }
-
-        $contents .= '</div>';
-        return new ResponseChunk($contents);
+      return $flashes;
     }
-    
-    public static function ProcessJavascriptVariables($response) {
-        $contents  = "<script type=\"text/javascript\">\r\n";
-        $contents .= "var Furnace = { \r\n";
-        $contents .= "   'theme': '" . Config::Get('app.theme') . "'\r\n";
-        $contents .= "  ,'URL'  : '" . F_URL_BASE . "'\r\n";
-        $contents .= "}\r\n";
-        $contents .= "</script>\r\n";        
-        
-        return new ResponseChunk($contents);
+
+    // DEPRECATED!
+    // This functionality has been pushed down into the 
+    // Response object for greater flexibility in 
+    // formatting and processing. 
+    // See Furnace::GetUserMessages(), Response::finalize(),
+    // and HtmlResponse::finalize()
+    //
+    public static function ProcessFlashMessages() {
+      Furnace::InternalError("Furnace::ProcessFlashMessages has been deprecated. "
+        . "Raw messages for the user can be obtained through Furnace::GetUserMessages(). "
+        . "These can then be processed by the appropriate *Response object via its "
+        . "finalize() method");
     }
 
     public static function Cleanup() {
