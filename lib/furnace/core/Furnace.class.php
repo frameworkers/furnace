@@ -86,7 +86,7 @@ class Furnace {
         }
         
         // 3.5 Create a Response object to hold the response
-        self::$responses[] = Furnace::CreateResponse($request,$route);
+        self::$responses[] = Response::Create($request, $route);
         $response = end(self::$responses);
         
         // 3.6 Include the required controller file & create an instance of the class
@@ -106,25 +106,9 @@ class Furnace {
                 Furnace::NotFound();
             }
         }
-
-        // 3.8 Prepare the expected (default) view file
-        $viewTemplateLoadedOk = false;        
-        $subDirView = $route->controller . '/' . $route->handler . Config::Get('view.extension');
-        $flatView   = $route->handler . Config::Get('view.extension');
-
-        try {  
-          $controllerInstance->region('content')->prepare($subDirView);
-          $viewTemplateLoadedOk = true;
-        } catch (\Exception $e) {
-          try {
-            $controllerInstance->region('content')->prepare($flatView);
-            $viewTemplateLoadedOk = true;
-          } catch (\Exception $e2) {
-            // Unable to load a view template, but continuing anyway
-            // in case this controller handler has no intention of
-            // displaying a view (e.g.: redirection, file download, etc)
-          }
-        }
+        
+        // 3.8 Initialize the response
+        $response->initialize();
 
         // 3.9 Invoke the controller function
         $a = array_values($route->parameters); // Named keys are ignored, only order matters
@@ -138,10 +122,9 @@ class Furnace {
 	        default:
 		        call_user_func_array(array($controllerClassName,$handlerFunction),$a);
         }
-
-        // 3.10 Capture the result from the controller
+        
+        // 3.10 Capture the final result from the controller
         $response = $controllerInstance->finalize();
-
 
 
         /* ============================================================================
@@ -149,35 +132,10 @@ class Furnace {
          * ============================================================================
          ***/
 
-        // 4.1 Sanity check the content zone for content
-        $data      = $response->data();
-        $hasLayout = $response->hasLayout();
-        if ((!$hasLayout && '' == $response->body()) || ($hasLayout && empty($data['_content_']))) {
-            if (Config::Get('environment') == F_ENV_DEVELOPMENT) {
-                Furnace::halt("Unable to handle request","Furnace was unable to find a "
-                    . "valid template file to use. The file:<br/>"
-                    . "<code>".F_MODULES_PATH . "/{$route->module}/views/{$route->handler}" . Config::Get('view.extension')."</code><br/> does "
-                    . "not exist (or is empty), and no valid <code>\$this->prepare(...)</code> statement was issued in "
-                    . "<code>{$controllerClassName}::{$route->handler}(...)</code> ");
-            } else {
-                Furnace::NotFound();
-            }
-        }
-
-        // 4.1.1 Allow the response object to perform any final processing steps
+        // 4.1 Allow the response object to perform any final processing steps on itself
         $response->finalize();
 
-
-        // 4.2 Process the layout file, if necessary
-        if ($hasLayout) {
-            // Process the layout file and add it to the response
-            $response->add(
-                template(
-                    new ResponseChunk($response->layout(),$response->data())),true);
-        }
-        
-
-        // 4.3 Ignore any buffered output and return the response
+        // 4.2 Ignore any buffered output and return the response
         ob_end_clean();
         array_pop(self::$responses);
         return $response;
@@ -211,19 +169,6 @@ class Furnace {
             : $newUrl;
         header('Location: ' . $newLocation);
         exit();
-    }
-
-    public static function CreateResponse($request,Route $route,$options = array()) {
-        switch ($route->contentType) {
-            case 'text':
-            case 'text/plain':
-                return new Response($request,$route,$options);
-            case 'html':
-            case 'text/html': 
-            default:
-                $r = new HtmlResponse($request,$route,$options);
-                return $r;
-        }
     }
 
     public static function GetUserMessages() {
