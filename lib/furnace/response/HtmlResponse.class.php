@@ -25,14 +25,20 @@ class HtmlResponse extends Response {
     protected $layoutFileContents = null;
     protected $layoutZones        = array("_content_" => '');
     protected $flashMessages      = array();
+    
+    protected $activeZone         = 'content';
 
     protected $rawJavascriptVars  = array();
 
 
     public function __construct(Request $request,Route $route,$options = array()) {
         parent::__construct($request, $route, $options);
+        
+        // Initialize the 'data' and 'contents' structures...
+        $this->data     = array('content' => '');
+        $this->contents = array('content' => '');
 
-        // First look at whether a layout was specified in the options array
+        // Determine whether a layout was specified in the options array...
         if (isset($options['layout'])) {
             if (false === $options['layout']) { // layout omitted explicitly
                 $this->layout(false);
@@ -41,7 +47,7 @@ class HtmlResponse extends Response {
                     . Config::Get('app.theme') . '/layouts/'
                     . $options['layout']);
             }
-        // Then default to using the layout specified by the route
+        // If not, default to using the layout specified by the route...
         } else {
             if (false === $route->layout) {     // layout omitted explicitly
                 $this->layout(false);
@@ -184,10 +190,10 @@ class HtmlResponse extends Response {
         Furnace::Flash($message,$type);
     }
     
-    public function includeJavascript($relativePath,$pathIsAbsolute = false) {
+    public function includeJavascript($relativePath,$pathIsAbsolute = false,$pathBase = null) {
     	$fullPath = ($pathIsAbsolute)
     		? $relativePath
-    		: js_url($relativePath);
+    		: (($pathBase === null) ? js_url($relativePath) : js_url($relativePath,$pathBase));
     	$chunk = new ResponseChunk('<script type="text/javascript" src="'.$fullPath.'"></script>');
     	$this->contents['javascripts'] .= $chunk->contents();
     }
@@ -195,7 +201,7 @@ class HtmlResponse extends Response {
     public function includeStylesheet($relativePath,$pathIsAbsolute = false) {
     	$fullPath = ($pathIsAbsolute)
     		? $relativePath
-    		: css_url($relativePath);
+    		: (($pathBase === null) ? css_url($relativePath) : css_url($relativePath,$pathBase));
     	$chunk = new ResponseChunk('<link rel="stylesheet" type="text/css" href="'.$fullPath.'"/>');
     	$this->contents['stylesheets'] .= $chunk->contents();
     }
@@ -228,8 +234,110 @@ class HtmlResponse extends Response {
         : $value;
       return $this; 
     }
+    
+    public function region($name) {
+        $this->activeZone = $name;
+        return $this; // allow chaining
+    }
+    
+    public function set( $key, $value, $default = null) {
+      $this->response->data[$this->activeZone][$key] = (null === $value)
+            ? $default
+            : $value;
+      return $this; // allow chaining
+    }
+    
+    /**
+     * Prepare a view template for use
+     * 
+     * Allows specifying of a path to a template file to use for rendering
+     * the content for the currently active zone. The default behavior (i.e.: when
+     * the second parameter, '$raw', is boolean 'false') is to treat the specified
+     * path as relative to the 'views' directory of the module specified by the 
+     * route. If the second parameter, '$raw', is true, then the value for 
+     * $templateFilePath is treated as the absolute path to the resource. 
+     *
+     * This function also checks the current theme to see if an override template
+     * has been defined. If one is found in the theme, it is used instead of the 
+     * application template.
+     * 
+     * @param string $templateFilePath The path to the template file to use. See the note above
+     *                                 for how this function will interpret the provided value
+     * @param string $raw              Whether to treat the path as relative (default) or absolute/raw.	
+     */
+    public function prepare($templateFilePath,$raw = false) {
+        if (!$raw) {
+          
+            // The full path to the template in the module
+            $fullPath = F_MODULES_PATH 
+                . "/{$this->route->module}"
+                . "/views/{$templateFilePath}";
+                
+            // The full path to a theme-specific override in the
+            // current theme
+            $themeOverride = Config::Get('app.themes.dir')
+                . '/' . Config::get('app.theme')
+                . '/views/' . $this->route->module
+                . "/{$templateFilePath}";
+
+            // Ensure at least one of the files exists
+            if (!file_exists($fullPath) && !file_exists($themeOverride)) {
+              throw new \Exception("Unable to prepare template: "
+                ."requested file does not exist and no corresponding theme override detected.");
+            }
+
+            // Check for a theme override of the template
+            $this->contents[$this->activeZone] = 
+                (file_exists($themeOverride))
+                    ? file_get_contents($themeOverride)
+                    : file_get_contents($fullPath);
+
+        } else {
+            if (!file_exists($templateFilePath)) {
+              throw new \Exception("Unable to prepare template: "
+                ."requested file does not exist.");
+            }
+            $this->contents[$this->activeZone] = $templateFilePath;
+        }
+
+        return $this; // allow chaining
+    }
+    
+    public function initialize() {
+      // 3.8 Prepare the expected (default) view file
+      $viewTemplateLoadedOk = false;        
+      $subDirView = $this->route->controller . '/' . $this->route->handler . Config::Get('view.extension');
+      $flatView   = $this->route->handler . Config::Get('view.extension');
+
+      try {  
+        $this->region('content')->prepare($subDirView);
+        $viewTemplateLoadedOk = true;
+      } catch (\Exception $e) {
+        try {
+          $this->region('content')->prepare($flatView);
+          $viewTemplateLoadedOk = true;
+        } catch (\Exception $e2) {
+          // Unable to load a view template, but continuing anyway
+          // in case this controller handler has no intention of
+          // displaying a view (e.g.: redirection, file download, etc)
+        }
+      }
+    }
 
     public function finalize() {
+    
+      // Process each of the content zones -------------------------------
+      $result = array();
+      foreach ($this->contents as $zone => $content) {
+
+          if (count($this->data[$zone]) > 0) {
+              $result[$zone] = template(new ResponseChunk($content,$this->data[$zone]));
+          } else {
+              $result[$zone] = new ResponseChunk($content,$this->data[$zone]);
+          }
+      }
+      $this->add($result);
+    
   
       // Prepare Javascript variables ------------------------------------
       $js  = "\r\n<script type=\"text/javascript\">\r\n";
@@ -264,5 +372,32 @@ class HtmlResponse extends Response {
 
       // Add the user messages to the data array
       $this->add(array('flashes' => new ResponseChunk($flashMessages)));
+      
+      // Sanity check the content zone for content -----------------------
+      $hasLayout = $this->hasLayout();
+  
+      if ((!$hasLayout && empty($this->body)) || ($hasLayout && empty($this->contents['content']))) {
+        if (Config::Get('environment') == F_ENV_DEVELOPMENT) {
+            Furnace::halt("Unable to handle request","Furnace was unable to find a "
+                . "valid template file to use. The file:<br/>"
+                . "<code>".F_MODULES_PATH . "/{$this->route->module}/views/{$this->route->handler}" 
+                . Config::Get('view.extension')."</code><br/> does "
+                . "not exist (or is empty), and no valid <code>\$this->prepare(...)</code> "
+                . "statement was issued in "
+                . "<code>{$controllerClassName}::{$this->route->handler}(...)</code> ");
+        } else {
+            Furnace::NotFound();
+        }
+      }
+      
+      
+      // Process the layout file, if necessary ---------------------------
+      if ($hasLayout) {
+        // Process the layout file and add it to the response
+        $this->add(
+            template(
+                new ResponseChunk($this->layout(),$this->data()))
+                ,true); // true because this is the _final_ addition
+      }
     }
 }
