@@ -146,8 +146,12 @@ class Router {
 	 * @param string   $url     The candidate URL
 	 */
 	public static function Route($url) {
+	
     // Store the absolute raw url as provided to the router
     $raw = $url;
+    
+    // Content-type detection via the HTTP_ACCEPT header
+    list($type) = (explode(',',$_SERVER['HTTP_ACCEPT'],2));
 		
 		// Ignore any query string arguments when routing
 		if (($qmark = strpos($url,'?')) > 0) {
@@ -160,25 +164,17 @@ class Router {
     	$url    = substr($url,strlen($prefix) + 1);
     }
     
+    // Look for an explicit response type specified by the presence of
+    // a '/>foo' ending on the request (where 'foo' is the desired 
+    // response type (e.g.: /blog/post/34/>json => 'json')).
+    preg_match(':/%3E([a-zA-Z\-]+)$:',$url,$matches);
+    if ( $matches[1] ) {
+      $type = $matches[1];
+      $url = str_replace($matches[0],'',$url);
+    }
+    
     // Break the incoming url into its segmented parts
     $parts  = explode('/',ltrim($url,'/'));
-
-    // Look for a response type which can be specified by the presence of
-    // an extension on the request (e.g.: /blog/post/34.json => 'json').
-    // Any usable type must have a corresponding entry in types.config.php
-    // or it will be ignored.
-    $type     = null;
-    $lastPart =& $parts[count($parts)-1];
-    $foundDot = strrpos($lastPart,'>') !== false;
-    $ext      = ($foundDot) 
-    	? substr($lastPart,strrpos($lastPart,'>') + 1) 
-    	: false;
-    if ( $ext && ResponseTypes::TypeExists( $ext ) ) {
-    	$type = $ext;
-    }
-    if ( $ext ) { // Strip the extension from the route
-    	$lastPart = str_replace(">{$ext}",'',$lastPart);
-    }
 
     $the_route = array();
     
@@ -255,14 +251,15 @@ class Router {
                ? $route['handler']
                : 'index')),
           'parameters' => $parameters,
-          'type'       => ((isset($type)    // has an extension been detected?
+          'contentType'=> ((isset($type)    // has an extension been detected?
                ? $type                      // use it, otherwise:
                : (isset($route['type'])     // is there type information in the route?
-               	? $route['type']          // use it, otherwise:
-               	: 'text/html'))), // use the default configured type
+               	? $route['type']            // use it, otherwise:
+               	: 'text/html'))),           // use the default configured type
         );
         
         Logger::Log(LogLevel::INFO,"Matched route: {$the_route['route']}");
+        Logger::Log(LogLevel::INFO,"Response Type: {$the_route['type']}");
         return new Route($the_route);
       }
     }
