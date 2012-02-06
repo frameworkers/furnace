@@ -105,6 +105,10 @@ class Input {
 
         return $default;
     }
+    
+    public static function Clean( $value ) {
+      return self::filter_data( $value );
+    }
 
     //public function cookie($key = null, $default = null, $filter = true) {}
     //public function server($key = null, $default = null, $filter = true) {}
