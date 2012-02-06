@@ -32,7 +32,6 @@ class Controller {
 
     protected $connection;
      
-    protected $activeZone = 'content';
 
     public function __construct($request, $response) {
         $this->request  = $request;
@@ -56,61 +55,7 @@ class Controller {
         return $this->auth;
     }
 
-    /**
-     * Prepare a view template for use
-     * 
-     * Allows specifying of a path to a template file to use for rendering
-     * the content for the currently active zone. The default behavior (i.e.: when
-     * the second parameter, '$raw', is boolean 'false') is to treat the specified
-     * path as relative to the 'views' directory of the module specified by the 
-     * route. If the second parameter, '$raw', is true, then the value for 
-     * $templateFilePath is treated as the absolute path to the resource. 
-     *
-     * This function also checks the current theme to see if an override template
-     * has been defined. If one is found in the theme, it is used instead of the 
-     * application template.
-     * 
-     * @param string $templateFilePath The path to the template file to use. See the note above
-     *                                 for how this function will interpret the provided value
-     * @param string $raw              Whether to treat the path as relative (default) or absolute/raw.	
-     */
-    public function prepare($templateFilePath,$raw = false) {
-        if (!$raw) {
-          
-            // The full path to the template in the module
-            $fullPath = F_MODULES_PATH 
-                . "/{$this->request->route()->module}"
-                . "/views/{$templateFilePath}";
-                
-            // The full path to a theme-specific override in the
-            // current theme
-            $themeOverride = Config::Get('app.themes.dir')
-                . '/' . Config::get('app.theme')
-                . '/views/' . $this->request->route()->module
-                . "/{$templateFilePath}";
-
-            // Ensure at least one of the files exists
-            if (!file_exists($fullPath) && !file_exists($themeOverride)) {
-              throw new \Exception("Unable to prepare template: "
-                ."requested file does not exist and no corresponding theme override detected.");
-            }
-
-            // Check for a theme override of the template
-            $this->response->contents[$this->activeZone] = 
-                (file_exists($themeOverride))
-                    ? file_get_contents($themeOverride)
-                    : file_get_contents($fullPath);
-
-        } else {
-            if (!file_exists($templateFilePath)) {
-              throw new \Exception("Unable to prepare template: "
-                ."requested file does not exist.");
-            }
-            $this->response->contents[$this->activeZone] = $templateFilePath;
-        }
-
-        return $this; // allow chaining
-    }
+    
 
     public function load($modelClass,$alias = null) {
         $lastNsSeparator = strrpos($modelClass,'\\');
@@ -138,15 +83,8 @@ class Controller {
       return $this;
     }
 
-    public function region($name) {
-        $this->activeZone = $name;
-        return $this; // allow chaining
-    }
-
     public function set($key,$value,$default = null) {
-        $this->response->data[$this->activeZone][$key] = (null === $value)
-            ? $default
-            : $value;
+        $this->response->set($key,$value,$default);
         return $this; // allow chaining
     }
 
@@ -159,17 +97,6 @@ class Controller {
     }
 
     public function finalize() {
-        $result = array();
-        foreach ($this->response->contents as $zone => $content) {
-
-            if (count($this->response->data[$zone]) > 0) {
-                $result[$zone] = template(new ResponseChunk($content,$this->response->data[$zone]));
-            } else {
-                $result[$zone] = new ResponseChunk($content,$this->response->data[$zone]);
-            }
-        }
-        
-        $this->response->add($result);
         return $this->response;
     }
 
