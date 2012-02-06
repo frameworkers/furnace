@@ -24,21 +24,37 @@ class Response {
     protected $route;
     protected $body;
     
-    public $data       = array('content' => '');
-    public $contents   = array('content' => '');
+    public $data       = array();
+    public $contents   = array();
 
     public function __construct(Request $request,Route $route,$options = array()) {
         $this->request      = $request;
         $this->route        = $route;
         $this->body         = '';
     }
-
+    
+    public static function Create ($request, Route $route, $options = array()) {
+        switch (strtolower($route->contentType)) {
+            case 'text':
+            case 'text/plain':
+                return new Response($request, $route, $options);
+            case 'json':
+            case 'application/json':
+            case 'x-application/json':
+            case 'text/javascript':
+              return new JsonResponse($request, $route, $options);
+            case 'html':
+            case 'text/html': 
+            default:
+                $r = new HtmlResponse($request, $route, $options);
+                return $r;
+        }
+    }
 
     public function add(ResponseChunk $chunk,$bFinal = false) {
         $this->body .= $chunk->contents();
         return $this; // allow chaining
     }
-
 
     public function text($contents) {
         $c = new ResponseChunk();
@@ -58,11 +74,33 @@ class Response {
     public function hasLayout() {
         return false;
     }
+    
+    // Perform any initial processing. This is invoked by the Furnace
+    // class as step 3.8 of the Request(...) method
+    public function initialize() {}
 
     // Perform any final processing. This is invoked by the Furnace
-    // class as step 4.1.1 of the Request(...) method
+    // class as step 4.1 of the Request(...) method
     public function finalize() {}
-
+    
+    // Store key/value data in this response
+    public function set( $key, $value, $default ) {
+      $this->data[$key] = (null == $value) ? $default : $value;
+      return $this;
+    }
+    
+    // Backwards-compatibility (<0.4.4). Since 0.4.4 this function
+    // is now available in the HtmlResponse class.
+    public function region( $which = 'content' ) { 
+      return $this; 
+    }
+    
+    // Backwards-compatibility (<0.4.4). Since 0.4.4 this function
+    // is now available in the HtmlResponse class.
+    public function prepare( $templateFilePath, $raw = false ) {
+      return $this;
+    }
+    
     public static function redirect( $newURL ) {
         if ($newURL[0] == '/' && F_URL_BASE != '/') {
 			$newURL = F_URL_BASE . $newURL;
@@ -70,6 +108,5 @@ class Response {
 		header('Location: ' . $newURL);
 		exit();
     }
-
 }
 
