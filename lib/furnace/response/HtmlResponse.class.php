@@ -241,7 +241,7 @@ class HtmlResponse extends Response {
     }
     
     public function set( $key, $value, $default = null) {
-      $this->response->data[$this->activeZone][$key] = (null === $value)
+      $this->data[$this->activeZone][$key] = (null === $value)
             ? $default
             : $value;
       return $this; // allow chaining
