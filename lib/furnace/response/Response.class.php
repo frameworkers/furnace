@@ -108,5 +108,13 @@ class Response {
 		header('Location: ' . $newURL);
 		exit();
     }
+
+
+    // Null handlers to permit complete reuse of controller logic
+    // independent of functions present/not present in derived
+    // handlers
+    public function __call( $name, $arguments ) { /* empty */ } 
+    public static function __callStatic( $name, $arguments ) { /* empty */ }
+
 }
 
