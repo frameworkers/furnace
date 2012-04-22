@@ -72,32 +72,56 @@ class Config {
 		}
 	}
 	
-	public static function LoadModule( $moduleName ) {
-	    // Get the config file for the desired module
-	    $configFilePath = F_MODULES_PATH . "/{$moduleName}/config.php";
-	    
-	    // Enter staging mode
-	    self::$stageMode = true;
-	    self::$stagedModuleName = $moduleName;
-	    
-	    // Process the config file
-	    if (file_exists($configFilePath)) {
-	        require_once ($configFilePath);
-	    }
-	    // Exit staging mode
-	    self::$stagedModuleName = false;
-	    self::$stageMode = false;
+	public static function GetModules() {
+    return self::$modules;
+  }
+
+	
+  public static function LoadModule( $moduleName, $returnFields = array() ) {
+    // Don't do anything unless this module has not previously been seen
+    if (!isset(self::$modules[$moduleName])) {	
+      // Get the config file for the desired module
+      $configFilePath = F_MODULES_PATH . "/{$moduleName}/config.php";
+      
+      // Enter staging mode
+      self::$stageMode = true;
+      self::$stagedModuleName = $moduleName;
+      
+      // Process the config file
+      if (file_exists($configFilePath)) {
+          require_once ($configFilePath);
+      }
+    }
+    
+    // Were any values explicitly requested for return?
+    $returnValues = array();
+    if (!empty($returnFields)) {
+      foreach ($returnFields as $f) {
+        $returnValues[$f] = self::$modules[$moduleName][$f];
+      }
+    }
+    
+    // Exit staging mode
+    self::$stagedModuleName = false;
+    self::$stageMode = false;
+    
+    // Determine what to return
+    if (!empty($returnFields)) {
+      return $returnValues; // Return the requested config fields
+    } else {
+      return true;          // Just indicate success
+    } 
 	}
 	
-	public static function ApplyStagedModule( $moduleName ) {
-	    if (isset(self::$modules[$moduleName])) {
-	        self::$configStore = array_merge(
-	            self::$configStore, self::$modules[$moduleName]);
-	        return true;
-	    } else {
-	        return false;
-	    }
-	}
+  public static function ApplyStagedModule( $moduleName ) {
+    if (isset(self::$modules[$moduleName])) {
+        self::$configStore = array_merge(
+            self::$configStore, self::$modules[$moduleName]);
+        return true;
+    } else {
+        return false;
+    }
+  }
 	
 	public static function Delete($key) {
 		unset(self::$configStore[$key]);
