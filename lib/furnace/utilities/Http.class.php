@@ -20,9 +20,24 @@ use furnace\routing\Route;
 
 class Http {
 
-    public static $HTTP_403 = 'Not Authorized';
-    public static $HTTP_404 = 'Not Found';
-    public static $HTTP_500 = 'Internal Server Error';
-    
+  // HTTP Status Codes
+  const NOT_AUTHORIZED = '403';
+  const NOT_FOUND = '404';
+  const METHOD_NOT_ALLOWED = '405';
+  const INTERNAL_SERVER_ERROR = '500'; 
+  
+  // HTTP Methods
+  const GET  = "GET";
+  const POST = "POST";
+  
+  public static function translate( $code ) {
+    switch ($code) {
+      case HTTP::NOT_AUTHORIZED: return "Not Authorized";
+      case HTTP::NOT_FOUND: return "Not Found";
+      case HTTP::METHOD_NOT_ALLOWED: return "Method Not Allowed";
+      case HTTP::INTERNAL_SERVER_ERROR: return "Internal Server Error";
+      default: return "Unknown Error";
+    }
+  }
 
 }
