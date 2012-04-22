@@ -21,6 +21,7 @@ use furnace\response\ResponseChunk;
 use furnace\request\Request;
 use furnace\auth\providers\AbstractAuthenticationProvider;
 use furnace\connections\Connections;
+use furnace\exceptions\FurnaceException;
 
 class Controller {
 
@@ -103,6 +104,16 @@ class Controller {
     public function db($connectionLabel = 'default') {
         return Connections::Get($connectionLabel);
     }
+    
+    public function assert( $condition, $httpStatusCode ) {
+      if (false === $condition) {
+        $this->request->abort($httpStatusCode
+          , null
+          , "Assertion failed! If a backtrace is available, see line "
+            ." <code>#1</code> for the corresponding file and line number.");
+      }
+      return $this; // allow chaining
+    }    
 
     public function __get($name) {
         return $this->$name();
