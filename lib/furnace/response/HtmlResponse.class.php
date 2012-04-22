@@ -127,7 +127,7 @@ class HtmlResponse extends Response {
     		: Config::Get('app.themes.dir')
     		    .Config::Get('app.theme')
     		    ."/layouts/{$relativePath}";
-    	
+      
     	$this->layoutFileContents = file_get_contents($fullPath);
     	return $this;
     }
@@ -367,7 +367,7 @@ class HtmlResponse extends Response {
               $fn             = $message['type'];
               $flashMessages .= ($fn($message['message'])->contents());
           }
-          $contents .= '</div>';
+          $flashMessages .= '</div>';
       }
 
       // Add the user messages to the data array
