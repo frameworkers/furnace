@@ -344,7 +344,13 @@ class HtmlResponse extends Response {
       $js .= "var Furnace = { \r\n";
       $js .= "   'theme': '" . Config::Get('app.theme') . "'\r\n";
       $js .= "  ,'URL'  : '" . F_URL_BASE . "'\r\n";
+      $js .= "  ,'modules': {\r\n";
+      foreach (Config::GetModules() as $moduleName => $conf) {
+         $js .= "    '{$moduleName}': { 'URL': '". F_URL_BASE . $conf[$moduleName.'.module.url']."'} ,\r\n";
+      }
+      $js .= "   }\r\n";
       $js .= "}\r\n";
+
 
       // Prepare user Javascript variables
       foreach ($this->rawJavascriptVars as $k => $v) {
