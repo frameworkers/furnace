@@ -45,6 +45,10 @@ define('F_DEFAULT_MODULE_NS'  , 'app');
 define('F_DEFAULT_MODULE_PATH', F_MODULES_PATH . '/' . F_DEFAULT_MODULE_NAME);
 define('F_DEFAULT_LOG_PATH'   , F_DATA_PATH . '/logs/app.log');
 
+define('HTTP_GET'             ,'GET'); 	 // Back compat. Use Http::GET
+define('HTTP_POST'            ,'POST');  // Back compat. Use Http::POST
+
+
 // 0.2 Register our own error handler ------------------------------------------------------
 
 function furnace_error_handler($errno, $errstr, $errfile, $errline ) {
