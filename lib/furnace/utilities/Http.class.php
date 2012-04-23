@@ -21,6 +21,7 @@ use furnace\routing\Route;
 class Http {
 
   // HTTP Status Codes
+  const BAD_REQUEST = '400';
   const NOT_AUTHORIZED = '403';
   const NOT_FOUND = '404';
   const METHOD_NOT_ALLOWED = '405';
@@ -32,6 +33,7 @@ class Http {
   
   public static function translate( $code ) {
     switch ($code) {
+      case HTTP::BAD_REQUEST: return "Bad Request";
       case HTTP::NOT_AUTHORIZED: return "Not Authorized";
       case HTTP::NOT_FOUND: return "Not Found";
       case HTTP::METHOD_NOT_ALLOWED: return "Method Not Allowed";
@@ -39,5 +41,4 @@ class Http {
       default: return "Unknown Error";
     }
   }
-
 }
