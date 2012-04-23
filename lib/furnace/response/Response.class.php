@@ -15,6 +15,7 @@
 
 namespace furnace\response;
 
+use furnace\exceptions\FurnaceException;
 use furnace\request\Request;
 use furnace\routing\Route;
 
@@ -102,11 +103,17 @@ class Response {
     }
     
     public static function redirect( $newURL ) {
-        if ($newURL[0] == '/' && F_URL_BASE != '/') {
-			$newURL = F_URL_BASE . $newURL;
-		}
-		header('Location: ' . $newURL);
-		exit();
+      if ($newURL[0] == '/' && F_URL_BASE != '/') {
+			  $newURL = F_URL_BASE . $newURL;
+		  }
+		  header('Location: ' . $newURL);
+		  exit();
+    }
+    
+    public static function abort($httpStatusCode, $message = null, $developerMessage = null) {
+      $e = new FurnaceException($message, $httpStatusCode);
+      $e->setDeveloperMessage($developerMessage);
+      throw $e;
     }
 
 
