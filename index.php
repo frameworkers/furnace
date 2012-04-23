@@ -16,7 +16,7 @@
  * =========================================================================================
  * Frameworkers.org - Furnace - Lightweight PHP Web Application Development Framework    
  * 
- * Copyright (c) 2008-2011 Frameworkers.org
+ * Copyright (c) 2008-2012 Frameworkers.org
  * License: Apache Software Licence V2.0 (http://furnace.frameworkers.org/license)    
  * 
  * Author: Andrew F. Hart (andrew@frameworkers.org)
@@ -40,25 +40,20 @@ define('F_APP_PATH'           , dirname(__FILE__));
 define('F_LIB_PATH'           , F_APP_PATH . '/lib');
 define('F_DATA_PATH'          , F_APP_PATH . '/data');
 define('F_MODULES_PATH'       , F_APP_PATH . '/modules');
-define('F_DEFAULT_MODULE_NAME', 'default');
+define('F_DEFAULT_MODULE_NAME', 'app');
 define('F_DEFAULT_MODULE_NS'  , 'app');
 define('F_DEFAULT_MODULE_PATH', F_MODULES_PATH . '/' . F_DEFAULT_MODULE_NAME);
 define('F_DEFAULT_LOG_PATH'   , F_DATA_PATH . '/logs/app.log');
-define('HTTP_POST'            , 'POST');
-define('HTTP_GET'             , 'GET');
-
-define('HTTP_403'             , '403');
-define('HTTP_404'             , '404');
-define('HTTP_500'             , '500');
-
 
 // 0.2 Register our own error handler ------------------------------------------------------
-//TODO: Register our own error handler
 
+function furnace_error_handler($errno, $errstr, $errfile, $errline ) {
+    throw new FurnaceException($errstr, 0, $errno, $errfile, $errline);
+}
+set_error_handler("furnace_error_handler");
 
 // 0.3 Begin buffering output --------------------------------------------------------------
 ob_start();
-
 
 /* =========================================================================================
  * 1. Bootstrap Furnace
@@ -79,6 +74,9 @@ use \furnace\core\Furnace;
 require_once(F_LIB_PATH . '/furnace/utilities/AutoLoader.class.php');
 $autoloader = \furnace\utilities\AutoLoader::init();
 
+// 1.3 Load bare-bones PHP rendering utilities
+require_once(F_LIB_PATH . '/furnace/utilities/rendering.php');
+
 
 /* =========================================================================================
  * 2. Load the Application
@@ -96,22 +94,23 @@ require(F_APP_PATH . '/config.php');
 // 2.3 Special environment preparations depending on 'environment' -------------------------
 if (Config::Get('environment') == F_ENV_DEVELOPMENT) {
 	
-	// Include development utilities
-    require(F_LIB_PATH . '/furnace/utilities/development.php');
-    
-    // Turn on error reporting
-    ini_set('display_errors',1);
+  // Include development utilities
+  require(F_LIB_PATH . '/furnace/utilities/development.php');
+
+  // Turn on error reporting
+  ini_set('display_errors',1);    
     
 } else {
 	
-	// Turn off error reporting
-	ini_set('display_errors',0);
+  // Turn off error reporting
+  ini_set('display_errors',0);
+	
 }
-
 
 // 2.4 Ensure the data directory is writeable ----------------------------------------------
 if (!is_writeable(F_DATA_PATH)) {
-    Furnace::halt("Unable to write to the application data directory",
+
+  Furnace::InternalError("Unable to write to the application data directory",
      "Furnace needs write access to the application data directory, currently "
     ."specified by F_DATA_PATH in 'index.php' to be: <br/> "
     ."<code>" . F_DATA_PATH . "</code><br/> Recursively change the permissions on this "
@@ -121,7 +120,8 @@ if (!is_writeable(F_DATA_PATH)) {
 // 2.5 Initialize the logging subsystem ----------------------------------------------------
 if (file_exists(Config::Get('env.logging.file')) 
     && !is_writeable(Config::Get('env.logging.file'))) {
-    Furnace::halt("Unable to write to the application log file",
+    
+    Furnace::InternalError("Unable to write to the application log file",
      "Furnace needs write access to the application log file, currently "
     ."specified by `env.logging.file in 'config.php' to be: <br/> "
     ."<code>" . Config::Get('env.logging.file') . "</code><br/> Ensure "
@@ -149,7 +149,6 @@ if (Config::Get('use.sessions')) {
 
 $response = Furnace::Request($_SERVER['REQUEST_URI']);
 
-
 /* =========================================================================================
  * 4. Send Response
  * =========================================================================================
@@ -159,11 +158,7 @@ $response = Furnace::Request($_SERVER['REQUEST_URI']);
 ob_end_clean();
 
 // 4.2 Send the response
-// Send any appropriate headers
-//echo $response->headers();
-// Send the response body
 echo $response->body();
-
 
 /* =========================================================================================
  * 5. Clean up
@@ -173,105 +168,7 @@ echo $response->body();
 Furnace::Cleanup();
 
 
-/* =========================================================================================
- * 6. Globally Available Environment Information Helper Function
- * =========================================================================================
- ***/
 
-function env($key = null,$default = null) {
-
-    $v = Config::Get($key);
-    return (null == $v) 
-        ? $default
-        : $v;
-}
-
-
-/* =========================================================================================
- * 7. Globally Available Rendering Helper Functions
- * =========================================================================================
- ***/
-
-function text($contents) {
-    return new ResponseChunk($contents);
-}   
-
-function html($contents) {
-    return new ResponseChunk($contents);
-}
-
-function json($contents) {
-    return new ResponseChunk(json_encode($contents));
-}
-
-function template(ResponseChunk $chunk) {
-    // Using a template engine
-    if (Config::Get('template.engine')) {
-        $renderEngine = Config::Get('template.engine');
-        $renderEngine::init();
-        return new ResponseChunk($renderEngine::process($chunk));
-    
-    // Using straight PHP
-    } else {
-        ob_start();
-        $_data = $chunk->data();
-        echo eval('?>' . $chunk->contents());
-        $result = ob_get_contents();
-        ob_end_clean();
-        return new ResponseChunk($result);
-    }
-}
-
-function success($message) {
-    return flash($message,"Success!",'success');
-}
-function warn($message) {
-    return flash($message,"Warning:",'warn');
-}
-function error($message) {
-    return flash($message,"An error has occurred:",'error');
-}
-function info($message) {
-    return flash($message,"For your information:",'info');
-}
-function flash($message,$title,$cssClasses) {
-    return new ResponseChunk(
-        "<div class='f_flashMessage {$cssClasses}'><h5>{$title}</h5>{$message}</div>");
-}
-
-function img_url($path) {
-    return Config::Get('app.themes.url') 
-    	   . Config::Get('app.theme') . "/img/{$path}";
-}
-
-function js_url($path) {
-    return Config::Get('app.themes.url') 
-    	   . Config::Get('app.theme') . "/js/{$path}";
-}
-
-function css_url($path) {
-    return Config::Get('app.themes.url') 
-    	   . Config::Get('app.theme') . "/css/{$path}";
-}
-
-function href($url) {
-    return F_URL_BASE . $url;
-}
-
-function input($type,$name,$id='',$data = null,$default = '') {
-    switch (strtolower($type)) {
-        case 'textarea':
-            return '<textarea name="'.$name.'" id="'.$id.'">'.$data.'</textarea>';
-        case 'text':
-        default:
-            return '<input type="text" name="'.$name.'" id="'.$id.'" value="'.$data.'"/>';
-    }
-}
-
-
-function load_region($name) {
-    return Furnace::Response()->data($name);
-}
 
 
 
