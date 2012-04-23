@@ -384,7 +384,7 @@ class HtmlResponse extends Response {
   
       if ((!$hasLayout && empty($this->body)) || ($hasLayout && empty($this->contents['content']))) {
         if (Config::Get('environment') == F_ENV_DEVELOPMENT) {
-            Furnace::halt("Unable to handle request","Furnace was unable to find a "
+            Furnace::InternalError("Unable to handle request","Furnace was unable to find a "
                 . "valid template file to use. The file:<br/>"
                 . "<code>".F_MODULES_PATH . "/{$this->route->module}/views/{$this->route->handler}" 
                 . Config::Get('view.extension')."</code><br/> does "
