@@ -107,7 +107,7 @@ class Controller {
     
     public function assert( $condition, $httpStatusCode ) {
       if (false === $condition) {
-        $this->request->abort($httpStatusCode
+        $this->response->abort($httpStatusCode
           , null
           , "Assertion failed! If a backtrace is available, see line "
             ." <code>#1</code> for the corresponding file and line number.");
