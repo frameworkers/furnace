@@ -31,7 +31,7 @@
  ***/
 
 // 0.1 Define Constants --------------------------------------------------------------------
-define('FURNACE_VERSION'      , '0.4.3');
+define('FURNACE_VERSION'      , '0.4.4');
 define('F_REQUEST_START'      , microtime(true));
 define('F_START_MEMORY'       , memory_get_usage());
 define('F_ENV_PRODUCTION'     , 1000);
