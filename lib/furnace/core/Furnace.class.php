@@ -152,6 +152,16 @@ class Furnace {
       
       // Stop processing this request
       Furnace::Halt($e);    
+    
+    } catch (Exception $e ) {
+    
+      // Create a FurnaceException to represent this exception
+      $ex = new FurnaceException(Config::Get('message.500','Internal Server Error'));
+      $ex->setDeveloperMessage($e->getMessage());
+      $ex->setHttpStatusCode(HTTP::INTERNAL_SERVER_ERROR);
+      
+      // Stop processing this request
+      Furnace::Halt($ex);
     }
   } 
 
